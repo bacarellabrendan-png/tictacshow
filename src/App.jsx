@@ -4,22 +4,50 @@ import {
   buildPuzzle, matchAnswer, normalizeStr,
 } from "./data/questions.js";
 
-// ─── SUPABASE CLIENT ──────────────────────────────────────────────────────────
+// ─── SUPABASE ──────────────────────────────────────────────────────────────────
 const SB_URL = import.meta.env.VITE_SUPABASE_URL;
 const SB_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 async function sbFetch(path, opts = {}) {
-  const session = JSON.parse(localStorage.getItem("tts_session") || "null");
+  let session = JSON.parse(localStorage.getItem("tts_session") || "null");
+
+  // Auto-refresh token if it's about to expire (Supabase tokens last 1 hour)
+  if (session?.expires_at && Date.now() / 1000 > session.expires_at - 60) {
+    try {
+      const res = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: SB_KEY },
+        body: JSON.stringify({ refresh_token: session.refresh_token }),
+      });
+      if (res.ok) {
+        const fresh = await res.json();
+        localStorage.setItem("tts_session", JSON.stringify(fresh));
+        const u = fresh.user;
+        localStorage.setItem("tts_user", JSON.stringify({
+          id: u.id, email: u.email,
+          username: u.user_metadata?.username ?? u.email.split("@")[0],
+        }));
+        session = fresh;
+      } else {
+        localStorage.removeItem("tts_session");
+        localStorage.removeItem("tts_user");
+        window.location.reload();
+        return { ok: false, status: 401, data: "Session expired" };
+      }
+    } catch { /* network issue, let the request fail naturally */ }
+  }
+
   const headers = {
     "Content-Type": "application/json",
     apikey: SB_KEY,
-    Authorization: `Bearer ${session?.access_token || SB_KEY}`,
+    Authorization: `Bearer ${session?.access_token ?? SB_KEY}`,
     ...opts.headers,
   };
-  const res = await fetch(`${SB_URL}${path}`, { ...opts, headers });
+  const res  = await fetch(`${SB_URL}${path}`, { ...opts, headers });
   const text = await res.text();
-  try { return { ok: res.ok, status: res.status, data: JSON.parse(text) }; }
-  catch { return { ok: res.ok, status: res.status, data: text }; }
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  return { ok: res.ok, status: res.status, data };
 }
 
 async function signUp(email, password, username) {
@@ -30,6 +58,10 @@ async function signUp(email, password, username) {
   if (r.ok && r.data?.access_token) {
     localStorage.setItem("tts_session", JSON.stringify(r.data));
     localStorage.setItem("tts_user", JSON.stringify({ id: r.data.user.id, email, username }));
+    return { ...r, confirmed: true };
+  }
+  if (r.ok && r.data?.user && !r.data?.access_token) {
+    return { ...r, emailConfirmationRequired: true };
   }
   return r;
 }
@@ -41,7 +73,7 @@ async function signIn(email, password) {
   });
   if (r.ok && r.data?.access_token) {
     localStorage.setItem("tts_session", JSON.stringify(r.data));
-    const username = r.data.user?.user_metadata?.username || email.split("@")[0];
+    const username = r.data.user?.user_metadata?.username ?? email.split("@")[0];
     localStorage.setItem("tts_user", JSON.stringify({ id: r.data.user.id, email, username }));
   }
   return r;
@@ -56,78 +88,142 @@ function getUser() {
   return JSON.parse(localStorage.getItem("tts_user") || "null");
 }
 
-async function dbSelect(table, params = "") {
-  return sbFetch(`/rest/v1/${table}${params}`, {
-    method: "GET",
-    headers: { Prefer: "return=representation" },
-  });
+async function dbSelect(table, qs = "") {
+  return sbFetch(`/rest/v1/${table}${qs}`, { headers: { Prefer: "return=representation" } });
 }
 
-async function dbInsert(table, data) {
+async function dbInsert(table, body) {
   return sbFetch(`/rest/v1/${table}`, {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(body),
     headers: { Prefer: "return=representation" },
   });
 }
 
-async function dbUpdate(table, params, data) {
-  return sbFetch(`/rest/v1/${table}${params}`, {
+async function dbUpdate(table, qs, body) {
+  return sbFetch(`/rest/v1/${table}${qs}`, {
     method: "PATCH",
-    body: JSON.stringify(data),
+    body: JSON.stringify(body),
     headers: { Prefer: "return=representation" },
   });
 }
 
-// ─── GAME LOGIC ───────────────────────────────────────────────────────────────
-const WINNING_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+// ─── GAME LOGIC ────────────────────────────────────────────────────────────────
+const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
 function checkWinner(board) {
-  for (const [a, b, c] of WINNING_LINES) {
+  for (const [a, b, c] of LINES) {
     if (board[a] && board[a] === board[b] && board[a] === board[c] && board[a] !== "reset")
       return { winner: board[a], line: [a, b, c] };
   }
-  // draw only if every square is owned (p1/p2), none empty or reset
   if (board.every(v => v === "p1" || v === "p2")) return { winner: "draw", line: [] };
   return null;
 }
 
-function genInviteCode() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase(); }
+
+// ─── CPU HELPERS ───────────────────────────────────────────────────────────────
+const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
+
+/*
+  cpuDiff controls answer quality, independent of question difficulty:
+  easy   — 20% chance of invalid answer; rest picks from common answers (rarity 45-95)
+  medium — always valid, picks from mid-high rarity (25-80)
+  hard   — always valid, picks from rare answers (5-30), 15% chance of a mid-tier slip
+*/
+function cpuPickAnswer(qKey, cpuDiff) {
+  const pool = ANSWER_POOLS[qKey]?.answers ?? [];
+  if (!pool.length) return { name: "No answer", valid: false, rarity: null };
+
+  const validNames = new Set(pool.map(a => normalizeStr(a.name)));
+
+  if (cpuDiff === "easy") {
+    // 20% chance CPU makes a mistake
+    if (Math.random() < 0.20) {
+      const wrongOptions = ATHLETE_INDEX.filter(n => !validNames.has(normalizeStr(n)));
+      const wrong = wrongOptions.length
+        ? wrongOptions[Math.floor(Math.random() * wrongOptions.length)]
+        : "Mystery Player";
+      return { name: wrong, valid: false, rarity: null };
+    }
+    const cands = pool.filter(a => a.rarity >= 45);
+    const src = cands.length ? cands : pool;
+    const pick = src[Math.floor(Math.random() * src.length)];
+    return { name: pick.name, valid: true, rarity: pick.rarity };
+  }
+
+  if (cpuDiff === "medium") {
+    const cands = pool.filter(a => a.rarity >= 25 && a.rarity <= 80);
+    const src = cands.length ? cands : pool;
+    const pick = src[Math.floor(Math.random() * src.length)];
+    return { name: pick.name, valid: true, rarity: pick.rarity };
+  }
+
+  // hard
+  if (Math.random() < 0.15) {
+    const mid = pool.filter(a => a.rarity >= 30 && a.rarity <= 65);
+    if (mid.length) {
+      const pick = mid[Math.floor(Math.random() * mid.length)];
+      return { name: pick.name, valid: true, rarity: pick.rarity };
+    }
+  }
+  const rare = pool.filter(a => a.rarity <= 30);
+  const src = rare.length ? rare : pool;
+  const pick = src[Math.floor(Math.random() * src.length)];
+  return { name: pick.name, valid: true, rarity: pick.rarity };
 }
 
-// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
-const BG = "#1c1c2e";
-const SURFACE = "#25253a";
-const SURFACE2 = "#2e2e46";
-const BORDER = "#3a3a55";
-const TEXT_HI = "#f0f0fa";
-const TEXT_MID = "#a8a8c8";
-const TEXT_LO = "#6a6a90";
-const P_COLORS = { p1: "#FF6B35", p2: "#4ECDC4" };
+function cpuPickCell(board) {
+  const avail = board.reduce((acc, v, i) => (v === "null" || v == null) ? [...acc, i] : acc, []);
+  if (!avail.length) return null;
+  for (const [a, b, c] of LINES) {
+    const vals = [board[a], board[b], board[c]];
+    if (vals.filter(v => v === "p2").length === 2 && vals.some(v => v === "null" || v == null))
+      return [a, b, c][vals.findIndex(v => v === "null" || v == null)];
+  }
+  for (const [a, b, c] of LINES) {
+    const vals = [board[a], board[b], board[c]];
+    if (vals.filter(v => v === "p1").length === 2 && vals.some(v => v === "null" || v == null))
+      return [a, b, c][vals.findIndex(v => v === "null" || v == null)];
+  }
+  return avail[Math.floor(Math.random() * avail.length)];
+}
 
-// ─── RARITY BAR ───────────────────────────────────────────────────────────────
+// ─── DESIGN TOKENS ─────────────────────────────────────────────────────────────
+const BG      = "#1a1a2e";
+const SURF    = "#22223a";
+const SURF2   = "#2b2b46";
+const SURF3   = "#343454";
+const BORDER  = "#38385a";
+const HI      = "#f2f2ff";
+const MID     = "#a0a0c0";
+const LO      = "#60608a";
+const ACCENT  = "#FF6B35";
+const ACCENT2 = "#4ECDC4";
+const PC      = { p1: ACCENT, p2: ACCENT2 };
+
+// ─── RARITY BAR ────────────────────────────────────────────────────────────────
 function RarityBar({ score }) {
-  const pct = Math.max(2, Math.min(100, score));
-  const col = score < 10 ? "#FC5C65" : score < 30 ? "#F7B731" : "#4ECDC4";
+  const pct  = Math.max(2, Math.min(100, score));
+  const col  = score < 10 ? "#FC5C65" : score < 30 ? "#F7B731" : ACCENT2;
   const tier = score < 10 ? "RARE" : score < 30 ? "UNCOMMON" : "COMMON";
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-        <span style={{ fontSize: "0.62rem", color: TEXT_LO, letterSpacing: "1px" }}>POPULARITY</span>
-        <span style={{ fontSize: "0.62rem", color: col, letterSpacing: "1px" }}>{tier} · {score}%</span>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
+        <span style={{ fontSize: "0.65rem", color: LO, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>POPULARITY</span>
+        <span style={{ fontSize: "0.65rem", color: col, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>{tier} · {score}%</span>
       </div>
-      <div style={{ height: 4, background: BORDER, borderRadius: 2, overflow: "hidden" }}>
-        <div style={{ width: pct + "%", height: "100%", background: col, borderRadius: 2, transition: "width 0.8s ease" }} />
+      <div style={{ height: 5, background: BORDER, borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: col, borderRadius: 3, transition: "width 0.9s ease" }} />
       </div>
     </div>
   );
 }
 
-// ─── AUTOCOMPLETE INPUT ───────────────────────────────────────────────────────
-function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, placeholder, diffColor }) {
+// ─── AUTOCOMPLETE INPUT ────────────────────────────────────────────────────────
+function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, placeholder, accentColor }) {
   const [open, setOpen] = useState(false);
-  const [hi, setHi] = useState(0);
+  const [hi,   setHi]   = useState(0);
   const wrapRef = useRef(null);
 
   const suggestions = value.trim().length >= 1
@@ -137,11 +233,9 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
   useEffect(() => setHi(0), [value]);
 
   useEffect(() => {
-    const handler = e => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    const close = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
   }, []);
 
   return (
@@ -151,7 +245,7 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
         value={value}
         disabled={disabled}
         autoComplete="off"
-        placeholder={placeholder}
+        placeholder={placeholder ?? "Type a name…"}
         onChange={e => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         onKeyDown={e => {
@@ -167,9 +261,10 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
       />
       {open && suggestions.length > 0 && !disabled && (
         <div style={{
-          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
-          background: SURFACE2, border: `1px solid ${diffColor}66`, borderRadius: 10,
-          zIndex: 100, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+          position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
+          background: SURF2, border: `1px solid ${accentColor ?? ACCENT}88`,
+          borderRadius: 10, zIndex: 200, overflow: "hidden",
+          boxShadow: "0 12px 32px rgba(0,0,0,0.6)",
         }}>
           {suggestions.map((name, i) => (
             <div
@@ -177,11 +272,12 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
               onMouseDown={e => { e.preventDefault(); onSelect(name); setOpen(false); }}
               onMouseEnter={() => setHi(i)}
               style={{
-                padding: "0.65rem 1rem",
-                background: i === hi ? `${diffColor}22` : "transparent",
-                color: i === hi ? TEXT_HI : TEXT_MID,
-                fontSize: "0.9rem", cursor: "pointer",
+                padding: "0.7rem 1.1rem",
+                background: i === hi ? `${accentColor ?? ACCENT}22` : "transparent",
+                color: i === hi ? HI : MID,
+                fontSize: "0.92rem", cursor: "pointer",
                 borderBottom: i < suggestions.length - 1 ? `1px solid ${BORDER}` : "none",
+                transition: "background 0.1s",
               }}
             >
               {name}
@@ -193,83 +289,188 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
   );
 }
 
-// ─── GLOBAL CSS ───────────────────────────────────────────────────────────────
+// ─── GLOBAL CSS ────────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Mono:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: ${BG}; }
-  @keyframes fadeIn  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+  html { font-size: 16px; }
+  body { background: ${BG}; color: ${HI}; font-family: 'DM Serif Display', Georgia, serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+
+  @keyframes fadeIn  { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes fadeUp  { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
   @keyframes shimmer { 0% { background-position:-200% center } 100% { background-position:200% center } }
-  @keyframes blink   { 0%,100% { opacity:1 } 50% { opacity:0.35 } }
-  @keyframes winPulse { 0% { box-shadow:0 0 0 0 rgba(255,107,53,0.5) } 100% { box-shadow:0 0 0 14px rgba(255,107,53,0) } }
+  @keyframes blink   { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+  @keyframes pulse   { 0% { box-shadow:0 0 0 0 rgba(255,107,53,0.6) } 100% { box-shadow:0 0 0 16px rgba(255,107,53,0) } }
+  @keyframes spin    { to { transform: rotate(360deg) } }
+
+  /* ─── Inputs ─── */
   .ni {
-    background:${SURFACE2}; border:1px solid ${BORDER}; border-radius:10px;
-    color:${TEXT_HI}; padding:0.85rem 1.1rem; font-size:1rem;
-    font-family:'DM Serif Display',serif; width:100%; outline:none; transition:border-color 0.2s;
+    background: ${SURF2}; border: 1.5px solid ${BORDER}; border-radius: 10px;
+    color: ${HI}; padding: 0.85rem 1.1rem; font-size: 1rem;
+    font-family: 'DM Serif Display', serif; width: 100%; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .ni:focus { border-color:#FF6B35; }
+  .ni:focus { border-color: ${ACCENT}; box-shadow: 0 0 0 3px ${ACCENT}22; }
+
   .ai {
-    background:${SURFACE2}; border:2px solid ${BORDER}; border-radius:10px;
-    color:${TEXT_HI}; padding:0.8rem 1rem; font-size:1rem;
-    font-family:'DM Serif Display',serif; width:100%; outline:none; transition:border-color 0.2s;
+    background: ${SURF2}; border: 1.5px solid ${BORDER}; border-radius: 10px;
+    color: ${HI}; padding: 0.85rem 1.1rem; font-size: 1rem;
+    font-family: 'DM Serif Display', serif; width: 100%; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .ai:focus { border-color:#FF6B35; }
-  .ai:disabled { opacity:0.4; cursor:not-allowed; }
+  .ai:focus  { border-color: ${ACCENT}; box-shadow: 0 0 0 3px ${ACCENT}22; }
+  .ai:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ─── Buttons ─── */
   .big-btn {
-    background:linear-gradient(135deg,#FF6B35,#e8460a); border:none; border-radius:12px;
-    color:#fff; padding:1rem 2.5rem; font-size:1.3rem; font-family:'Bebas Neue',cursive;
-    letter-spacing:3px; cursor:pointer; width:100%; box-shadow:0 6px 24px rgba(255,107,53,0.35);
-    transition:all 0.2s;
+    background: linear-gradient(135deg, ${ACCENT}, #d63a00); border: none; border-radius: 12px;
+    color: #fff; padding: 1rem 2.5rem; font-size: 1.25rem; font-family: 'Bebas Neue', cursive;
+    letter-spacing: 3px; cursor: pointer; width: 100%;
+    box-shadow: 0 6px 28px rgba(255,107,53,0.38); transition: all 0.2s;
   }
-  .big-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 10px 30px rgba(255,107,53,0.45); }
-  .big-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .big-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(255,107,53,0.5); }
+  .big-btn:active:not(:disabled) { transform: translateY(0); }
+  .big-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .ghost-btn {
+    background: transparent; border: 1.5px solid ${BORDER}; border-radius: 10px;
+    color: ${MID}; padding: 0.8rem 1.5rem; font-size: 0.9rem;
+    font-family: 'Bebas Neue', cursive; letter-spacing: 2px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ghost-btn:hover { border-color: ${MID}; color: ${HI}; }
+
+  .icon-btn {
+    background: transparent; border: none; cursor: pointer; color: ${LO};
+    padding: 0.4rem; border-radius: 6px; transition: color 0.15s;
+  }
+  .icon-btn:hover { color: ${HI}; }
+
   .sb {
-    border:none; border-radius:10px; color:#000; padding:0.8rem 1.3rem;
-    font-family:'Bebas Neue',cursive; letter-spacing:2px; font-size:1rem;
-    cursor:pointer; transition:all 0.15s; white-space:nowrap;
+    border: none; border-radius: 10px; color: #000; padding: 0.8rem 1.4rem;
+    font-family: 'Bebas Neue', cursive; letter-spacing: 2px; font-size: 0.95rem;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
   }
-  .sb:disabled { opacity:0.35; cursor:not-allowed; }
+  .sb:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+  .sb:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* ─── Board cells ─── */
   .cell {
-    aspect-ratio:1; border-radius:14px; border:2px solid ${BORDER};
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:0.65rem; transition:all 0.2s; position:relative;
-    overflow:hidden; text-align:center; min-height:80px; background:${SURFACE};
+    aspect-ratio: 1; border-radius: 14px; border: 1.5px solid ${BORDER};
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0.7rem; transition: all 0.2s; position: relative;
+    overflow: hidden; text-align: center; background: ${SURF}; cursor: default;
+    min-height: 90px;
   }
-  .pickable { cursor:pointer; }
-  .pickable:hover { background:${SURFACE2} !important; transform:scale(1.03); }
-  .active-cell { box-shadow:0 0 0 3px rgba(255,107,53,0.3); }
-  .win-cell { animation:winPulse 1.1s infinite; }
+  .pickable { cursor: pointer; }
+  .pickable:hover {
+    background: ${SURF3} !important; transform: scale(1.04);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .active-cell { box-shadow: 0 0 0 3px ${ACCENT}55 !important; }
+  .win-cell { animation: pulse 1.2s infinite; }
+
+  /* ─── Layout ─── */
+  .game-wrap {
+    display: flex; gap: 1.75rem; padding: 1.5rem;
+    max-width: 1150px; margin: 0 auto; align-items: flex-start;
+  }
+  .board-col {
+    flex: 1 1 0; min-width: 0;
+  }
+  .sidebar {
+    flex: 0 0 360px; display: flex; flex-direction: column; gap: 1rem;
+    position: sticky; top: 1rem;
+  }
+  .board-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem;
+    width: 100%;
+  }
+
+  @media (max-width: 860px) {
+    .game-wrap { flex-direction: column; padding: 1rem; gap: 1rem; }
+    .sidebar { flex: none; position: static; }
+  }
+
+  /* ─── Lobby ─── */
+  .lobby-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.85rem;
+  }
+  .game-card {
+    background: ${SURF}; border: 1.5px solid ${BORDER}; border-radius: 16px;
+    padding: 1.2rem 1.4rem; cursor: pointer; transition: all 0.2s; animation: fadeIn 0.3s ease;
+  }
+  .game-card:hover { border-color: ${MID}; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.4); }
+
+  /* ─── Difficulty / mode selectors ─── */
+  .diff-card {
+    background: ${SURF}; border: 2px solid ${BORDER}; border-radius: 14px;
+    padding: 1.1rem 1.4rem; cursor: pointer; text-align: left;
+    transition: all 0.2s;
+  }
+  .diff-card:hover { border-color: ${MID}; transform: translateY(-1px); }
+
+  /* ─── Section label ─── */
+  .section-label {
+    font-family: 'Roboto Mono', monospace; font-size: 0.7rem;
+    color: ${LO}; letter-spacing: 2.5px; text-transform: uppercase;
+    margin-bottom: 0.85rem;
+  }
+
+  /* ─── Spinner ─── */
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid ${BORDER};
+    border-top-color: ${ACCENT}; border-radius: 50%;
+    animation: spin 0.7s linear infinite; display: inline-block;
+  }
 `;
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+// ─── MAIN APP ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [user,        setUser]        = useState(getUser);
-  const [screen,      setScreen]      = useState("lobby");
-  const [authMode,    setAuthMode]    = useState("login");
-  const [authForm,    setAuthForm]    = useState({ email: "", password: "", username: "" });
-  const [authError,   setAuthError]   = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [myGames,     setMyGames]     = useState([]);
-  const [lobbyLoading,setLobbyLoading]= useState(false);
-  const [game,        setGame]        = useState(null);
-  const [joinCode,    setJoinCode]    = useState("");
-  const [joinError,   setJoinError]   = useState("");
-  const [difficulty,  setDifficulty]  = useState("beginner");
-  const [currentMove, setCurrentMove] = useState(null);
-  const [myAnswer,    setMyAnswer]    = useState("");
-  const [submitted,   setSubmitted]   = useState(false);
-  const [copyMsg,     setCopyMsg]     = useState("");
-  const [revealData,  setRevealData]  = useState(null);
-  const [revealStep,  setRevealStep]  = useState(0);
+  // Auth
+  const [user,          setUser]          = useState(getUser);
+  const [screen,        setScreen]        = useState("lobby");
+  const [authMode,      setAuthMode]      = useState("login");
+  const [authForm,      setAuthForm]      = useState({ email: "", password: "", username: "" });
+  const [authError,     setAuthError]     = useState("");
+  const [authLoading,   setAuthLoading]   = useState(false);
+  const [authInfo,      setAuthInfo]      = useState(""); // e.g. "check your email"
 
-  // Refs so polling callbacks always see fresh values without stale closures
-  const gameRef        = useRef(null);
-  const resolving      = useRef(false);  // prevents double-resolve on same move
-  const showingReveal  = useRef(false);  // prevents duplicate reveal panels
+  // Lobby
+  const [myGames,       setMyGames]       = useState([]);
+  const [lobbyLoading,  setLobbyLoading]  = useState(false);
+
+  // Create
+  const [qDiff,         setQDiff]         = useState("beginner");   // question difficulty
+  const [cpuDiff,       setCpuDiff]       = useState("medium");     // cpu skill level
+  const [gameMode,      setGameMode]      = useState("vs_friend");  // "vs_friend" | "vs_cpu"
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError,   setCreateError]   = useState("");
+
+  // Join
+  const [joinCode,      setJoinCode]      = useState("");
+  const [joinError,     setJoinError]     = useState("");
+
+  // Game
+  const [game,          setGame]          = useState(null);
+  const [currentMove,   setCurrentMove]   = useState(null);
+  const [myAnswer,      setMyAnswer]      = useState("");
+  const [submitted,     setSubmitted]     = useState(false);
+  const [copyMsg,       setCopyMsg]       = useState("");
+  const [revealData,    setRevealData]    = useState(null);
+  const [revealStep,    setRevealStep]    = useState(0);
+
+  // Refs for stale-closure-safe async ops
+  const gameRef       = useRef(null);
+  const resolving     = useRef(false);
+  const showingReveal = useRef(false);
+  const cpuThinking   = useRef(false);
 
   useEffect(() => { gameRef.current = game; }, [game]);
 
-  // ── BOOT ────────────────────────────────────────────────────────────────────
+  // ── Boot ──────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) { setScreen("auth"); return; }
     setScreen("lobby");
@@ -278,23 +479,25 @@ export default function App() {
     if (code) { setJoinCode(code); setScreen("join"); }
   }, [user]);
 
-  // ── POLLING ─────────────────────────────────────────────────────────────────
+  // ── Multiplayer polling ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (screen !== "game" || !game) return;
+    if (screen !== "game" || !game || game.isCpu) return;
     const iv = setInterval(refreshGame, 3000);
     return () => clearInterval(iv);
-  }, [screen, game?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [screen, game?.id, game?.isCpu]); // eslint-disable-line
 
-  // ── LOAD MOVE for non-picking player when phase switches to "answering" ──────
+  // ── Load move for non-picking player (multiplayer) ────────────────────────────
   useEffect(() => {
+    if (game?.isCpu) return;
     if (game?.phase !== "answering" || game.active_cell == null || currentMove) return;
-    dbSelect("moves", `?game_id=eq.${game.id}&cell_index=eq.${game.active_cell}&order=created_at.desc&limit=1`)
+    dbSelect("moves",
+      `?game_id=eq.${game.id}&cell_index=eq.${game.active_cell}&order=created_at.desc&limit=1`)
       .then(r => { if (r.ok && r.data?.[0]) setCurrentMove(r.data[0]); });
-  }, [game?.phase, game?.active_cell]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [game?.phase, game?.active_cell, game?.isCpu]); // eslint-disable-line
 
-  // ── POLL FOR OPPONENT ANSWER after we've locked in ──────────────────────────
+  // ── Poll for opponent answer (multiplayer) ────────────────────────────────────
   useEffect(() => {
-    if (!submitted || !currentMove || !game) return;
+    if (game?.isCpu || !submitted || !currentMove || !game) return;
     const myRole = game.player1_id === user?.id ? "p1" : "p2";
     const iv = setInterval(async () => {
       const r = await dbSelect("moves", `?id=eq.${currentMove.id}`);
@@ -309,82 +512,100 @@ export default function App() {
       if (mv.result) clearInterval(iv);
     }, 2000);
     return () => clearInterval(iv);
-  }, [submitted, currentMove?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [submitted, currentMove?.id, game?.isCpu]); // eslint-disable-line
 
-  // ── REFRESH GAME (polling tick) ──────────────────────────────────────────────
+  // ── CPU auto-pick square ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!game?.isCpu) return;
+    if (game.phase !== "choosing" || game.choosing_player !== "p2") return;
+    if (game.phase === "gameover" || cpuThinking.current || revealData) return;
+
+    cpuThinking.current = true;
+    const delay = 1200 + Math.random() * 1000;
+    const t = setTimeout(() => {
+      const g = gameRef.current;
+      if (!g || g.phase !== "choosing" || g.choosing_player !== "p2") {
+        cpuThinking.current = false;
+        return;
+      }
+      const idx = cpuPickCell(g.board);
+      if (idx !== null && idx !== undefined) selectCellCpu(idx);
+      cpuThinking.current = false;
+    }, delay);
+    return () => { clearTimeout(t); cpuThinking.current = false; };
+  }, [game?.phase, game?.choosing_player, game?.isCpu, revealData]); // eslint-disable-line
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // POLLING (multiplayer)
+  // ─────────────────────────────────────────────────────────────────────────────
   async function refreshGame() {
     const cur = gameRef.current;
-    if (!cur) return;
+    if (!cur || cur.isCpu) return;
     const r = await dbSelect("games", `?id=eq.${cur.id}`);
     if (!r.ok || !r.data?.[0]) return;
     const fresh = r.data[0];
 
-    // Detect answering → choosing transition for the non-resolver's reveal
     if (fresh.phase === "choosing" && cur.phase === "answering" && !showingReveal.current) {
       const prevCell = cur.active_cell;
       if (prevCell != null) {
-        const mr = await dbSelect("moves", `?game_id=eq.${cur.id}&cell_index=eq.${prevCell}&order=created_at.desc&limit=1`);
-        if (mr.ok && mr.data?.[0] && mr.data[0].result) {
-          triggerReveal(mr.data[0], fresh);
-        }
+        const mr = await dbSelect("moves",
+          `?game_id=eq.${cur.id}&cell_index=eq.${prevCell}&order=created_at.desc&limit=1`);
+        if (mr.ok && mr.data?.[0]?.result) triggerReveal(mr.data[0], fresh);
       }
     }
-
     setGame(fresh);
   }
 
-  // ── REVEAL ──────────────────────────────────────────────────────────────────
-  function triggerReveal(move, freshGame) {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // REVEAL
+  // ─────────────────────────────────────────────────────────────────────────────
+  function triggerReveal(move, g) {
     showingReveal.current = true;
     const winnerName =
-      move.result === "p1" ? freshGame.player1_name :
-      move.result === "p2" ? freshGame.player2_name : null;
+      move.result === "p1" ? g.player1_name :
+      move.result === "p2" ? g.player2_name : null;
     setRevealData({ move, result: move.result, winnerName });
     setRevealStep(0);
-    setTimeout(() => setRevealStep(1), 400);
-    setTimeout(() => setRevealStep(2), 1100);
-    setTimeout(() => setRevealStep(3), 2000);
+    setTimeout(() => setRevealStep(1), 450);
+    setTimeout(() => setRevealStep(2), 1200);
+    setTimeout(() => setRevealStep(3), 2100);
     setTimeout(() => {
-      setRevealData(null);
-      setRevealStep(0);
-      setSubmitted(false);
-      setMyAnswer("");
-      setCurrentMove(null);
-      resolving.current = false;
-      showingReveal.current = false;
-    }, 5500);
+      setRevealData(null); setRevealStep(0);
+      setSubmitted(false); setMyAnswer(""); setCurrentMove(null);
+      resolving.current = false; showingReveal.current = false;
+    }, 5800);
   }
 
-  // ── DATA HELPERS ────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DATA HELPERS
+  // ─────────────────────────────────────────────────────────────────────────────
   async function loadMyGames() {
     if (!user) return;
     setLobbyLoading(true);
     const r = await dbSelect("games",
-      `?or=(player1_id.eq.${user.id},player2_id.eq.${user.id})&order=updated_at.desc&limit=20`);
-    if (r.ok) setMyGames(r.data);
+      `?or=(player1_id.eq.${user.id},player2_id.eq.${user.id})&order=updated_at.desc&limit=40`);
+    if (r.ok) setMyGames(Array.isArray(r.data) ? r.data : []);
     setLobbyLoading(false);
   }
 
   function resetGameState(g) {
-    setGame(g);
-    gameRef.current = g;
-    setCurrentMove(null);
-    setMyAnswer("");
-    setSubmitted(false);
-    setRevealData(null);
-    setRevealStep(0);
-    resolving.current = false;
-    showingReveal.current = false;
+    setGame(g); gameRef.current = g;
+    setCurrentMove(null); setMyAnswer(""); setSubmitted(false);
+    setRevealData(null); setRevealStep(0);
+    resolving.current = false; showingReveal.current = false; cpuThinking.current = false;
   }
 
-  // ── AUTH ────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AUTH
+  // ─────────────────────────────────────────────────────────────────────────────
   async function handleAuth(e) {
     e.preventDefault();
-    setAuthError(""); setAuthLoading(true);
+    setAuthError(""); setAuthInfo(""); setAuthLoading(true);
     if (authMode === "signup") {
       if (!authForm.username.trim()) { setAuthError("Username is required"); setAuthLoading(false); return; }
       const r = await signUp(authForm.email, authForm.password, authForm.username);
-      if (r.ok) setUser(getUser());
+      if (r.confirmed) setUser(getUser());
+      else if (r.emailConfirmationRequired) setAuthInfo("Account created! Check your email to confirm, then log in.");
       else setAuthError(r.data?.msg || r.data?.error_description || "Sign up failed");
     } else {
       const r = await signIn(authForm.email, authForm.password);
@@ -394,30 +615,79 @@ export default function App() {
     setAuthLoading(false);
   }
 
-  // ── CREATE GAME ─────────────────────────────────────────────────────────────
-  async function createGame() {
-    const r = await dbInsert("games", {
-      invite_code: genInviteCode(),
-      difficulty,
-      cells: buildPuzzle(difficulty),
-      player1_id: user.id,
-      player1_name: user.username,
-      phase: "waiting",
+  // ─────────────────────────────────────────────────────────────────────────────
+  // START CPU GAME
+  // ─────────────────────────────────────────────────────────────────────────────
+  function startCpuGame() {
+    const g = {
+      id: `cpu-${Date.now()}`,
+      isCpu: true,
+      cpuDiff,
+      difficulty: qDiff,
+      cells: buildPuzzle(qDiff),
+      phase: "choosing",
       board: Array(9).fill("null"),
       scores: { p1: 0, p2: 0 },
       win_line: [],
+      active_cell: null,
       choosing_player: "p1",
-    });
-    if (r.ok && r.data?.[0]) { resetGameState(r.data[0]); setScreen("game"); }
+      winner: null,
+      player1_id: user.id,
+      player1_name: user.username,
+      player2_id: "cpu",
+      player2_name: CPU_NAMES[cpuDiff] ?? "Bot",
+    };
+    resetGameState(g);
+    setScreen("game");
   }
 
-  // ── JOIN GAME ───────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CREATE GAME (multiplayer)
+  // ─────────────────────────────────────────────────────────────────────────────
+  async function createGame() {
+    setCreateLoading(true); setCreateError("");
+    try {
+      const payload = {
+        invite_code: genCode(),
+        difficulty: qDiff,
+        cells: buildPuzzle(qDiff),
+        player1_id: user.id,
+        player1_name: user.username,
+        phase: "waiting",
+        board: Array(9).fill("null"),
+        scores: { p1: 0, p2: 0 },
+        win_line: [],
+        choosing_player: "p1",
+      };
+      const r = await dbInsert("games", payload);
+      if (r.ok && r.data?.[0]) {
+        resetGameState(r.data[0]);
+        setScreen("game");
+      } else {
+        const msg = typeof r.data === "string" ? r.data : JSON.stringify(r.data);
+        console.error("createGame failed →", r.status, msg);
+        setCreateError(`Failed to create game (${r.status}). ${
+          r.status === 401 ? "Try logging out and back in." :
+          r.status === 403 ? "Permission denied — check Supabase RLS policies." :
+          msg.slice(0, 200)
+        }`);
+      }
+    } catch (err) {
+      console.error("createGame error →", err);
+      setCreateError(`Network error: ${err.message}`);
+    }
+    setCreateLoading(false);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // JOIN GAME
+  // ─────────────────────────────────────────────────────────────────────────────
   async function joinGame() {
     setJoinError("");
     const r = await dbSelect("games", `?invite_code=eq.${joinCode.toUpperCase().trim()}`);
     if (!r.ok || !r.data?.[0]) { setJoinError("Game not found. Check the code and try again."); return; }
     const g = r.data[0];
-    if (g.player2_id)          { setJoinError("This game already has two players."); return; }
+    if (g.player2_id)            { setJoinError("This game already has two players."); return; }
     if (g.player1_id === user.id) { setJoinError("You can't join your own game."); return; }
     const upd = await dbUpdate("games", `?id=eq.${g.id}`,
       { player2_id: user.id, player2_name: user.username, phase: "choosing" });
@@ -426,17 +696,20 @@ export default function App() {
       resetGameState(fresh.data[0]);
       setScreen("game");
       window.history.replaceState({}, "", window.location.pathname);
+    } else {
+      setJoinError("Could not join game. Please try again.");
     }
   }
 
-  // ── SELECT CELL ─────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SELECT CELL — multiplayer
+  // ─────────────────────────────────────────────────────────────────────────────
   async function selectCell(idx) {
     if (!game || game.phase !== "choosing") return;
     const myRole = game.player1_id === user.id ? "p1" : "p2";
     if (game.choosing_player !== myRole) return;
-    const owner = (game.board ?? [])[idx];
-    if (owner !== "null" && owner !== null) return;
-
+    const owner = game.board[idx];
+    if (owner !== "null" && owner != null) return;
     const qKey = game.cells[idx].questionKey;
     const mv = await dbInsert("moves", { game_id: game.id, cell_index: idx, question_key: qKey });
     if (!mv.ok || !mv.data?.[0]) return;
@@ -445,7 +718,29 @@ export default function App() {
     await refreshGame();
   }
 
-  // ── SUBMIT ANSWER ───────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SELECT CELL — CPU
+  // ─────────────────────────────────────────────────────────────────────────────
+  function selectCellCpu(idx) {
+    const g = gameRef.current;
+    if (!g || g.phase !== "choosing") return;
+    const owner = g.board[idx];
+    if (owner !== "null" && owner != null) return;
+    const qKey = g.cells[idx].questionKey;
+    const move = {
+      id: `move-${Date.now()}`, game_id: g.id, cell_index: idx, question_key: qKey,
+      p1_answer: null, p2_answer: null,
+      p1_valid: null, p2_valid: null,
+      p1_rarity: null, p2_rarity: null, result: null,
+    };
+    setCurrentMove(move);
+    const updated = { ...g, active_cell: idx, phase: "answering" };
+    setGame(updated); gameRef.current = updated;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SUBMIT ANSWER — multiplayer
+  // ─────────────────────────────────────────────────────────────────────────────
   async function submitAnswer() {
     if (submitted || !myAnswer.trim() || !game || !currentMove) return;
     const myRole = game.player1_id === user.id ? "p1" : "p2";
@@ -454,103 +749,171 @@ export default function App() {
     const patch  = myRole === "p1"
       ? { p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null }
       : { p2_answer: myAnswer, p2_valid: !!match, p2_rarity: match?.rarity ?? null };
-
     await dbUpdate("moves", `?id=eq.${currentMove.id}`, patch);
     setSubmitted(true);
-
-    // If opponent already answered, resolve immediately
     const freshMv = await dbSelect("moves", `?id=eq.${currentMove.id}`);
     if (freshMv.ok && freshMv.data?.[0]) {
       const mv = freshMv.data[0];
       const otherIn = myRole === "p1" ? mv.p2_answer !== null : mv.p1_answer !== null;
-      if (otherIn && !resolving.current) {
-        resolving.current = true;
-        await resolveMove(mv);
-      }
+      if (otherIn && !resolving.current) { resolving.current = true; await resolveMove(mv); }
     }
   }
 
-  // ── RESOLVE MOVE ────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SUBMIT ANSWER — CPU
+  // ─────────────────────────────────────────────────────────────────────────────
+  function submitAnswerCpu() {
+    if (submitted || !myAnswer.trim() || !game || !currentMove) return;
+    const qKey  = game.cells[game.active_cell].questionKey;
+    const match = matchAnswer(myAnswer, qKey);
+    const updatedMove = {
+      ...currentMove,
+      p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null,
+    };
+    setCurrentMove(updatedMove);
+    setSubmitted(true);
+
+    // CPU "thinks" for 2-3 seconds
+    const delay = 2000 + Math.random() * 1000;
+    setTimeout(() => {
+      const g = gameRef.current;
+      if (!g) return;
+      const cpuAns = cpuPickAnswer(qKey, g.cpuDiff ?? "medium");
+      const finalMove = {
+        ...updatedMove,
+        p2_answer: cpuAns.name,
+        p2_valid:  cpuAns.valid,
+        p2_rarity: cpuAns.rarity,
+      };
+      resolveCpuMove(finalMove);
+    }, delay);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RESOLVE MOVE — multiplayer
+  // ─────────────────────────────────────────────────────────────────────────────
   async function resolveMove(mv) {
-    // Determine winner: invalid answer loses; tie = same answer; rarer (lower %) wins
     let result;
-    if (!mv.p1_valid && !mv.p2_valid)                           result = "reset";
-    else if (!mv.p1_valid)                                      result = "p2";
-    else if (!mv.p2_valid)                                      result = "p1";
-    else if (normalizeStr(mv.p1_answer) === normalizeStr(mv.p2_answer)) result = "reset";
+    if (!mv.p1_valid && !mv.p2_valid)                                    result = "reset";
+    else if (!mv.p1_valid)                                               result = "p2";
+    else if (!mv.p2_valid)                                               result = "p1";
+    else if (normalizeStr(mv.p1_answer) === normalizeStr(mv.p2_answer))  result = "reset";
     else result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
 
     await dbUpdate("moves", `?id=eq.${mv.id}`, { result });
-
     const gRes = await dbSelect("games", `?id=eq.${game.id}`);
     const g    = gRes.data[0];
-    const newBoard = [...g.board];
+    const newBoard  = [...g.board];
     newBoard[g.active_cell] = result === "reset" ? "reset" : result;
-
     const newScores = { ...g.scores };
     if (result !== "reset") newScores[result] = (newScores[result] || 0) + 1;
-
-    const boardForCheck = newBoard.map(v => (v === "null" || v === null || v === "reset") ? null : v);
-    const winCheck   = checkWinner(boardForCheck);
-    const nextPicker = result === "reset"
-      ? (g.choosing_player === "p1" ? "p2" : "p1")
-      : (result === "p1" ? "p2" : "p1");
-
+    const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
+    const nextPick = result === "reset" ? (g.choosing_player === "p1" ? "p2" : "p1")
+                                        : (result === "p1" ? "p2" : "p1");
     triggerReveal({ ...mv, result }, g);
-
     await dbUpdate("games", `?id=eq.${game.id}`, {
-      board: newBoard,
-      scores: newScores,
-      active_cell: null,
-      phase: winCheck ? "gameover" : "choosing",
-      choosing_player: nextPicker,
-      winner: winCheck ? winCheck.winner : null,
-      win_line: winCheck ? winCheck.line : [],
+      board: newBoard, scores: newScores, active_cell: null,
+      phase: check ? "gameover" : "choosing", choosing_player: nextPick,
+      winner: check ? check.winner : null, win_line: check ? check.line : [],
     });
-
-    // Reset tile after 2 s if tie
     if (result === "reset") {
       setTimeout(async () => {
-        const nb = [...newBoard];
-        nb[g.active_cell] = "null";
+        const nb = [...newBoard]; nb[g.active_cell] = "null";
         await dbUpdate("games", `?id=eq.${game.id}`, { board: nb });
       }, 2000);
     }
-
     await refreshGame();
   }
 
-  // ── DERIVED ──────────────────────────────────────────────────────────────────
-  const myRole       = game ? (game.player1_id === user?.id ? "p1" : "p2") : null;
-  const diffMeta     = game ? (DIFFICULTY_META[game.difficulty] ?? DIFFICULTY_META.beginner) : null;
-  const diffColor    = diffMeta?.color ?? "#FF6B35";
-  const activeQ      = game?.active_cell != null ? ANSWER_POOLS[game.cells?.[game.active_cell]?.questionKey] : null;
-  const isMyPickTurn = game?.phase === "choosing" && myRole === game.choosing_player;
-  const inviteLink   = game ? `${window.location.origin}${window.location.pathname}?join=${game.invite_code}` : "";
-  const board        = game?.board ?? Array(9).fill("null");
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RESOLVE MOVE — CPU
+  // ─────────────────────────────────────────────────────────────────────────────
+  function resolveCpuMove(mv) {
+    const g = gameRef.current;
+    if (!g) return;
+    let result;
+    if (!mv.p1_valid && !mv.p2_valid)                                    result = "reset";
+    else if (!mv.p1_valid)                                               result = "p2";
+    else if (!mv.p2_valid)                                               result = "p1";
+    else if (normalizeStr(mv.p1_answer) === normalizeStr(mv.p2_answer))  result = "reset";
+    else result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
 
-  // ════════════════════════════════════════════════════════════════
-  // SCREENS
-  // ════════════════════════════════════════════════════════════════
+    const newBoard  = [...g.board];
+    newBoard[g.active_cell] = result === "reset" ? "reset" : result;
+    const newScores = { ...g.scores };
+    if (result !== "reset") newScores[result] = (newScores[result] || 0) + 1;
+    const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
+    const nextPick = result === "reset" ? (g.choosing_player === "p1" ? "p2" : "p1")
+                                        : (result === "p1" ? "p2" : "p1");
+    triggerReveal({ ...mv, result }, g);
+    const updated = {
+      ...g, board: newBoard, scores: newScores, active_cell: null,
+      phase: check ? "gameover" : "choosing", choosing_player: nextPick,
+      winner: check ? check.winner : null, win_line: check ? check.line : [],
+    };
+    setGame(updated); gameRef.current = updated;
 
-  // ── AUTH ─────────────────────────────────────────────────────────────────────
+    if (result === "reset") {
+      setTimeout(() => {
+        const cur = gameRef.current;
+        if (!cur) return;
+        const nb = [...cur.board]; nb[g.active_cell] = "null";
+        const r2 = { ...cur, board: nb };
+        setGame(r2); gameRef.current = r2;
+      }, 2000);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DERIVED
+  // ─────────────────────────────────────────────────────────────────────────────
+  const myRole    = game ? (game.player1_id === user?.id ? "p1" : "p2") : null;
+  const diffMeta  = game ? (DIFFICULTY_META[game.difficulty] ?? DIFFICULTY_META.beginner) : null;
+  const diffColor = diffMeta?.color ?? ACCENT;
+  const activeQ   = game?.active_cell != null
+    ? ANSWER_POOLS[game.cells?.[game.active_cell]?.questionKey]
+    : null;
+  const isMyPick  = game?.phase === "choosing" && myRole === game.choosing_player;
+  const board     = game?.board ?? Array(9).fill("null");
+  const inviteLink = game && !game.isCpu
+    ? `${window.location.origin}${window.location.pathname}?join=${game.invite_code}`
+    : "";
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // SCREEN: AUTH
+  // ══════════════════════════════════════════════════════════════════════════════
   if (!user || screen === "auth") return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <style>{GLOBAL_CSS}</style>
 
-      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "clamp(3rem,10vw,6rem)", lineHeight: 0.9, letterSpacing: "2px" }}>
-          <span style={{ color: TEXT_HI }}>TIC TAC </span>
-          <span style={{ background: "linear-gradient(90deg,#FF6B35,#FC5C65,#FF6B35)", backgroundSize: "200%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>SHOW</span>
+      {/* Logo */}
+      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "clamp(3.5rem,10vw,6rem)", lineHeight: 0.9, letterSpacing: "2px" }}>
+          <span style={{ color: HI }}>TIC TAC </span>
+          <span style={{
+            background: `linear-gradient(90deg,${ACCENT},#FC5C65,${ACCENT})`,
+            backgroundSize: "200%",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            animation: "shimmer 3s linear infinite",
+          }}>SHOW</span>
         </div>
-        <div style={{ color: TEXT_LO, fontFamily: "'DM Serif Display',serif", fontStyle: "italic", marginTop: "0.5rem" }}>The sports trivia showdown</div>
+        <div style={{ color: LO, fontStyle: "italic", marginTop: "0.6rem", fontSize: "1.05rem" }}>
+          Sports trivia meets tic-tac-toe
+        </div>
       </div>
 
-      <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 20, padding: "2rem", width: "100%", maxWidth: 420, animation: "fadeIn 0.4s ease" }}>
-        <div style={{ display: "flex", marginBottom: "1.5rem", borderBottom: `1px solid ${BORDER}` }}>
+      {/* Auth card */}
+      <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: 20, padding: "2rem", width: "100%", maxWidth: 440, animation: "fadeUp 0.4s ease" }}>
+        <div style={{ display: "flex", marginBottom: "1.75rem", gap: "0.25rem" }}>
           {["login", "signup"].map(m => (
-            <button key={m} onClick={() => { setAuthMode(m); setAuthError(""); }}
-              style={{ flex: 1, padding: "0.6rem", background: "transparent", border: "none", cursor: "pointer", fontFamily: "'Bebas Neue',cursive", fontSize: "1.1rem", letterSpacing: "2px", color: authMode === m ? TEXT_HI : TEXT_LO, borderBottom: authMode === m ? "3px solid #FF6B35" : "3px solid transparent" }}>
+            <button key={m} onClick={() => { setAuthMode(m); setAuthError(""); setAuthInfo(""); }}
+              style={{
+                flex: 1, padding: "0.65rem", background: "transparent", border: "none",
+                cursor: "pointer", fontFamily: "'Bebas Neue',cursive", fontSize: "1.1rem",
+                letterSpacing: "2px", color: authMode === m ? HI : LO,
+                borderBottom: `3px solid ${authMode === m ? ACCENT : "transparent"}`,
+                transition: "all 0.2s",
+              }}>
               {m === "login" ? "LOG IN" : "SIGN UP"}
             </button>
           ))}
@@ -559,339 +922,719 @@ export default function App() {
         <form onSubmit={handleAuth}>
           {authMode === "signup" && (
             <div style={{ marginBottom: "1rem" }}>
-              <label style={{ color: TEXT_LO, fontSize: "0.72rem", display: "block", marginBottom: "0.35rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>USERNAME</label>
-              <input className="ni" placeholder="Your display name" value={authForm.username} onChange={e => setAuthForm(f => ({ ...f, username: e.target.value }))} />
+              <label style={{ color: LO, fontSize: "0.7rem", display: "block", marginBottom: "0.4rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>USERNAME</label>
+              <input className="ni" placeholder="Your display name" value={authForm.username}
+                onChange={e => setAuthForm(f => ({ ...f, username: e.target.value }))} />
             </div>
           )}
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ color: TEXT_LO, fontSize: "0.72rem", display: "block", marginBottom: "0.35rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>EMAIL</label>
-            <input className="ni" type="email" placeholder="you@email.com" value={authForm.email} onChange={e => setAuthForm(f => ({ ...f, email: e.target.value }))} />
+            <label style={{ color: LO, fontSize: "0.7rem", display: "block", marginBottom: "0.4rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>EMAIL</label>
+            <input className="ni" type="email" placeholder="you@email.com" value={authForm.email}
+              onChange={e => setAuthForm(f => ({ ...f, email: e.target.value }))} />
           </div>
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ color: TEXT_LO, fontSize: "0.72rem", display: "block", marginBottom: "0.35rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>PASSWORD</label>
-            <input className="ni" type="password" placeholder="••••••••" value={authForm.password} onChange={e => setAuthForm(f => ({ ...f, password: e.target.value }))} />
+          <div style={{ marginBottom: "1.75rem" }}>
+            <label style={{ color: LO, fontSize: "0.7rem", display: "block", marginBottom: "0.4rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>PASSWORD</label>
+            <input className="ni" type="password" placeholder="••••••••" value={authForm.password}
+              onChange={e => setAuthForm(f => ({ ...f, password: e.target.value }))} />
           </div>
-          {authError && <div style={{ color: "#FC5C65", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{authError}</div>}
+          {authError && (
+            <div style={{ color: "#FC5C65", fontSize: "0.88rem", marginBottom: "1rem", textAlign: "center", background: "#FC5C6515", border: "1px solid #FC5C6533", borderRadius: 8, padding: "0.6rem" }}>
+              {authError}
+            </div>
+          )}
+          {authInfo && (
+            <div style={{ color: ACCENT2, fontSize: "0.88rem", marginBottom: "1rem", textAlign: "center", background: `${ACCENT2}15`, border: `1px solid ${ACCENT2}33`, borderRadius: 8, padding: "0.6rem" }}>
+              {authInfo}
+            </div>
+          )}
           <button className="big-btn" type="submit" disabled={authLoading}>
-            {authLoading ? "…" : authMode === "login" ? "LOG IN" : "CREATE ACCOUNT"}
+            {authLoading ? <span className="spinner" /> : authMode === "login" ? "LOG IN" : "CREATE ACCOUNT"}
           </button>
         </form>
       </div>
     </div>
   );
 
-  // ── LOBBY ────────────────────────────────────────────────────────────────────
-  if (screen === "lobby") return (
-    <div style={{ minHeight: "100vh", background: BG, color: TEXT_HI }}>
-      <style>{GLOBAL_CSS}</style>
+  // ══════════════════════════════════════════════════════════════════════════════
+  // SCREEN: LOBBY
+  // ══════════════════════════════════════════════════════════════════════════════
+  if (screen === "lobby") {
+    const activeGames    = myGames.filter(g => g.phase !== "gameover");
+    const completedGames = myGames.filter(g => g.phase === "gameover");
 
-      <div style={{ background: SURFACE, borderBottom: `1px solid ${BORDER}`, padding: "0.85rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.6rem", letterSpacing: "2px" }}>
-          TIC TAC <span style={{ color: "#FF6B35" }}>SHOW</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ color: TEXT_LO, fontSize: "0.85rem" }}>{user.username}</span>
-          <button onClick={() => { signOut(); setUser(null); }}
-            style={{ background: "transparent", border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT_LO, padding: "0.4rem 0.8rem", cursor: "pointer", fontSize: "0.8rem" }}>
-            Log out
-          </button>
-        </div>
-      </div>
+    return (
+      <div style={{ minHeight: "100vh", background: BG, color: HI }}>
+        <style>{GLOBAL_CSS}</style>
 
-      <div style={{ maxWidth: 600, margin: "0 auto", padding: "1.5rem" }}>
-        <div style={{ display: "flex", gap: "0.8rem", marginBottom: "2rem" }}>
-          <button className="big-btn" onClick={() => setScreen("create")} style={{ flex: 1 }}>NEW GAME</button>
-          <button onClick={() => setScreen("join")}
-            style={{ flex: 1, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_HI, fontSize: "1.1rem", fontFamily: "'Bebas Neue',cursive", letterSpacing: "3px", cursor: "pointer" }}>
-            JOIN GAME
-          </button>
-        </div>
+        {/* Top nav */}
+        <nav style={{
+          background: SURF, borderBottom: `1px solid ${BORDER}`,
+          padding: "0 2rem", display: "flex", alignItems: "center",
+          justifyContent: "space-between", height: 60,
+          position: "sticky", top: 0, zIndex: 100,
+        }}>
+          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "2px" }}>
+            TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+            <span style={{ color: LO, fontSize: "0.88rem", fontFamily: "'Roboto Mono',monospace" }}>
+              {user.username}
+            </span>
+            <button className="ghost-btn" onClick={() => { signOut(); setUser(null); }}
+              style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
+              Log out
+            </button>
+          </div>
+        </nav>
 
-        <div style={{ fontFamily: "'Roboto Mono',monospace", fontSize: "0.7rem", color: TEXT_LO, letterSpacing: "2px", marginBottom: "1rem" }}>YOUR GAMES</div>
-        {lobbyLoading && <div style={{ color: TEXT_LO, textAlign: "center", padding: "2rem" }}>Loading…</div>}
-        {!lobbyLoading && myGames.length === 0 && (
-          <div style={{ color: TEXT_LO, textAlign: "center", padding: "3rem", fontStyle: "italic", fontFamily: "'DM Serif Display',serif" }}>No games yet — start one!</div>
-        )}
-        {myGames.map(g => {
-          const role    = g.player1_id === user.id ? "p1" : "p2";
-          const oppName = role === "p1" ? (g.player2_name || "Waiting for opponent…") : g.player1_name;
-          const meta    = DIFFICULTY_META[g.difficulty] ?? DIFFICULTY_META.beginner;
-          const myTurn  = g.phase === "choosing" && g.choosing_player === role;
-          return (
-            <div key={g.id} onClick={() => { resetGameState(g); setScreen("game"); }}
-              style={{ background: SURFACE, border: `1px solid ${myTurn ? meta.color : BORDER}`, borderRadius: 16, padding: "1.2rem 1.5rem", marginBottom: "0.8rem", cursor: "pointer", transition: "all 0.2s", animation: "fadeIn 0.3s ease" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.1rem", letterSpacing: "1px" }}>vs {oppName}</div>
-                <div style={{ background: `${meta.color}22`, border: `1px solid ${meta.color}44`, borderRadius: 20, padding: "0.15rem 0.6rem", fontSize: "0.65rem", color: meta.color, fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px" }}>
-                  {meta.label}
-                </div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: "0.75rem", color: TEXT_LO, fontFamily: "'Roboto Mono',monospace" }}>
-                  {g.phase === "waiting"   ? "Waiting for opponent to join" :
-                   g.phase === "gameover"  ? `Game over — ${g.winner === role ? "You won!" : g.winner === "draw" ? "Draw" : "You lost"}` :
-                   myTurn                  ? "Your turn to pick" :
-                   g.phase === "answering" ? "Answering in progress…" :
-                                             "Opponent's turn"}
-                </div>
-                {myTurn && <div style={{ fontSize: "0.65rem", color: meta.color, fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px" }}>YOUR TURN</div>}
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1.5rem" }}>
+
+          {/* Hero CTAs */}
+          <div style={{ display: "flex", gap: "1rem", marginBottom: "3rem", flexWrap: "wrap" }}>
+            <button className="big-btn" onClick={() => { setGameMode("vs_friend"); setScreen("create"); }}
+              style={{ flex: "1 1 220px", maxWidth: 340, width: "auto" }}>
+              NEW GAME VS FRIEND
+            </button>
+            <button onClick={() => { setGameMode("vs_cpu"); setScreen("create"); }}
+              style={{
+                flex: "1 1 200px", maxWidth: 300, background: SURF2,
+                border: `1.5px solid ${BORDER}`, borderRadius: 12, color: HI,
+                fontSize: "1.25rem", fontFamily: "'Bebas Neue',cursive", letterSpacing: "3px",
+                cursor: "pointer", transition: "all 0.2s", padding: "1rem 2.5rem",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT2; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.transform = "none"; }}>
+              PLAY vs CPU
+            </button>
+            <button onClick={() => setScreen("join")}
+              style={{
+                flex: "1 1 160px", maxWidth: 200, background: "transparent",
+                border: `1.5px solid ${BORDER}`, borderRadius: 12, color: MID,
+                fontSize: "1.1rem", fontFamily: "'Bebas Neue',cursive", letterSpacing: "3px",
+                cursor: "pointer", transition: "all 0.2s", padding: "1rem 1.5rem",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = MID; e.currentTarget.style.color = HI; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MID; }}>
+              JOIN BY CODE
+            </button>
+          </div>
+
+          {lobbyLoading && (
+            <div style={{ color: LO, textAlign: "center", padding: "3rem", fontStyle: "italic" }}>
+              Loading your games…
+            </div>
+          )}
+
+          {/* Active games */}
+          {!lobbyLoading && activeGames.length > 0 && (
+            <div style={{ marginBottom: "2.5rem" }}>
+              <div className="section-label">Active Games</div>
+              <div className="lobby-grid">
+                {activeGames.map(g => {
+                  const role    = g.player1_id === user.id ? "p1" : "p2";
+                  const oppName = role === "p1" ? (g.player2_name || "Waiting for opponent…") : g.player1_name;
+                  const meta    = DIFFICULTY_META[g.difficulty] ?? DIFFICULTY_META.beginner;
+                  const myTurn  = g.phase === "choosing" && g.choosing_player === role;
+                  const waiting = g.phase === "waiting";
+                  const answering = g.phase === "answering";
+                  return (
+                    <div key={g.id} className="game-card"
+                      style={{ borderColor: myTurn ? meta.color : BORDER }}
+                      onClick={() => { resetGameState(g); setScreen("game"); }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.15rem", letterSpacing: "1px" }}>
+                          vs {oppName}
+                        </div>
+                        <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+                          <div style={{
+                            background: `${meta.color}22`, border: `1px solid ${meta.color}44`,
+                            borderRadius: 20, padding: "0.12rem 0.55rem",
+                            fontSize: "0.62rem", color: meta.color,
+                            fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px",
+                          }}>
+                            {meta.label}
+                          </div>
+                          {myTurn && (
+                            <div style={{
+                              background: `${ACCENT}22`, border: `1px solid ${ACCENT}55`,
+                              borderRadius: 20, padding: "0.12rem 0.55rem",
+                              fontSize: "0.62rem", color: ACCENT,
+                              fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px",
+                              animation: "blink 2s ease infinite",
+                            }}>
+                              YOUR TURN
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontSize: "0.78rem", color: LO, fontFamily: "'Roboto Mono',monospace" }}>
+                          {waiting ? "Waiting for opponent to join" :
+                           answering ? "Both players answering…" :
+                           myTurn ? "Your turn to pick a square" :
+                           "Opponent's turn to pick"}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: MID, fontFamily: "'Roboto Mono',monospace" }}>
+                          {(g.scores?.p1 ?? 0)}–{(g.scores?.p2 ?? 0)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+          )}
 
-  // ── CREATE GAME ──────────────────────────────────────────────────────────────
-  if (screen === "create") return (
-    <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-      <style>{GLOBAL_CSS}</style>
-      <div style={{ width: "100%", maxWidth: 480 }}>
-        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2.5rem", letterSpacing: "4px", color: TEXT_HI, marginBottom: "0.4rem" }}>NEW GAME</div>
-        <div style={{ color: TEXT_LO, fontFamily: "'DM Serif Display',serif", fontStyle: "italic", marginBottom: "2rem" }}>Pick a difficulty, then share the invite link</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "2rem" }}>
-          {Object.entries(DIFFICULTY_META).map(([key, meta]) => (
-            <button key={key} onClick={() => setDifficulty(key)}
-              style={{ background: SURFACE, border: `2px solid ${difficulty === key ? meta.color : BORDER}`, borderRadius: 16, padding: "1.2rem 1.5rem", cursor: "pointer", textAlign: "left", color: TEXT_HI, transition: "all 0.2s" }}>
-              <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.5rem", letterSpacing: "2px", color: meta.color }}>{meta.label}</div>
-              <div style={{ color: TEXT_MID, fontSize: "0.85rem", fontFamily: "'DM Serif Display',serif", fontStyle: "italic" }}>{meta.sublabel}</div>
-            </button>
-          ))}
+          {/* Completed games */}
+          {!lobbyLoading && completedGames.length > 0 && (
+            <div>
+              <div className="section-label">Completed Games</div>
+              <div className="lobby-grid">
+                {completedGames.map(g => {
+                  const role    = g.player1_id === user.id ? "p1" : "p2";
+                  const oppName = role === "p1" ? g.player2_name : g.player1_name;
+                  const meta    = DIFFICULTY_META[g.difficulty] ?? DIFFICULTY_META.beginner;
+                  const iWon    = g.winner === role;
+                  const isDraw  = g.winner === "draw";
+                  return (
+                    <div key={g.id} className="game-card"
+                      style={{ opacity: 0.7 }}
+                      onClick={() => { resetGameState(g); setScreen("game"); }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.1rem", letterSpacing: "1px" }}>
+                          vs {oppName}
+                        </div>
+                        <div style={{
+                          background: `${meta.color}22`, border: `1px solid ${meta.color}44`,
+                          borderRadius: 20, padding: "0.12rem 0.55rem",
+                          fontSize: "0.62rem", color: meta.color,
+                          fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px",
+                        }}>
+                          {meta.label}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div style={{ fontSize: "0.78rem", fontFamily: "'Roboto Mono',monospace",
+                          color: isDraw ? MID : iWon ? PC.p1 : "#FC5C65" }}>
+                          {isDraw ? "Draw" : iWon ? "Won" : "Lost"}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: MID, fontFamily: "'Roboto Mono',monospace" }}>
+                          {(g.scores?.p1 ?? 0)}–{(g.scores?.p2 ?? 0)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {!lobbyLoading && myGames.length === 0 && (
+            <div style={{ textAlign: "center", padding: "4rem 2rem", color: LO, fontStyle: "italic", fontSize: "1.15rem" }}>
+              No games yet — challenge a friend or play vs the CPU!
+            </div>
+          )}
         </div>
-        <button className="big-btn" onClick={createGame}>CREATE &amp; GET INVITE LINK</button>
-        <button onClick={() => setScreen("lobby")} style={{ marginTop: "1rem", width: "100%", background: "transparent", border: "none", color: TEXT_LO, cursor: "pointer", fontFamily: "'DM Serif Display',serif", fontStyle: "italic" }}>
-          Back to lobby
-        </button>
       </div>
-    </div>
-  );
+    );
+  }
 
-  // ── JOIN GAME ────────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════════
+  // SCREEN: CREATE
+  // ══════════════════════════════════════════════════════════════════════════════
+  if (screen === "create") {
+    const isCpu = gameMode === "vs_cpu";
+    return (
+      <div style={{ minHeight: "100vh", background: BG, color: HI }}>
+        <style>{GLOBAL_CSS}</style>
+
+        <nav style={{ background: SURF, borderBottom: `1px solid ${BORDER}`, padding: "0 2rem", display: "flex", alignItems: "center", height: 60, gap: "1.2rem" }}>
+          <button className="ghost-btn" onClick={() => { setScreen("lobby"); setCreateError(""); }}
+            style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
+            ← Back
+          </button>
+          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px", color: HI }}>
+            NEW GAME
+          </div>
+        </nav>
+
+        <div style={{ maxWidth: 680, margin: "3rem auto", padding: "0 1.5rem" }}>
+
+          {/* Mode toggle */}
+          <div className="section-label">Game Mode</div>
+          <div style={{ display: "flex", gap: "0.75rem", marginBottom: "2.5rem" }}>
+            {[
+              { key: "vs_friend", label: "VS FRIEND", sub: "Async multiplayer — play at your own pace" },
+              { key: "vs_cpu",    label: "VS CPU",    sub: "Single player — challenge the computer" },
+            ].map(m => (
+              <button key={m.key} className="diff-card"
+                onClick={() => setGameMode(m.key)}
+                style={{ flex: 1, borderColor: gameMode === m.key ? ACCENT : BORDER }}>
+                <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.3rem", letterSpacing: "2px", color: gameMode === m.key ? ACCENT : HI }}>
+                  {m.label}
+                </div>
+                <div style={{ color: LO, fontSize: "0.82rem", marginTop: "0.25rem" }}>{m.sub}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Question difficulty */}
+          <div className="section-label">Question Difficulty</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem", marginBottom: "2.5rem" }}>
+            {Object.entries(DIFFICULTY_META).map(([key, meta]) => (
+              <button key={key} className="diff-card"
+                onClick={() => setQDiff(key)}
+                style={{ borderColor: qDiff === key ? meta.color : BORDER }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px", color: meta.color }}>
+                      {meta.label}
+                    </div>
+                    <div style={{ color: LO, fontSize: "0.85rem", fontStyle: "italic" }}>{meta.sublabel}</div>
+                  </div>
+                  {qDiff === key && (
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* CPU difficulty (only if vs CPU) */}
+          {isCpu && (
+            <>
+              <div className="section-label">CPU Difficulty</div>
+              <div style={{ display: "flex", gap: "0.65rem", marginBottom: "2.5rem", flexWrap: "wrap" }}>
+                {[
+                  { key: "easy",   label: "EASY",   sub: "Makes mistakes, picks common answers",  color: ACCENT2 },
+                  { key: "medium", label: "MEDIUM", sub: "Consistent, competitive answers",         color: "#F7B731" },
+                  { key: "hard",   label: "HARD",   sub: "Picks rare answers, tough to beat",       color: "#FC5C65" },
+                ].map(d => (
+                  <button key={d.key} className="diff-card"
+                    onClick={() => setCpuDiff(d.key)}
+                    style={{ flex: "1 1 160px", borderColor: cpuDiff === d.key ? d.color : BORDER }}>
+                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.2rem", letterSpacing: "2px", color: cpuDiff === d.key ? d.color : HI }}>
+                      {d.label}
+                    </div>
+                    <div style={{ color: LO, fontSize: "0.78rem", marginTop: "0.2rem" }}>{d.sub}</div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {createError && (
+            <div style={{
+              color: "#FC5C65", fontSize: "0.88rem", marginBottom: "1.2rem",
+              background: "#FC5C6515", border: "1px solid #FC5C6533",
+              borderRadius: 10, padding: "0.85rem 1.1rem", lineHeight: 1.5,
+            }}>
+              {createError}
+            </div>
+          )}
+
+          <button className="big-btn" disabled={createLoading}
+            onClick={isCpu ? startCpuGame : createGame}>
+            {createLoading
+              ? <span className="spinner" />
+              : isCpu ? `START vs ${CPU_NAMES[cpuDiff] ?? "CPU"}` : "CREATE GAME & GET INVITE LINK"}
+          </button>
+
+          {!isCpu && (
+            <p style={{ textAlign: "center", color: LO, fontSize: "0.85rem", marginTop: "1rem", fontStyle: "italic" }}>
+              You'll get a shareable link and 6-digit code to send your friend.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // SCREEN: JOIN
+  // ══════════════════════════════════════════════════════════════════════════════
   if (screen === "join") return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <style>{GLOBAL_CSS}</style>
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2.5rem", letterSpacing: "4px", color: TEXT_HI, marginBottom: "0.4rem" }}>JOIN GAME</div>
-        <div style={{ color: TEXT_LO, fontFamily: "'DM Serif Display',serif", fontStyle: "italic", marginBottom: "2rem" }}>Enter the invite code your opponent shared</div>
-        <input className="ni" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())}
+      <div style={{ width: "100%", maxWidth: 440 }}>
+        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2.5rem", letterSpacing: "4px", marginBottom: "0.4rem" }}>JOIN GAME</div>
+        <div style={{ color: LO, fontStyle: "italic", marginBottom: "2rem" }}>Enter the invite code your friend shared with you</div>
+        <input className="ni" value={joinCode}
+          onChange={e => setJoinCode(e.target.value.toUpperCase())}
           placeholder="6-DIGIT CODE"
-          style={{ marginBottom: "1rem", fontSize: "1.5rem", letterSpacing: "4px", textAlign: "center", fontFamily: "'Bebas Neue',cursive" }} />
-        {joinError && <div style={{ color: "#FC5C65", marginBottom: "1rem", textAlign: "center", fontSize: "0.9rem" }}>{joinError}</div>}
+          style={{ marginBottom: "1.2rem", fontSize: "1.8rem", letterSpacing: "6px", textAlign: "center", fontFamily: "'Bebas Neue',cursive" }} />
+        {joinError && (
+          <div style={{ color: "#FC5C65", marginBottom: "1rem", fontSize: "0.9rem", textAlign: "center" }}>{joinError}</div>
+        )}
         <button className="big-btn" onClick={joinGame}>JOIN GAME</button>
         <button onClick={() => { setScreen("lobby"); setJoinCode(""); setJoinError(""); window.history.replaceState({}, "", window.location.pathname); }}
-          style={{ marginTop: "1rem", width: "100%", background: "transparent", border: "none", color: TEXT_LO, cursor: "pointer", fontFamily: "'DM Serif Display',serif", fontStyle: "italic" }}>
-          Back to lobby
+          style={{ marginTop: "1rem", width: "100%", background: "transparent", border: "none", color: LO, cursor: "pointer", fontStyle: "italic", fontSize: "0.9rem" }}>
+          ← Back to lobby
         </button>
       </div>
     </div>
   );
 
-  // ── GAME ─────────────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════════
+  // SCREEN: GAME
+  // ══════════════════════════════════════════════════════════════════════════════
   if (!game) return null;
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, color: TEXT_HI, display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: BG, color: HI, display: "flex", flexDirection: "column" }}>
       <style>{GLOBAL_CSS}</style>
 
       {/* ── Header ── */}
-      <div style={{ background: SURFACE, borderBottom: `1px solid ${BORDER}`, padding: "0.75rem 1.2rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button onClick={() => { setScreen("lobby"); loadMyGames(); }}
-          style={{ background: "transparent", border: "none", color: TEXT_LO, cursor: "pointer", fontFamily: "'Bebas Neue',cursive", fontSize: "0.9rem", letterSpacing: "1px" }}>
+      <nav style={{
+        background: SURF, borderBottom: `1px solid ${BORDER}`,
+        padding: "0 1.5rem", display: "flex", alignItems: "center",
+        justifyContent: "space-between", height: 56, flexShrink: 0,
+        position: "sticky", top: 0, zIndex: 100,
+      }}>
+        <button
+          onClick={() => { setScreen("lobby"); loadMyGames(); resetGameState(null); }}
+          style={{ background: "transparent", border: "none", color: LO, cursor: "pointer", fontFamily: "'Bebas Neue',cursive", fontSize: "0.95rem", letterSpacing: "1px", display: "flex", alignItems: "center", gap: "0.4rem" }}>
           ← LOBBY
         </button>
-        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.3rem", letterSpacing: "2px" }}>
-          TIC TAC <span style={{ color: "#FF6B35" }}>SHOW</span>
+        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px" }}>
+          TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
         </div>
-        {diffMeta && (
-          <div style={{ background: `${diffColor}22`, border: `1px solid ${diffColor}44`, borderRadius: 20, padding: "0.2rem 0.7rem", fontSize: "0.65rem", color: diffColor, fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px" }}>
-            {diffMeta.label}
-          </div>
-        )}
-      </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          {game.isCpu && (
+            <span style={{ fontFamily: "'Roboto Mono',monospace", fontSize: "0.7rem", color: LO }}>
+              vs {game.player2_name}
+            </span>
+          )}
+          {diffMeta && (
+            <div style={{
+              background: `${diffColor}22`, border: `1px solid ${diffColor}44`,
+              borderRadius: 20, padding: "0.2rem 0.75rem",
+              fontSize: "0.65rem", color: diffColor,
+              fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px",
+            }}>
+              {diffMeta.label}
+            </div>
+          )}
+        </div>
+      </nav>
 
-      {/* ── Waiting for P2 ── */}
+      {/* ── Waiting phase (multiplayer) ── */}
       {game.phase === "waiting" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2rem", letterSpacing: "3px", marginBottom: "1rem", animation: "blink 2s ease infinite" }}>WAITING FOR OPPONENT</div>
-          <div style={{ color: TEXT_LO, fontFamily: "'DM Serif Display',serif", fontStyle: "italic", marginBottom: "2rem" }}>Share this link with your opponent:</div>
-          <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "1rem 1.5rem", fontFamily: "'Roboto Mono',monospace", fontSize: "0.85rem", color: TEXT_MID, marginBottom: "1rem", wordBreak: "break-all", maxWidth: 480, textAlign: "center" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "3rem 2rem" }}>
+          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2rem", letterSpacing: "3px", marginBottom: "0.5rem", animation: "blink 2s ease infinite" }}>
+            WAITING FOR OPPONENT
+          </div>
+          <div style={{ color: LO, fontStyle: "italic", marginBottom: "2.5rem" }}>
+            Share this code or link to invite a friend
+          </div>
+
+          {/* Big code display */}
+          <div style={{
+            fontFamily: "'Bebas Neue',cursive", fontSize: "4rem", letterSpacing: "12px",
+            color: ACCENT, background: SURF, border: `2px solid ${ACCENT}55`,
+            borderRadius: 16, padding: "0.75rem 2.5rem", marginBottom: "1.5rem",
+            userSelect: "all",
+          }}>
+            {game.invite_code}
+          </div>
+
+          <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
+            <button className="sb" style={{ background: ACCENT }}
+              onClick={() => { navigator.clipboard.writeText(inviteLink); setCopyMsg("Link copied!"); setTimeout(() => setCopyMsg(""), 2500); }}>
+              {copyMsg || "COPY INVITE LINK"}
+            </button>
+            <button className="sb" style={{ background: SURF2, color: HI }}
+              onClick={() => { navigator.clipboard.writeText(game.invite_code); setCopyMsg("Code copied!"); setTimeout(() => setCopyMsg(""), 2500); }}>
+              COPY CODE
+            </button>
+          </div>
+
+          <div style={{ color: LO, fontSize: "0.8rem", maxWidth: 400, textAlign: "center", lineHeight: 1.6, fontFamily: "'Roboto Mono',monospace" }}>
             {inviteLink}
           </div>
-          <div style={{ display: "flex", gap: "0.8rem" }}>
-            <button className="sb" style={{ background: diffColor }} onClick={() => { navigator.clipboard.writeText(inviteLink); setCopyMsg("Copied!"); setTimeout(() => setCopyMsg(""), 2000); }}>
-              {copyMsg || "COPY LINK"}
-            </button>
-            <button className="sb" style={{ background: SURFACE2, color: TEXT_HI }} onClick={() => { navigator.clipboard.writeText(game.invite_code); setCopyMsg("Code copied!"); setTimeout(() => setCopyMsg(""), 2000); }}>
-              CODE: {game.invite_code}
-            </button>
+          <div style={{ color: LO, fontSize: "0.78rem", fontStyle: "italic", marginTop: "1.5rem" }}>
+            Page updates automatically when your friend joins
           </div>
-          <div style={{ marginTop: "1.5rem", color: TEXT_LO, fontSize: "0.8rem", fontStyle: "italic" }}>Page updates automatically when they join</div>
         </div>
       )}
 
       {/* ── Active game ── */}
       {game.phase !== "waiting" && (
-        <div style={{ flex: 1, padding: "1rem", maxWidth: 720, margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", gap: "0.9rem" }}>
+        <div className="game-wrap">
 
-          {/* Score bar */}
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            {["p1", "p2"].map(p => {
-              const name    = p === "p1" ? game.player1_name : game.player2_name;
-              const isMe    = myRole === p;
-              const picking = game.phase === "choosing" && game.choosing_player === p;
-              const col     = P_COLORS[p];
-              return (
-                <div key={p} style={{ flex: 1, background: SURFACE, border: `2px solid ${picking ? col : BORDER}`, borderRadius: 12, padding: "0.7rem 1rem", display: "flex", alignItems: "center", gap: "0.6rem", transition: "all 0.3s" }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: col, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontFamily: "'Bebas Neue',cursive", color: "#000", flexShrink: 0 }}>
-                    {p === "p1" ? "X" : "O"}
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: "0.82rem", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}{isMe ? " (you)" : ""}</div>
-                    <div style={{ fontSize: "0.62rem", color: TEXT_LO, fontFamily: "'Roboto Mono',monospace" }}>{(game.scores ?? {})[p] ?? 0} sq</div>
-                  </div>
-                  {picking && <div style={{ marginLeft: "auto", fontSize: "0.6rem", color: col, fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px", flexShrink: 0 }}>PICKING</div>}
-                </div>
-              );
-            })}
-          </div>
+          {/* ── Left: Score bar + Board ── */}
+          <div className="board-col">
 
-          {/* Status line */}
-          <div style={{ textAlign: "center", color: TEXT_LO, fontSize: "0.8rem", fontStyle: "italic", minHeight: "1.2rem" }}>
-            {game.phase === "choosing" && (isMyPickTurn ? "Your turn — tap a square" : `Waiting for ${game.choosing_player === "p1" ? game.player1_name : game.player2_name} to pick…`)}
-            {game.phase === "answering" && !revealData && (submitted ? "Answer locked in — waiting for opponent…" : activeQ ? `Clue: ${activeQ.clue}` : "")}
-          </div>
-
-          {/* Board */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" }}>
-            {(game.cells ?? []).map((cell, i) => {
-              const owner   = board[i];
-              const isOwned = owner === "p1" || owner === "p2";
-              const isReset = owner === "reset";
-              const isActive= game.active_cell === i;
-              const inWin   = (game.win_line ?? []).includes(i);
-              const canPick = game.phase === "choosing" && isMyPickTurn && !isOwned && !isReset && (owner === "null" || owner === null);
-              const q       = ANSWER_POOLS[cell.questionKey];
-              let cls = "cell";
-              if (isActive) cls += " active-cell";
-              if (inWin)    cls += " win-cell";
-              if (canPick)  cls += " pickable";
-
-              return (
-                <div key={i} className={cls}
-                  style={{
-                    borderColor: isOwned ? `${P_COLORS[owner]}55` : isActive ? diffColor : BORDER,
-                    background:  isOwned ? `${P_COLORS[owner]}18` : SURFACE,
-                  }}
-                  onClick={() => canPick && selectCell(i)}>
-                  {isOwned ? (
-                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2.6rem", color: P_COLORS[owner], lineHeight: 1 }}>
-                      {owner === "p1" ? "X" : "O"}
+            {/* Score bar */}
+            <div style={{ display: "flex", gap: "0.65rem", marginBottom: "1.2rem" }}>
+              {["p1", "p2"].map(p => {
+                const name    = p === "p1" ? game.player1_name : game.player2_name;
+                const isMe    = myRole === p;
+                const picking = game.phase === "choosing" && game.choosing_player === p;
+                const col     = PC[p];
+                return (
+                  <div key={p} style={{
+                    flex: 1, background: SURF, border: `1.5px solid ${picking ? col : BORDER}`,
+                    borderRadius: 14, padding: "0.85rem 1.1rem",
+                    display: "flex", alignItems: "center", gap: "0.75rem",
+                    transition: "all 0.3s",
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: "50%", background: col,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontFamily: "'Bebas Neue',cursive", fontSize: "1rem",
+                      color: "#000", flexShrink: 0, fontWeight: 700,
+                    }}>
+                      {p === "p1" ? "X" : "O"}
                     </div>
-                  ) : isReset ? (
-                    <div style={{ fontSize: "1.6rem", opacity: 0.45 }}>↺</div>
-                  ) : (
-                    <div style={{ fontSize: "0.68rem", color: isActive ? TEXT_HI : TEXT_MID, lineHeight: 1.55, fontFamily: "'Roboto Mono',monospace", fontWeight: 500 }}>
-                      {q && <div style={{ fontSize: "0.54rem", color: isActive ? diffColor : TEXT_LO, marginBottom: "0.3rem", letterSpacing: "1.5px", fontWeight: 700, textTransform: "uppercase" }}>{q.sport}</div>}
-                      {q ? (q.clue.length > 65 ? q.clue.slice(0, 63) + "…" : q.clue) : ""}
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: "0.9rem", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {name}{isMe ? " (you)" : ""}
+                      </div>
+                      <div style={{ fontSize: "0.65rem", color: LO, fontFamily: "'Roboto Mono',monospace" }}>
+                        {(game.scores ?? {})[p] ?? 0} squares
+                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                    {picking && (
+                      <div style={{ fontSize: "0.6rem", color: col, fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px", flexShrink: 0, animation: "blink 1.5s ease infinite" }}>
+                        PICKING
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Board */}
+            <div className="board-grid">
+              {(game.cells ?? []).map((cell, i) => {
+                const owner   = board[i];
+                const isOwned = owner === "p1" || owner === "p2";
+                const isReset = owner === "reset";
+                const isActive = game.active_cell === i;
+                const inWin   = (game.win_line ?? []).includes(i);
+                const canPick = game.phase === "choosing" && isMyPick && !isOwned && !isReset && (owner === "null" || owner == null);
+                const q       = ANSWER_POOLS[cell.questionKey];
+                let cls = "cell";
+                if (isActive) cls += " active-cell";
+                if (inWin)    cls += " win-cell";
+                if (canPick)  cls += " pickable";
+                return (
+                  <div key={i} className={cls}
+                    style={{
+                      borderColor: isOwned ? `${PC[owner]}55` : isActive ? diffColor : BORDER,
+                      background:  isOwned ? `${PC[owner]}18` : SURF,
+                    }}
+                    onClick={() => canPick && (game.isCpu ? selectCellCpu(i) : selectCell(i))}>
+                    {isOwned ? (
+                      <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "3rem", color: PC[owner], lineHeight: 1 }}>
+                        {owner === "p1" ? "X" : "O"}
+                      </div>
+                    ) : isReset ? (
+                      <div style={{ fontSize: "2rem", opacity: 0.45 }}>↺</div>
+                    ) : (
+                      <>
+                        {q && (
+                          <div style={{ fontSize: "0.55rem", color: isActive ? diffColor : LO, marginBottom: "0.35rem", letterSpacing: "1.5px", fontWeight: 700, textTransform: "uppercase", fontFamily: "'Roboto Mono',monospace" }}>
+                            {q.sport}
+                          </div>
+                        )}
+                        <div style={{ fontSize: "0.7rem", color: isActive ? HI : MID, lineHeight: 1.5, fontFamily: "'Roboto Mono',monospace", fontWeight: 500 }}>
+                          {q ? (q.clue.length > 72 ? q.clue.slice(0, 70) + "…" : q.clue) : ""}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Status under board */}
+            <div style={{ marginTop: "1rem", textAlign: "center", color: LO, fontSize: "0.82rem", fontStyle: "italic", minHeight: "1.4rem" }}>
+              {game.phase === "choosing" && (
+                isMyPick
+                  ? "Your turn — click a square to play it"
+                  : `Waiting for ${game.choosing_player === "p1" ? game.player1_name : game.player2_name} to pick…`
+              )}
+              {game.phase === "answering" && !revealData && !submitted && "Both players answering…"}
+              {game.phase === "answering" && submitted && !revealData && "Answer locked in — waiting for opponent…"}
+            </div>
           </div>
 
-          {/* Answer panel */}
-          {game.phase === "answering" && activeQ && !revealData && (
-            <div style={{ background: SURFACE, border: `1px solid ${diffColor}44`, borderRadius: 16, padding: "1.2rem", animation: "fadeIn 0.3s ease" }}>
-              <div style={{ fontSize: "0.62rem", color: diffColor, letterSpacing: "1px", marginBottom: "0.5rem", fontFamily: "'Roboto Mono',monospace" }}>{activeQ.sport} CLUE</div>
-              <div style={{ fontSize: "1rem", color: TEXT_HI, lineHeight: 1.65, marginBottom: "0.9rem", fontFamily: "'DM Serif Display',serif" }}>{activeQ.clue}</div>
-              {!submitted ? (
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <AutocompleteInput
-                    value={myAnswer}
-                    disabled={submitted}
-                    diffColor={diffColor}
-                    placeholder="Type a name…"
-                    onChange={v => setMyAnswer(v)}
-                    onSelect={v => setMyAnswer(v)}
-                    onSubmit={submitAnswer}
-                  />
-                  <button className="sb" style={{ background: diffColor }} onClick={submitAnswer} disabled={!myAnswer.trim()}>
-                    LOCK IN
+          {/* ── Right: Sidebar ── */}
+          <div className="sidebar">
+
+            {/* Clue + answer input */}
+            {game.phase === "answering" && activeQ && !revealData && (
+              <div style={{
+                background: SURF, border: `1.5px solid ${diffColor}55`,
+                borderRadius: 18, padding: "1.5rem", animation: "fadeIn 0.3s ease",
+              }}>
+                <div style={{ fontSize: "0.65rem", color: diffColor, letterSpacing: "2px", marginBottom: "0.6rem", fontFamily: "'Roboto Mono',monospace", fontWeight: 600 }}>
+                  {activeQ.sport} · CLUE
+                </div>
+                <div style={{ fontSize: "1.15rem", color: HI, lineHeight: 1.7, marginBottom: "1.4rem" }}>
+                  {activeQ.clue}
+                </div>
+                {!submitted ? (
+                  <div style={{ display: "flex", gap: "0.6rem" }}>
+                    <AutocompleteInput
+                      value={myAnswer}
+                      disabled={submitted}
+                      accentColor={diffColor}
+                      placeholder="Type a name…"
+                      onChange={v => setMyAnswer(v)}
+                      onSelect={v => setMyAnswer(v)}
+                      onSubmit={game.isCpu ? submitAnswerCpu : submitAnswer}
+                    />
+                    <button className="sb" style={{ background: diffColor }}
+                      onClick={game.isCpu ? submitAnswerCpu : submitAnswer}
+                      disabled={!myAnswer.trim()}>
+                      LOCK IN
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{
+                    background: SURF2, border: `1.5px solid ${PC[myRole ?? "p1"]}`,
+                    borderRadius: 10, padding: "0.9rem 1.2rem",
+                    color: PC[myRole ?? "p1"], fontFamily: "'Roboto Mono',monospace",
+                    fontSize: "0.85rem", textAlign: "center",
+                    display: "flex", alignItems: "center", gap: "0.6rem", justifyContent: "center",
+                  }}>
+                    <span className="spinner" style={{ borderTopColor: PC[myRole ?? "p1"] }} />
+                    Answer locked — waiting for {game.isCpu ? game.player2_name : "opponent"}…
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Picking prompt in sidebar */}
+            {game.phase === "choosing" && (
+              <div style={{
+                background: SURF, border: `1.5px solid ${BORDER}`,
+                borderRadius: 18, padding: "1.5rem", textAlign: "center",
+              }}>
+                {isMyPick ? (
+                  <>
+                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px", color: ACCENT, marginBottom: "0.4rem" }}>
+                      YOUR TURN
+                    </div>
+                    <div style={{ color: MID, fontSize: "0.9rem" }}>
+                      Click any open square on the board to play it
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.3rem", letterSpacing: "2px", color: LO, marginBottom: "0.4rem" }}>
+                      WAITING
+                    </div>
+                    <div style={{ color: LO, fontSize: "0.88rem" }}>
+                      {game.choosing_player === "p1" ? game.player1_name : game.player2_name} is choosing a square…
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Reveal panel */}
+            {revealData && (
+              <div style={{
+                background: SURF, border: `1.5px solid ${BORDER}`,
+                borderRadius: 18, padding: "1.5rem", animation: "fadeIn 0.3s ease",
+              }}>
+                <div style={{ fontFamily: "'Roboto Mono',monospace", letterSpacing: "3px", fontSize: "0.7rem", color: LO, textAlign: "center", marginBottom: "1.2rem" }}>
+                  ANSWERS REVEALED
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1.2rem" }}>
+                  {["p1", "p2"].map((p, idx) => {
+                    const show   = revealStep > idx;
+                    const pName  = p === "p1" ? game.player1_name : game.player2_name;
+                    const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
+                    const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
+                    const rarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
+                    const won    = revealData.result === p;
+                    return (
+                      <div key={p} style={{
+                        background: show ? (won ? `${PC[p]}15` : SURF2) : SURF,
+                        border: `1.5px solid ${show ? (won ? PC[p] : BORDER) : "transparent"}`,
+                        borderRadius: 12, padding: "1rem",
+                        transition: "all 0.5s", opacity: show ? 1 : 0.1,
+                      }}>
+                        <div style={{ fontSize: "0.62rem", color: LO, marginBottom: "0.45rem", letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace", textTransform: "uppercase" }}>
+                          {pName}{won ? " 🏆" : ""}
+                        </div>
+                        {show ? (
+                          <>
+                            <div style={{ fontSize: "0.95rem", color: valid ? HI : "#FC5C65", fontWeight: 700, marginBottom: valid && rarity != null ? "0.7rem" : 0 }}>
+                              {answer}{!valid && " ✗"}
+                            </div>
+                            {valid && rarity != null && <RarityBar score={rarity} />}
+                            {!valid && <div style={{ fontSize: "0.7rem", color: "#FC5C65", fontFamily: "'Roboto Mono',monospace", marginTop: "0.3rem" }}>invalid answer</div>}
+                          </>
+                        ) : (
+                          <div style={{ color: BORDER, fontSize: "2rem", textAlign: "center", padding: "0.5rem 0" }}>?</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {revealStep >= 3 && (
+                  <div style={{
+                    textAlign: "center", fontFamily: "'Bebas Neue',cursive",
+                    fontSize: "1.3rem", letterSpacing: "3px",
+                    color: revealData.result === "reset" ? LO : PC[revealData.result],
+                    animation: "fadeIn 0.4s ease",
+                  }}>
+                    {revealData.result === "reset"
+                      ? "TIE — SQUARE REPLAYED"
+                      : `${revealData.winnerName} WINS THE SQUARE`}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Game over */}
+            {game.phase === "gameover" && !revealData && (
+              <div style={{
+                background: SURF, border: `2px solid ${diffColor}`,
+                borderRadius: 20, padding: "2rem", textAlign: "center", animation: "fadeUp 0.4s ease",
+              }}>
+                <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2.4rem", letterSpacing: "4px", marginBottom: "0.5rem" }}>
+                  {game.winner === "draw" ? "IT'S A DRAW" :
+                   game.winner === myRole ? "YOU WIN! 🏆" :
+                   `${game.winner === "p1" ? game.player1_name : game.player2_name} WINS!`}
+                </div>
+                <div style={{ color: MID, fontStyle: "italic", marginBottom: "1.75rem", fontSize: "1rem" }}>
+                  {game.player1_name} {(game.scores ?? {}).p1 ?? 0} – {(game.scores ?? {}).p2 ?? 0} {game.player2_name}
+                </div>
+                <button className="big-btn" onClick={() => { setScreen("lobby"); loadMyGames(); resetGameState(null); }}>
+                  BACK TO LOBBY
+                </button>
+                {game.isCpu && (
+                  <button className="big-btn" onClick={startCpuGame}
+                    style={{ marginTop: "0.75rem", background: "linear-gradient(135deg,#2b2b46,#3a3a60)" }}>
+                    PLAY AGAIN
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Multiplayer invite while in game (waiting phase already handled above) */}
+            {!game.isCpu && game.phase !== "waiting" && game.phase !== "gameover" && !revealData && (
+              <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "1rem 1.2rem" }}>
+                <div className="section-label" style={{ marginBottom: "0.5rem" }}>Invite code</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                  <span style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.5rem", letterSpacing: "6px", color: ACCENT }}>
+                    {game.invite_code}
+                  </span>
+                  <button className="sb" style={{ background: SURF3, color: HI, fontSize: "0.8rem", padding: "0.5rem 0.9rem" }}
+                    onClick={() => { navigator.clipboard.writeText(inviteLink); setCopyMsg("Copied!"); setTimeout(() => setCopyMsg(""), 2000); }}>
+                    {copyMsg || "COPY"}
                   </button>
                 </div>
-              ) : (
-                <div style={{ background: SURFACE2, border: `1px solid ${P_COLORS[myRole]}`, borderRadius: 10, padding: "0.9rem 1.2rem", color: P_COLORS[myRole], fontFamily: "'Roboto Mono',monospace", fontSize: "0.85rem", textAlign: "center" }}>
-                  ✓ Answer locked — waiting for opponent…
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Reveal panel */}
-          {revealData && (
-            <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "1.5rem", animation: "fadeIn 0.3s ease" }}>
-              <div style={{ fontFamily: "'Bebas Neue',cursive", letterSpacing: "4px", fontSize: "0.85rem", color: TEXT_LO, textAlign: "center", marginBottom: "1.2rem" }}>
-                ANSWERS REVEALED
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.8rem", marginBottom: "1.2rem" }}>
-                {["p1", "p2"].map((p, i) => {
-                  const show   = revealStep > i;
-                  const name   = p === "p1" ? game.player1_name : game.player2_name;
-                  const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
-                  const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
-                  const rarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
-                  const won    = revealData.result === p;
-                  return (
-                    <div key={p} style={{
-                      background:   show ? (won ? `${P_COLORS[p]}15` : SURFACE2) : SURFACE,
-                      border:       `1px solid ${show ? (won ? P_COLORS[p] : BORDER) : "transparent"}`,
-                      borderRadius: 12, padding: "1rem",
-                      transition:   "all 0.5s",
-                      opacity:      show ? 1 : 0.15,
-                    }}>
-                      <div style={{ fontSize: "0.62rem", color: TEXT_LO, marginBottom: "0.4rem", letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace", textTransform: "uppercase" }}>
-                        {name}{won ? " 🏆" : ""}
-                      </div>
-                      {show ? (
-                        <>
-                          <div style={{ fontSize: "0.95rem", color: valid ? TEXT_HI : "#FC5C65", fontWeight: 700, marginBottom: valid && rarity != null ? "0.6rem" : 0, fontFamily: "'DM Serif Display',serif" }}>
-                            {answer}{!valid && " ✗"}
-                          </div>
-                          {valid && rarity != null && <RarityBar score={rarity} />}
-                          {!valid && <div style={{ fontSize: "0.7rem", color: "#FC5C65", fontFamily: "'Roboto Mono',monospace", marginTop: "0.3rem" }}>not a valid answer</div>}
-                        </>
-                      ) : (
-                        <div style={{ color: BORDER, fontSize: "2rem", textAlign: "center", padding: "0.5rem 0" }}>?</div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {revealStep >= 3 && (
-                <div style={{ textAlign: "center", fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "3px", color: revealData.result === "reset" ? TEXT_LO : P_COLORS[revealData.result], animation: "fadeIn 0.4s ease" }}>
-                  {revealData.result === "reset" ? "TIE — SQUARE REPLAYED" : `${revealData.winnerName} WINS THE SQUARE`}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Game over */}
-          {game.phase === "gameover" && !revealData && (
-            <div style={{ background: SURFACE, border: `2px solid ${diffColor}`, borderRadius: 20, padding: "2rem", textAlign: "center", animation: "fadeIn 0.4s ease" }}>
-              <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2.4rem", letterSpacing: "4px", marginBottom: "0.4rem" }}>
-                {game.winner === "draw"    ? "IT'S A DRAW" :
-                 game.winner === myRole   ? "YOU WIN! 🏆" :
-                 `${game.winner === "p1" ? game.player1_name : game.player2_name} WINS!`}
-              </div>
-              <div style={{ color: TEXT_MID, fontFamily: "'DM Serif Display',serif", fontStyle: "italic", marginBottom: "1.5rem" }}>
-                {game.player1_name} {(game.scores ?? {}).p1 ?? 0} – {(game.scores ?? {}).p2 ?? 0} {game.player2_name}
-              </div>
-              <button className="big-btn" onClick={() => { setScreen("lobby"); loadMyGames(); }}>BACK TO LOBBY</button>
-            </div>
-          )}
-
+            )}
+          </div>
         </div>
       )}
     </div>
