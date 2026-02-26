@@ -677,14 +677,24 @@ export default function App() {
       if (r.confirmed) {
         setUser(getUser());
       } else if (r.emailConfirmationRequired) {
-        setAuthInfo("Account created! Check your inbox for a confirmation email, then come back and log in.");
+        // Email confirmation is on — should be disabled in Supabase dashboard
+        setAuthError(
+          "Account created but email confirmation is required. " +
+          "Ask the site admin to disable 'Confirm email' in Supabase → Authentication → Settings."
+        );
       } else {
         // Surface the actual Supabase error — they use "msg" not "error_description"
+        const code   = r.data?.error_code ?? r.data?.code ?? "";
         const errMsg = r.data?.msg || r.data?.message || r.data?.error_description
-          || (typeof r.data === "string" ? r.data : null)
-          || `Sign up failed (${r.status})`;
+          || (typeof r.data === "string" ? r.data : null);
         console.error("signup failed:", r.status, r.data);
-        setAuthError(errMsg);
+        if (code === "user_already_exists" || r.status === 422) {
+          setAuthError("An account with that email already exists. Try logging in instead.");
+        } else if (r.status === 0 || r.status >= 500) {
+          setAuthError("Connection error — please check your internet and try again.");
+        } else {
+          setAuthError(errMsg || `Sign up failed (${r.status}). Please try again.`);
+        }
       }
     } else {
       const r = await signIn(authForm.email, authForm.password);
@@ -695,11 +705,13 @@ export default function App() {
         const errMsg  = r.data?.msg || r.data?.message || r.data?.error_description;
         console.error("signin failed:", r.status, r.data);
         if (errCode === "email_not_confirmed") {
-          setAuthError("Email not confirmed. Check your inbox and click the confirmation link, then try again.");
+          setAuthError("Your email isn't confirmed yet. Check your inbox for the confirmation link.");
         } else if (errCode === "invalid_credentials" || r.status === 400) {
-          setAuthError(errMsg || "Invalid email or password");
+          setAuthError("Incorrect email or password.");
+        } else if (r.status === 0 || r.status >= 500) {
+          setAuthError("Connection error — please check your internet and try again.");
         } else {
-          setAuthError(errMsg || `Login failed (${r.status})`);
+          setAuthError(errMsg || `Login failed (${r.status}). Please try again.`);
         }
       }
     }
