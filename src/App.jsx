@@ -142,51 +142,33 @@ function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase()
 const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
 /*
-  cpuDiff controls answer quality, independent of question difficulty:
-  easy   — 20% chance of invalid answer; rest picks from common answers (rarity 45-95)
-  medium — always valid, picks from mid-high rarity (25-80)
-  hard   — always valid, picks from rare answers (5-30), 15% chance of a mid-tier slip
+  cpuDiff controls answer quality only — completely independent of question difficulty.
+  easy   — picks common answers (rarity 50–99); falls back to any valid answer
+  medium — picks mid-tier answers (rarity 20–60); falls back to any valid answer
+  hard   — picks rare answers (rarity 1–30); falls back to mid-tier, then any valid answer
 */
 function cpuPickAnswer(qKey, cpuDiff) {
   const pool = ANSWER_POOLS[qKey]?.answers ?? [];
   if (!pool.length) return { name: "No answer", valid: false, rarity: null };
 
-  const validNames = new Set(pool.map(a => normalizeStr(a.name)));
-
-  if (cpuDiff === "easy") {
-    // 20% chance CPU makes a mistake
-    if (Math.random() < 0.20) {
-      const wrongOptions = ATHLETE_INDEX.filter(n => !validNames.has(normalizeStr(n)));
-      const wrong = wrongOptions.length
-        ? wrongOptions[Math.floor(Math.random() * wrongOptions.length)]
-        : "Mystery Player";
-      return { name: wrong, valid: false, rarity: null };
-    }
-    const cands = pool.filter(a => a.rarity >= 45);
-    const src = cands.length ? cands : pool;
+  function pickFrom(candidates) {
+    const src = candidates.length ? candidates : pool;
     const pick = src[Math.floor(Math.random() * src.length)];
     return { name: pick.name, valid: true, rarity: pick.rarity };
+  }
+
+  if (cpuDiff === "easy") {
+    return pickFrom(pool.filter(a => a.rarity >= 50));
   }
 
   if (cpuDiff === "medium") {
-    const cands = pool.filter(a => a.rarity >= 25 && a.rarity <= 80);
-    const src = cands.length ? cands : pool;
-    const pick = src[Math.floor(Math.random() * src.length)];
-    return { name: pick.name, valid: true, rarity: pick.rarity };
+    return pickFrom(pool.filter(a => a.rarity >= 20 && a.rarity <= 60));
   }
 
-  // hard
-  if (Math.random() < 0.15) {
-    const mid = pool.filter(a => a.rarity >= 30 && a.rarity <= 65);
-    if (mid.length) {
-      const pick = mid[Math.floor(Math.random() * mid.length)];
-      return { name: pick.name, valid: true, rarity: pick.rarity };
-    }
-  }
-  const rare = pool.filter(a => a.rarity <= 30);
-  const src = rare.length ? rare : pool;
-  const pick = src[Math.floor(Math.random() * src.length)];
-  return { name: pick.name, valid: true, rarity: pick.rarity };
+  // hard — prefers rarest; falls back to mid-tier if no rare answers exist
+  const rare = pool.filter(a => a.rarity >= 1 && a.rarity <= 30);
+  if (rare.length) return pickFrom(rare);
+  return pickFrom(pool.filter(a => a.rarity >= 20 && a.rarity <= 60));
 }
 
 function cpuPickCell(board) {
@@ -1392,9 +1374,9 @@ export default function App() {
               <div className="section-label">CPU Difficulty</div>
               <div style={{ display: "flex", gap: "0.65rem", marginBottom: "2.5rem", flexWrap: "wrap" }}>
                 {[
-                  { key: "easy",   label: "EASY",   sub: "Makes mistakes, picks common answers",  color: ACCENT2 },
-                  { key: "medium", label: "MEDIUM", sub: "Consistent, competitive answers",         color: "#F7B731" },
-                  { key: "hard",   label: "HARD",   sub: "Picks rare answers, tough to beat",       color: "#FC5C65" },
+                  { key: "easy",   label: "EASY",   sub: "Picks obvious answers (rarity 50–99)",   color: ACCENT2 },
+                  { key: "medium", label: "MEDIUM", sub: "Picks mid-tier answers (rarity 20–60)",    color: "#F7B731" },
+                  { key: "hard",   label: "HARD",   sub: "Picks rare answers (rarity 1–30)",         color: "#FC5C65" },
                 ].map(d => (
                   <button key={d.key} className="diff-card"
                     onClick={() => setCpuDiff(d.key)}
