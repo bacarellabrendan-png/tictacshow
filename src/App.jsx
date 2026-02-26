@@ -564,16 +564,23 @@ export default function App() {
     const winnerName =
       move.result === "p1" ? g.player1_name :
       move.result === "p2" ? g.player2_name : null;
-    setRevealData({ move, result: move.result, winnerName });
+    const isSameAnswer  = move.p1_valid && move.p2_valid &&
+      normalizeStr(move.p1_answer ?? "") === normalizeStr(move.p2_answer ?? "");
+    const isBothInvalid = !move.p1_valid && !move.p2_valid;
+    // Snapshot the question NOW — active_cell will be nulled when game state updates
+    const revealQ = ANSWER_POOLS[move.question_key] ?? null;
+    setRevealData({ move, result: move.result, winnerName, isSameAnswer, isBothInvalid, q: revealQ });
     setRevealStep(0);
-    setTimeout(() => setRevealStep(1), 450);
-    setTimeout(() => setRevealStep(2), 1200);
-    setTimeout(() => setRevealStep(3), 2100);
-    setTimeout(() => {
-      setRevealData(null); setRevealStep(0);
-      setSubmitted(false); setMyAnswer(""); setCurrentMove(null);
-      resolving.current = false; showingReveal.current = false;
-    }, 5800);
+    // Stagger the answer cards in — no auto-close, user clicks Continue
+    setTimeout(() => setRevealStep(1), 350);
+    setTimeout(() => setRevealStep(2), 800);
+    setTimeout(() => setRevealStep(3), 1400);
+  }
+
+  function dismissReveal() {
+    setRevealData(null); setRevealStep(0);
+    setSubmitted(false); setMyAnswer(""); setCurrentMove(null);
+    resolving.current = false; showingReveal.current = false;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1536,60 +1543,10 @@ export default function App() {
               </div>
             )}
 
-            {/* Reveal panel */}
+            {/* Reveal placeholder in sidebar — keeps layout stable while modal is open */}
             {revealData && (
-              <div style={{
-                background: SURF, border: `1.5px solid ${BORDER}`,
-                borderRadius: 18, padding: "1.5rem", animation: "fadeIn 0.3s ease",
-              }}>
-                <div style={{ fontFamily: "'Roboto Mono',monospace", letterSpacing: "3px", fontSize: "0.7rem", color: LO, textAlign: "center", marginBottom: "1.2rem" }}>
-                  ANSWERS REVEALED
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1.2rem" }}>
-                  {["p1", "p2"].map((p, idx) => {
-                    const show   = revealStep > idx;
-                    const pName  = p === "p1" ? game.player1_name : game.player2_name;
-                    const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
-                    const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
-                    const rarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
-                    const won    = revealData.result === p;
-                    return (
-                      <div key={p} style={{
-                        background: show ? (won ? `${PC[p]}15` : SURF2) : SURF,
-                        border: `1.5px solid ${show ? (won ? PC[p] : BORDER) : "transparent"}`,
-                        borderRadius: 12, padding: "1rem",
-                        transition: "all 0.5s", opacity: show ? 1 : 0.1,
-                      }}>
-                        <div style={{ fontSize: "0.62rem", color: LO, marginBottom: "0.45rem", letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace", textTransform: "uppercase" }}>
-                          {pName}{won ? " 🏆" : ""}
-                        </div>
-                        {show ? (
-                          <>
-                            <div style={{ fontSize: "0.95rem", color: valid ? HI : "#FC5C65", fontWeight: 700, marginBottom: valid && rarity != null ? "0.7rem" : 0 }}>
-                              {answer}{!valid && " ✗"}
-                            </div>
-                            {valid && rarity != null && <RarityBar score={rarity} />}
-                            {!valid && <div style={{ fontSize: "0.7rem", color: "#FC5C65", fontFamily: "'Roboto Mono',monospace", marginTop: "0.3rem" }}>invalid answer</div>}
-                          </>
-                        ) : (
-                          <div style={{ color: BORDER, fontSize: "2rem", textAlign: "center", padding: "0.5rem 0" }}>?</div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                {revealStep >= 3 && (
-                  <div style={{
-                    textAlign: "center", fontFamily: "'Bebas Neue',cursive",
-                    fontSize: "1.3rem", letterSpacing: "3px",
-                    color: revealData.result === "reset" ? LO : PC[revealData.result],
-                    animation: "fadeIn 0.4s ease",
-                  }}>
-                    {revealData.result === "reset"
-                      ? "TIE — SQUARE REPLAYED"
-                      : `${revealData.winnerName} WINS THE SQUARE`}
-                  </div>
-                )}
+              <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "1rem", textAlign: "center", color: LO, fontStyle: "italic" }}>
+                Reviewing answers…
               </div>
             )}
 
@@ -1633,6 +1590,135 @@ export default function App() {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── REVEAL MODAL (full-screen overlay, dismisses on Continue click) ── */}
+      {revealData && (
+        <div style={{
+          position: "fixed", inset: 0,
+          background: "rgba(8,8,18,0.92)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 400, padding: "1.5rem",
+          animation: "fadeIn 0.2s ease",
+        }}>
+          <div style={{
+            background: SURF, border: `1.5px solid ${BORDER}`,
+            borderRadius: 24, padding: "2.5rem",
+            maxWidth: 620, width: "100%",
+            boxShadow: "0 32px 96px rgba(0,0,0,0.85)",
+          }}>
+            {/* Clue reminder — use snapshotted revealData.q, not activeQ (active_cell is null by now) */}
+            {revealData.q && (
+              <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+                <div style={{ fontSize: "0.62rem", color: diffColor, letterSpacing: "2px", fontFamily: "'Roboto Mono',monospace", marginBottom: "0.4rem" }}>
+                  {revealData.q.sport} · CLUE
+                </div>
+                <div style={{ color: MID, fontStyle: "italic", fontSize: "0.95rem", lineHeight: 1.5 }}>
+                  {revealData.q.clue}
+                </div>
+              </div>
+            )}
+
+            {/* Answer cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+              {["p1", "p2"].map((p, idx) => {
+                const show   = revealStep > idx;
+                const pName  = p === "p1" ? game.player1_name : game.player2_name;
+                const isMe   = myRole === p;
+                const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
+                const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
+                const rarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
+                const won    = revealData.result === p;
+                return (
+                  <div key={p} style={{
+                    background: show ? (won ? `${PC[p]}18` : SURF2) : SURF2,
+                    border: `2px solid ${show ? (won ? PC[p] : BORDER) : "transparent"}`,
+                    borderRadius: 16, padding: "1.4rem",
+                    transition: "background 0.45s, border-color 0.45s, opacity 0.45s, transform 0.45s",
+                    opacity: show ? 1 : 0,
+                    transform: show ? "translateY(0)" : "translateY(14px)",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
+                      <div style={{ fontFamily: "'Roboto Mono',monospace", fontSize: "0.65rem", letterSpacing: "1.5px", color: MID, textTransform: "uppercase" }}>
+                        {pName}{isMe ? " (you)" : ""}
+                      </div>
+                      {show && won && (
+                        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "0.8rem", color: PC[p], letterSpacing: "1px" }}>
+                          🏆 WINS
+                        </div>
+                      )}
+                    </div>
+                    {show ? (
+                      <>
+                        <div style={{
+                          fontSize: "1.1rem",
+                          color: !valid ? "#FC5C65" : won ? PC[p] : HI,
+                          fontWeight: 700, lineHeight: 1.3, marginBottom: "0.85rem",
+                        }}>
+                          {answer}
+                        </div>
+                        {!valid ? (
+                          <div style={{
+                            display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                            background: "#FC5C6520", border: "1px solid #FC5C6440",
+                            borderRadius: 6, padding: "0.25rem 0.65rem",
+                            fontSize: "0.68rem", color: "#FC5C65",
+                            fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px",
+                          }}>
+                            ✗ INVALID
+                          </div>
+                        ) : rarity != null ? (
+                          <RarityBar score={rarity} />
+                        ) : null}
+                      </>
+                    ) : (
+                      <div style={{ fontSize: "2.8rem", color: SURF3, textAlign: "center", padding: "0.6rem 0", fontFamily: "'Bebas Neue',cursive", letterSpacing: "4px" }}>
+                        ???
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Result banner */}
+            {revealStep >= 3 && (
+              <div style={{ textAlign: "center", marginBottom: "1.75rem", animation: "fadeUp 0.4s ease" }}>
+                {revealData.isSameAnswer ? (
+                  <>
+                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "3px", color: LO }}>SAME ANSWER</div>
+                    <div style={{ color: LO, fontStyle: "italic", fontSize: "0.88rem", marginTop: "0.25rem" }}>Square resets — pick again</div>
+                  </>
+                ) : revealData.isBothInvalid ? (
+                  <>
+                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "3px", color: LO }}>BOTH ANSWERS INVALID</div>
+                    <div style={{ color: LO, fontStyle: "italic", fontSize: "0.88rem", marginTop: "0.25rem" }}>Square resets — pick again</div>
+                  </>
+                ) : revealData.result === "reset" ? (
+                  <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "3px", color: LO }}>SQUARE RESETS</div>
+                ) : (
+                  <>
+                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2rem", letterSpacing: "3px", color: PC[revealData.result] }}>
+                      {revealData.winnerName} WINS THE SQUARE!
+                    </div>
+                    {revealData.move[`${revealData.result}_rarity`] != null &&
+                     revealData.move[`${revealData.result === "p1" ? "p2" : "p1"}_rarity`] != null && (
+                      <div style={{ color: MID, fontSize: "0.85rem", marginTop: "0.35rem", fontStyle: "italic" }}>
+                        Rarity: {revealData.move[`${revealData.result}_rarity`]}% vs {revealData.move[`${revealData.result === "p1" ? "p2" : "p1"}_rarity`]}%
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {revealStep >= 3 && (
+              <button className="big-btn" onClick={dismissReveal} style={{ animation: "fadeIn 0.4s ease" }}>
+                CONTINUE
+              </button>
             )}
           </div>
         </div>
