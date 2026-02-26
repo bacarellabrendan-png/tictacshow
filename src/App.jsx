@@ -310,7 +310,8 @@ const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Mono:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { font-size: 16px; }
-  body { background: ${BG}; color: ${HI}; font-family: 'DM Serif Display', Georgia, serif; -webkit-font-smoothing: antialiased; }
+  body { display: block; background: ${BG}; color: ${HI}; font-family: 'DM Serif Display', Georgia, serif; -webkit-font-smoothing: antialiased; }
+  #root { width: 100%; min-height: 100vh; }
   a { color: inherit; text-decoration: none; }
 
   @keyframes fadeIn  { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
@@ -390,7 +391,7 @@ const GLOBAL_CSS = `
   /* ─── Layout ─── */
   .game-wrap {
     display: flex; gap: 1.75rem; padding: 1.5rem;
-    max-width: 1150px; margin: 0 auto; align-items: flex-start;
+    max-width: 1200px; margin: 0 auto; align-items: flex-start;
   }
   .board-col {
     flex: 1 1 0; min-width: 0;
@@ -443,6 +444,17 @@ const GLOBAL_CSS = `
   }
 `;
 
+// ─── SPORT META ────────────────────────────────────────────────────────────────
+const SPORT_META = [
+  { key: "all",     label: "All Sports",      emoji: "🏆", sub: "Questions from every sport" },
+  { key: "nba",     label: "NBA",             emoji: "🏀", sub: "Basketball questions only" },
+  { key: "nfl",     label: "NFL",             emoji: "🏈", sub: "Football questions only" },
+  { key: "mlb",     label: "MLB",             emoji: "⚾", sub: "Baseball questions only" },
+  { key: "nhl",     label: "NHL",             emoji: "🏒", sub: "Hockey questions only" },
+  { key: "college", label: "College Sports",  emoji: "🎓", sub: "NCAA football & basketball" },
+  { key: "soccer",  label: "European Soccer", emoji: "⚽", sub: "Premier League, La Liga, Bundesliga, Serie A, Ligue 1, UCL" },
+];
+
 // ─── MAIN APP ──────────────────────────────────────────────────────────────────
 export default function App() {
   // Auth
@@ -462,6 +474,7 @@ export default function App() {
   const [qDiff,         setQDiff]         = useState("beginner");   // question difficulty
   const [cpuDiff,       setCpuDiff]       = useState("medium");     // cpu skill level
   const [gameMode,      setGameMode]      = useState("vs_friend");  // "vs_friend" | "vs_cpu"
+  const [sport,         setSport]         = useState("all");        // sport filter
   const [createLoading, setCreateLoading] = useState(false);
   const [createError,   setCreateError]   = useState("");
 
@@ -664,18 +677,20 @@ export default function App() {
   // START CPU GAME
   // ─────────────────────────────────────────────────────────────────────────────
   function startCpuGame() {
+    const firstPick = Math.random() < 0.5 ? "p1" : "p2";
     const g = {
       id: `cpu-${Date.now()}`,
       isCpu: true,
       cpuDiff,
       difficulty: qDiff,
-      cells: buildPuzzle(qDiff),
+      sport,
+      cells: buildPuzzle(qDiff, sport),
       phase: "choosing",
       board: Array(9).fill("null"),
       scores: { p1: 0, p2: 0 },
       win_line: [],
       active_cell: null,
-      choosing_player: "p1",
+      choosing_player: firstPick,
       winner: null,
       player1_id: user.id,
       player1_name: user.username,
@@ -692,17 +707,18 @@ export default function App() {
   async function createGame() {
     setCreateLoading(true); setCreateError("");
     try {
+      const firstPick = Math.random() < 0.5 ? "p1" : "p2";
       const payload = {
         invite_code: genCode(),
         difficulty: qDiff,
-        cells: buildPuzzle(qDiff),
+        cells: buildPuzzle(qDiff, sport),
         player1_id: user.id,
         player1_name: user.username,
         phase: "waiting",
         board: Array(9).fill("null"),
         scores: { p1: 0, p2: 0 },
         win_line: [],
-        choosing_player: "p1",
+        choosing_player: firstPick,
       };
       const r = await dbInsert("games", payload);
       if (r.ok && r.data?.[0]) {
@@ -853,8 +869,8 @@ export default function App() {
     const newScores = { ...g.scores };
     if (result !== "reset") newScores[result] = (newScores[result] || 0) + 1;
     const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
-    const nextPick = result === "reset" ? (g.choosing_player === "p1" ? "p2" : "p1")
-                                        : (result === "p1" ? "p2" : "p1");
+    // Simple alternation — the other player always picks next, regardless of who won
+    const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
     triggerReveal({ ...mv, result }, g);
     await dbUpdate("games", `?id=eq.${game.id}`, {
       board: newBoard, scores: newScores, active_cell: null,
@@ -888,8 +904,8 @@ export default function App() {
     const newScores = { ...g.scores };
     if (result !== "reset") newScores[result] = (newScores[result] || 0) + 1;
     const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
-    const nextPick = result === "reset" ? (g.choosing_player === "p1" ? "p2" : "p1")
-                                        : (result === "p1" ? "p2" : "p1");
+    // Simple alternation — the other player always picks next, regardless of who won
+    const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
     triggerReveal({ ...mv, result }, g);
     const updated = {
       ...g, board: newBoard, scores: newScores, active_cell: null,
@@ -1029,25 +1045,25 @@ export default function App() {
         {/* Top nav */}
         <nav style={{
           background: SURF, borderBottom: `1px solid ${BORDER}`,
-          padding: "0 2rem", display: "flex", alignItems: "center",
-          justifyContent: "space-between", height: 60,
           position: "sticky", top: 0, zIndex: 100,
         }}>
-          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "2px" }}>
-            TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-            <span style={{ color: LO, fontSize: "0.88rem", fontFamily: "'Roboto Mono',monospace" }}>
-              {user.username}
-            </span>
-            <button className="ghost-btn" onClick={() => { signOut(); setUser(null); }}
-              style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
-              Log out
-            </button>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
+            <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "2px" }}>
+              TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+              <span style={{ color: LO, fontSize: "0.88rem", fontFamily: "'Roboto Mono',monospace" }}>
+                {user.username}
+              </span>
+              <button className="ghost-btn" onClick={() => { signOut(); setUser(null); }}
+                style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
+                Log out
+              </button>
+            </div>
           </div>
         </nav>
 
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1.5rem" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
 
           {/* Hero CTAs */}
           <div style={{ display: "flex", gap: "1rem", marginBottom: "3rem", flexWrap: "wrap" }}>
@@ -1208,13 +1224,15 @@ export default function App() {
       <div style={{ minHeight: "100vh", background: BG, color: HI }}>
         <style>{GLOBAL_CSS}</style>
 
-        <nav style={{ background: SURF, borderBottom: `1px solid ${BORDER}`, padding: "0 2rem", display: "flex", alignItems: "center", height: 60, gap: "1.2rem" }}>
-          <button className="ghost-btn" onClick={() => { setScreen("lobby"); setCreateError(""); }}
-            style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
-            ← Back
-          </button>
-          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px", color: HI }}>
-            NEW GAME
+        <nav style={{ background: SURF, borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", height: 60, gap: "1.2rem" }}>
+            <button className="ghost-btn" onClick={() => { setScreen("lobby"); setCreateError(""); }}
+              style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
+              ← Back
+            </button>
+            <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px", color: HI }}>
+              NEW GAME
+            </div>
           </div>
         </nav>
 
@@ -1255,6 +1273,26 @@ export default function App() {
                   {qDiff === key && (
                     <div style={{ width: 10, height: 10, borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
                   )}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Sport filter */}
+          <div className="section-label">Sport</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.6rem", marginBottom: "2.5rem" }}>
+            {SPORT_META.map(s => (
+              <button key={s.key} className="diff-card"
+                onClick={() => setSport(s.key)}
+                style={{ borderColor: sport === s.key ? ACCENT2 : BORDER, padding: "0.85rem 1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                  <span style={{ fontSize: "1.3rem" }}>{s.emoji}</span>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.05rem", letterSpacing: "2px", color: sport === s.key ? ACCENT2 : HI }}>
+                      {s.label}
+                    </div>
+                    <div style={{ color: LO, fontSize: "0.72rem", lineHeight: 1.3 }}>{s.sub}</div>
+                  </div>
                 </div>
               </button>
             ))}
@@ -1347,34 +1385,34 @@ export default function App() {
       {/* ── Header ── */}
       <nav style={{
         background: SURF, borderBottom: `1px solid ${BORDER}`,
-        padding: "0 1.5rem", display: "flex", alignItems: "center",
-        justifyContent: "space-between", height: 56, flexShrink: 0,
-        position: "sticky", top: 0, zIndex: 100,
+        flexShrink: 0, position: "sticky", top: 0, zIndex: 100,
       }}>
-        <button
-          onClick={() => { setScreen("lobby"); loadMyGames(); resetGameState(null); }}
-          style={{ background: "transparent", border: "none", color: LO, cursor: "pointer", fontFamily: "'Bebas Neue',cursive", fontSize: "0.95rem", letterSpacing: "1px", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          ← LOBBY
-        </button>
-        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px" }}>
-          TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          {game.isCpu && (
-            <span style={{ fontFamily: "'Roboto Mono',monospace", fontSize: "0.7rem", color: LO }}>
-              vs {game.player2_name}
-            </span>
-          )}
-          {diffMeta && (
-            <div style={{
-              background: `${diffColor}22`, border: `1px solid ${diffColor}44`,
-              borderRadius: 20, padding: "0.2rem 0.75rem",
-              fontSize: "0.65rem", color: diffColor,
-              fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px",
-            }}>
-              {diffMeta.label}
-            </div>
-          )}
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
+          <button
+            onClick={() => { setScreen("lobby"); loadMyGames(); resetGameState(null); }}
+            style={{ background: "transparent", border: "none", color: LO, cursor: "pointer", fontFamily: "'Bebas Neue',cursive", fontSize: "0.95rem", letterSpacing: "1px", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+            ← LOBBY
+          </button>
+          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px" }}>
+            TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            {game.isCpu && (
+              <span style={{ fontFamily: "'Roboto Mono',monospace", fontSize: "0.7rem", color: LO }}>
+                vs {game.player2_name}
+              </span>
+            )}
+            {diffMeta && (
+              <div style={{
+                background: `${diffColor}22`, border: `1px solid ${diffColor}44`,
+                borderRadius: 20, padding: "0.2rem 0.75rem",
+                fontSize: "0.65rem", color: diffColor,
+                fontFamily: "'Roboto Mono',monospace", letterSpacing: "1px",
+              }}>
+                {diffMeta.label}
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
