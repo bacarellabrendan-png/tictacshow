@@ -492,10 +492,11 @@ export default function App() {
   const [revealStep,    setRevealStep]    = useState(0);
 
   // Refs for stale-closure-safe async ops
-  const gameRef       = useRef(null);
-  const resolving     = useRef(false);
-  const showingReveal = useRef(false);
-  const cpuThinking   = useRef(false);
+  const gameRef          = useRef(null);
+  const resolving        = useRef(false);
+  const showingReveal    = useRef(false);
+  const cpuThinking      = useRef(false);
+  const pendingRetryMove = useRef(null); // holds next move after same-answer retry
 
   useEffect(() => { gameRef.current = game; }, [game]);
 
@@ -518,7 +519,8 @@ export default function App() {
   // ── Load move for non-picking player (multiplayer) ────────────────────────────
   useEffect(() => {
     if (game?.isCpu) return;
-    if (game?.phase !== "answering" || game.active_cell == null || currentMove) return;
+    if (game?.phase !== "answering" && game?.phase !== "retry") return;
+    if (game.active_cell == null || currentMove) return;
     dbSelect("moves",
       `?game_id=eq.${game.id}&cell_index=eq.${game.active_cell}&order=created_at.desc&limit=1`)
       .then(r => { if (r.ok && r.data?.[0]) setCurrentMove(r.data[0]); });
@@ -582,6 +584,12 @@ export default function App() {
         if (mr.ok && mr.data?.[0]?.result) triggerReveal(mr.data[0], fresh);
       }
     }
+    // Same-answer retry: resolver set phase to "retry" — non-resolver resets for re-answering
+    if (fresh.phase === "retry" && cur.phase === "answering" && !showingReveal.current) {
+      setSubmitted(false);
+      setMyAnswer("");
+      setCurrentMove(null); // triggers load-move effect to re-fetch the updated move
+    }
     setGame(fresh);
   }
 
@@ -596,9 +604,11 @@ export default function App() {
     const isSameAnswer  = move.p1_valid && move.p2_valid &&
       normalizeStr(move.p1_answer ?? "") === normalizeStr(move.p2_answer ?? "");
     const isBothInvalid = !move.p1_valid && !move.p2_valid;
-    // The OTHER player always picks next (simple alternation)
-    const nextPickerName = g.choosing_player === "p1" ? g.player2_name : g.player1_name;
-    // Snapshot the question NOW — active_cell will be nulled when game state updates
+    // On same-answer retry the SAME player goes again; otherwise the OTHER player picks next
+    const nextPickerName = isSameAnswer
+      ? (g.choosing_player === "p1" ? g.player1_name : g.player2_name)
+      : (g.choosing_player === "p1" ? g.player2_name : g.player1_name);
+    // Snapshot the question NOW — active_cell may be nulled when game state updates
     const revealQ = ANSWER_POOLS[move.question_key] ?? null;
     setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ });
     setRevealStep(0);
@@ -610,8 +620,29 @@ export default function App() {
 
   function dismissReveal() {
     setRevealData(null); setRevealStep(0);
-    setSubmitted(false); setMyAnswer(""); setCurrentMove(null);
+    setSubmitted(false); setMyAnswer("");
     resolving.current = false; showingReveal.current = false;
+    // On same-answer retry, restore the new move so the player can answer again
+    if (pendingRetryMove.current) {
+      setCurrentMove(pendingRetryMove.current);
+      pendingRetryMove.current = null;
+    } else {
+      setCurrentMove(null);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HELPERS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /** Pick a fresh question key not already used on the board (excluding the active cell). */
+  function getNewQuestionKey(cells, activeCellIdx) {
+    const usedKeys = new Set(cells.filter((_, i) => i !== activeCellIdx).map(c => c.questionKey));
+    const allKeys  = Object.keys(ANSWER_POOLS);
+    const available = allKeys.filter(k => !usedKeys.has(k));
+    return available.length > 0
+      ? available[Math.floor(Math.random() * available.length)]
+      : allKeys[Math.floor(Math.random() * allKeys.length)];
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -856,22 +887,48 @@ export default function App() {
   // RESOLVE MOVE — multiplayer
   // ─────────────────────────────────────────────────────────────────────────────
   async function resolveMove(mv) {
-    let result;
-    if (!mv.p1_valid && !mv.p2_valid)                                    result = "reset";
-    else if (!mv.p1_valid)                                               result = "p2";
-    else if (!mv.p2_valid)                                               result = "p1";
-    else if (normalizeStr(mv.p1_answer) === normalizeStr(mv.p2_answer))  result = "reset";
-    else result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
-
-    await dbUpdate("moves", `?id=eq.${mv.id}`, { result });
     const gRes = await dbSelect("games", `?id=eq.${game.id}`);
     const g    = gRes.data[0];
+
+    // ── Same answer: replace question on same square, same player retries ──
+    if (mv.p1_valid && mv.p2_valid &&
+        normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "")) {
+      const newKey   = getNewQuestionKey(g.cells, g.active_cell);
+      const newCells = g.cells.map((c, i) => i === g.active_cell ? { questionKey: newKey } : c);
+      // Clear answers on the move and update its question key
+      await dbUpdate("moves", `?id=eq.${mv.id}`, {
+        question_key: newKey,
+        p1_answer: null, p2_answer: null,
+        p1_valid: null,  p2_valid: null,
+        p1_rarity: null, p2_rarity: null,
+      });
+      // Keep same active_cell and choosing_player; switch to "retry" phase
+      await dbUpdate("games", `?id=eq.${game.id}`, { cells: newCells, phase: "retry" });
+      // Resolver gets the retry move restored after reveal is dismissed
+      pendingRetryMove.current = {
+        ...mv, question_key: newKey,
+        p1_answer: null, p2_answer: null,
+        p1_valid: null, p2_valid: null,
+        p1_rarity: null, p2_rarity: null, result: null,
+      };
+      triggerReveal({ ...mv, result: "same_answer" }, g);
+      await refreshGame();
+      return;
+    }
+
+    let result;
+    if (!mv.p1_valid && !mv.p2_valid)  result = "reset";
+    else if (!mv.p1_valid)             result = "p2";
+    else if (!mv.p2_valid)             result = "p1";
+    else                               result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
+
+    await dbUpdate("moves", `?id=eq.${mv.id}`, { result });
     const newBoard  = [...g.board];
     newBoard[g.active_cell] = result === "reset" ? "reset" : result;
     const newScores = { ...g.scores };
     if (result !== "reset") newScores[result] = (newScores[result] || 0) + 1;
     const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
-    // Simple alternation — the other player always picks next, regardless of who won
+    // Simple alternation — the other player always picks next
     const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
     triggerReveal({ ...mv, result }, g);
     await dbUpdate("games", `?id=eq.${game.id}`, {
@@ -894,19 +951,36 @@ export default function App() {
   function resolveCpuMove(mv) {
     const g = gameRef.current;
     if (!g) return;
+
+    // ── Same answer: replace question on same square, same player retries ──
+    if (mv.p1_valid && mv.p2_valid &&
+        normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "")) {
+      const newKey   = getNewQuestionKey(g.cells, g.active_cell);
+      const newCells = g.cells.map((c, i) => i === g.active_cell ? { questionKey: newKey } : c);
+      const newMove  = {
+        id: `move-${Date.now()}`, game_id: g.id, cell_index: g.active_cell,
+        question_key: newKey, p1_answer: null, p2_answer: null,
+        p1_valid: null, p2_valid: null, p1_rarity: null, p2_rarity: null, result: null,
+      };
+      pendingRetryMove.current = newMove;
+      const updated = { ...g, cells: newCells, phase: "retry" };
+      setGame(updated); gameRef.current = updated;
+      triggerReveal({ ...mv, result: "same_answer" }, g);
+      return;
+    }
+
     let result;
-    if (!mv.p1_valid && !mv.p2_valid)                                    result = "reset";
-    else if (!mv.p1_valid)                                               result = "p2";
-    else if (!mv.p2_valid)                                               result = "p1";
-    else if (normalizeStr(mv.p1_answer) === normalizeStr(mv.p2_answer))  result = "reset";
-    else result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
+    if (!mv.p1_valid && !mv.p2_valid)  result = "reset";
+    else if (!mv.p1_valid)             result = "p2";
+    else if (!mv.p2_valid)             result = "p1";
+    else                               result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
 
     const newBoard  = [...g.board];
     newBoard[g.active_cell] = result === "reset" ? "reset" : result;
     const newScores = { ...g.scores };
     if (result !== "reset") newScores[result] = (newScores[result] || 0) + 1;
     const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
-    // Simple alternation — the other player always picks next, regardless of who won
+    // Simple alternation — the other player always picks next
     const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
     triggerReveal({ ...mv, result }, g);
     const updated = {
@@ -1556,8 +1630,8 @@ export default function App() {
                   ? "Your turn — click a square to play it"
                   : `Waiting for ${game.choosing_player === "p1" ? game.player1_name : game.player2_name} to pick…`
               )}
-              {game.phase === "answering" && !revealData && !submitted && "Both players answering…"}
-              {game.phase === "answering" && submitted && !revealData && "Answer locked in — waiting for opponent…"}
+              {(game.phase === "answering" || game.phase === "retry") && !revealData && !submitted && "Both players answering…"}
+              {(game.phase === "answering" || game.phase === "retry") && submitted && !revealData && "Answer locked in — waiting for opponent…"}
             </div>
           </div>
 
@@ -1565,7 +1639,7 @@ export default function App() {
           <div className="sidebar">
 
             {/* Clue + answer input */}
-            {game.phase === "answering" && activeQ && !revealData && (
+            {(game.phase === "answering" || game.phase === "retry") && activeQ && !revealData && (
               <div style={{
                 background: SURF, border: `1.5px solid ${diffColor}55`,
                 borderRadius: 18, padding: "1.5rem", animation: "fadeIn 0.3s ease",
@@ -1784,7 +1858,7 @@ export default function App() {
                   <>
                     <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "3px", color: LO }}>SAME ANSWER</div>
                     <div style={{ color: LO, fontStyle: "italic", fontSize: "0.88rem", marginTop: "0.25rem" }}>
-                      Square resets — {revealData.nextPickerName} picks next
+                      New question incoming — {revealData.nextPickerName} tries again!
                     </div>
                   </>
                 ) : revealData.isBothInvalid ? (
