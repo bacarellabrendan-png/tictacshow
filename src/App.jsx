@@ -7,6 +7,14 @@ import {
 // ─── SUPABASE ──────────────────────────────────────────────────────────────────
 const SB_URL = import.meta.env.VITE_SUPABASE_URL;
 const SB_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+if (!SB_URL || !SB_KEY) {
+  console.error(
+    "TicTacShow: missing Supabase env vars!\n" +
+    "Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local (local) " +
+    "and in Vercel → Project Settings → Environment Variables (production).\n" +
+    `Current values: VITE_SUPABASE_URL=${SB_URL} VITE_SUPABASE_ANON_KEY=${SB_KEY ? "[SET]" : "[MISSING]"}`
+  );
+}
 
 async function sbFetch(path, opts = {}) {
   let session = JSON.parse(localStorage.getItem("tts_session") || "null");
@@ -51,16 +59,23 @@ async function sbFetch(path, opts = {}) {
 }
 
 async function signUp(email, password, username) {
+  // GoTrue REST API uses top-level "data" for user_metadata, NOT "options.data"
   const r = await sbFetch("/auth/v1/signup", {
     method: "POST",
-    body: JSON.stringify({ email, password, options: { data: { username } } }),
+    body: JSON.stringify({ email, password, data: { username } }),
   });
-  if (r.ok && r.data?.access_token) {
+  if (!r.ok) return r; // real error (duplicate email, weak password, etc.)
+  if (r.data?.access_token) {
+    // Email auto-confirm is ON — we got tokens immediately
+    const u = r.data.user ?? r.data;
+    const uname = u?.user_metadata?.username ?? username;
     localStorage.setItem("tts_session", JSON.stringify(r.data));
-    localStorage.setItem("tts_user", JSON.stringify({ id: r.data.user.id, email, username }));
+    localStorage.setItem("tts_user", JSON.stringify({ id: u.id, email, username: uname }));
     return { ...r, confirmed: true };
   }
-  if (r.ok && r.data?.user && !r.data?.access_token) {
+  // No access_token = email confirmation is required.
+  // Supabase returns the user object directly (not wrapped in {user:...}).
+  if (r.data?.id || r.data?.user?.id) {
     return { ...r, emailConfirmationRequired: true };
   }
   return r;
@@ -73,8 +88,9 @@ async function signIn(email, password) {
   });
   if (r.ok && r.data?.access_token) {
     localStorage.setItem("tts_session", JSON.stringify(r.data));
-    const username = r.data.user?.user_metadata?.username ?? email.split("@")[0];
-    localStorage.setItem("tts_user", JSON.stringify({ id: r.data.user.id, email, username }));
+    const u = r.data.user;
+    const username = u?.user_metadata?.username ?? email.split("@")[0];
+    localStorage.setItem("tts_user", JSON.stringify({ id: u.id, email, username }));
   }
   return r;
 }
@@ -610,14 +626,36 @@ export default function App() {
     setAuthError(""); setAuthInfo(""); setAuthLoading(true);
     if (authMode === "signup") {
       if (!authForm.username.trim()) { setAuthError("Username is required"); setAuthLoading(false); return; }
-      const r = await signUp(authForm.email, authForm.password, authForm.username);
-      if (r.confirmed) setUser(getUser());
-      else if (r.emailConfirmationRequired) setAuthInfo("Account created! Check your email to confirm, then log in.");
-      else setAuthError(r.data?.msg || r.data?.error_description || "Sign up failed");
+      if (authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); setAuthLoading(false); return; }
+      const r = await signUp(authForm.email, authForm.password, authForm.username.trim());
+      if (r.confirmed) {
+        setUser(getUser());
+      } else if (r.emailConfirmationRequired) {
+        setAuthInfo("Account created! Check your inbox for a confirmation email, then come back and log in.");
+      } else {
+        // Surface the actual Supabase error — they use "msg" not "error_description"
+        const errMsg = r.data?.msg || r.data?.message || r.data?.error_description
+          || (typeof r.data === "string" ? r.data : null)
+          || `Sign up failed (${r.status})`;
+        console.error("signup failed:", r.status, r.data);
+        setAuthError(errMsg);
+      }
     } else {
       const r = await signIn(authForm.email, authForm.password);
-      if (r.ok) setUser(getUser());
-      else setAuthError(r.data?.error_description || "Invalid email or password");
+      if (r.ok) {
+        setUser(getUser());
+      } else {
+        const errCode = r.data?.error_code ?? "";
+        const errMsg  = r.data?.msg || r.data?.message || r.data?.error_description;
+        console.error("signin failed:", r.status, r.data);
+        if (errCode === "email_not_confirmed") {
+          setAuthError("Email not confirmed. Check your inbox and click the confirmation link, then try again.");
+        } else if (errCode === "invalid_credentials" || r.status === 400) {
+          setAuthError(errMsg || "Invalid email or password");
+        } else {
+          setAuthError(errMsg || `Login failed (${r.status})`);
+        }
+      }
     }
     setAuthLoading(false);
   }
@@ -893,6 +931,13 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <style>{GLOBAL_CSS}</style>
 
+      {/* Config error banner — visible if env vars missing */}
+      {(!SB_URL || !SB_KEY) && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, background: "#FC5C65", color: "#fff", textAlign: "center", padding: "0.75rem 1rem", fontSize: "0.9rem", fontFamily: "'Roboto Mono',monospace", zIndex: 9999 }}>
+          ⚠️ Missing Supabase config — set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel Environment Variables
+        </div>
+      )}
+
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
         <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "clamp(3.5rem,10vw,6rem)", lineHeight: 0.9, letterSpacing: "2px" }}>
@@ -945,18 +990,26 @@ export default function App() {
               onChange={e => setAuthForm(f => ({ ...f, password: e.target.value }))} />
           </div>
           {authError && (
-            <div style={{ color: "#FC5C65", fontSize: "0.88rem", marginBottom: "1rem", textAlign: "center", background: "#FC5C6515", border: "1px solid #FC5C6533", borderRadius: 8, padding: "0.6rem" }}>
+            <div style={{ color: "#FC5C65", fontSize: "0.9rem", marginBottom: "1rem", textAlign: "center", background: "#FC5C6515", border: "1px solid #FC5C6555", borderRadius: 10, padding: "0.75rem 1rem", lineHeight: 1.5 }}>
               {authError}
             </div>
           )}
           {authInfo && (
-            <div style={{ color: ACCENT2, fontSize: "0.88rem", marginBottom: "1rem", textAlign: "center", background: `${ACCENT2}15`, border: `1px solid ${ACCENT2}33`, borderRadius: 8, padding: "0.6rem" }}>
-              {authInfo}
+            <div style={{ marginBottom: "1rem", textAlign: "center", background: `${ACCENT2}18`, border: `2px solid ${ACCENT2}66`, borderRadius: 12, padding: "1.1rem 1rem" }}>
+              <div style={{ fontSize: "1.5rem", marginBottom: "0.4rem" }}>📧</div>
+              <div style={{ color: ACCENT2, fontFamily: "'Bebas Neue',cursive", fontSize: "1.1rem", letterSpacing: "2px", marginBottom: "0.5rem" }}>CHECK YOUR EMAIL</div>
+              <div style={{ color: MID, fontSize: "0.88rem", lineHeight: 1.55 }}>{authInfo}</div>
+              <button type="button" onClick={() => { setAuthMode("login"); setAuthInfo(""); setAuthError(""); }}
+                style={{ marginTop: "0.85rem", background: ACCENT2, border: "none", borderRadius: 8, color: "#0a0a16", padding: "0.55rem 1.5rem", fontFamily: "'Bebas Neue',cursive", fontSize: "1rem", letterSpacing: "2px", cursor: "pointer" }}>
+                GO TO LOG IN
+              </button>
             </div>
           )}
-          <button className="big-btn" type="submit" disabled={authLoading}>
-            {authLoading ? <span className="spinner" /> : authMode === "login" ? "LOG IN" : "CREATE ACCOUNT"}
-          </button>
+          {!authInfo && (
+            <button className="big-btn" type="submit" disabled={authLoading}>
+              {authLoading ? <span className="spinner" /> : authMode === "login" ? "LOG IN" : "CREATE ACCOUNT"}
+            </button>
+          )}
         </form>
       </div>
     </div>
