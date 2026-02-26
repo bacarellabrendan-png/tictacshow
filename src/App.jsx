@@ -596,9 +596,11 @@ export default function App() {
     const isSameAnswer  = move.p1_valid && move.p2_valid &&
       normalizeStr(move.p1_answer ?? "") === normalizeStr(move.p2_answer ?? "");
     const isBothInvalid = !move.p1_valid && !move.p2_valid;
+    // The OTHER player always picks next (simple alternation)
+    const nextPickerName = g.choosing_player === "p1" ? g.player2_name : g.player1_name;
     // Snapshot the question NOW — active_cell will be nulled when game state updates
     const revealQ = ANSWER_POOLS[move.question_key] ?? null;
-    setRevealData({ move, result: move.result, winnerName, isSameAnswer, isBothInvalid, q: revealQ });
+    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ });
     setRevealStep(0);
     // Stagger the answer cards in — no auto-close, user clicks Continue
     setTimeout(() => setRevealStep(1), 350);
@@ -1781,12 +1783,16 @@ export default function App() {
                 {revealData.isSameAnswer ? (
                   <>
                     <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "3px", color: LO }}>SAME ANSWER</div>
-                    <div style={{ color: LO, fontStyle: "italic", fontSize: "0.88rem", marginTop: "0.25rem" }}>Square resets — pick again</div>
+                    <div style={{ color: LO, fontStyle: "italic", fontSize: "0.88rem", marginTop: "0.25rem" }}>
+                      Square resets — {revealData.nextPickerName} picks next
+                    </div>
                   </>
                 ) : revealData.isBothInvalid ? (
                   <>
                     <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "3px", color: LO }}>BOTH ANSWERS INVALID</div>
-                    <div style={{ color: LO, fontStyle: "italic", fontSize: "0.88rem", marginTop: "0.25rem" }}>Square resets — pick again</div>
+                    <div style={{ color: LO, fontStyle: "italic", fontSize: "0.88rem", marginTop: "0.25rem" }}>
+                      Square resets — {revealData.nextPickerName} picks next
+                    </div>
                   </>
                 ) : revealData.result === "reset" ? (
                   <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "3px", color: LO }}>SQUARE RESETS</div>
