@@ -168,59 +168,28 @@ async function validateAnswer(guess, questionKey) {
   const pool = ANSWER_POOLS[questionKey];
   if (!pool) return null;
 
-  // If question has no rules, fall back to legacy
-  if (!pool.rules || !pool.rules.length) {
-    const match = matchAnswer(guess, questionKey);
-    return match ? { name: match.name, valid: true, rarity: 50 } : null;
-  }
-
-  // Fuzzy-match guess against the players table to get the canonical name
   const g = normalizeStr(guess);
 
-  // First check local answers array for a name match
-  let canonicalName = null;
+  // 1. Check local answers array first (instant, no network)
   for (const answer of pool.answers) {
     if (normalizeStr(answer.name) === g) {
-      canonicalName = answer.name;
-      break;
+      return { name: answer.name, valid: true, rarity: 50 };
     }
   }
 
-  // If not in local pool, try the players table (Supabase)
-  if (!canonicalName) {
-    try {
-      const r = await sbFetch(
-        `/rest/v1/players?display_name=ilike.${encodeURIComponent(guess.trim())}&limit=1`,
-        { method: "GET" }
-      );
-      if (r.ok && r.data?.[0]) {
-        canonicalName = r.data[0].display_name;
-      }
-    } catch { /* network failure — fall through */ }
-  }
-
-  if (!canonicalName) {
-    // Last resort: fall back to legacy matchAnswer
-    const match = matchAnswer(guess, questionKey);
-    return match ? { name: match.name, valid: true, rarity: 50 } : null;
-  }
-
-  // Call validate_answer RPC
+  // 2. Check the players table — if the player exists for this sport, accept it
+  const sport = (pool.sport || "").toLowerCase();
   try {
-    const r = await sbFetch("/rest/v1/rpc/validate_answer", {
-      method: "POST",
-      body: JSON.stringify({
-        p_player_name: canonicalName,
-        p_sport: pool.sport,
-        p_rules: pool.rules,
-      }),
-    });
-    if (r.ok && r.data === true) {
-      return { name: canonicalName, valid: true, rarity: 50 };
+    const r = await sbFetch(
+      `/rest/v1/players?name=ilike.${encodeURIComponent(guess.trim())}&sport=eq.${encodeURIComponent(sport)}&limit=1`,
+      { method: "GET" }
+    );
+    if (r.ok && r.data?.[0]) {
+      return { name: r.data[0].name, valid: true, rarity: 50 };
     }
-  } catch { /* RPC failure — fall through to legacy */ }
+  } catch { /* network failure — fall through to legacy */ }
 
-  // RPC said invalid or failed — fall back to legacy as safety net
+  // 3. Legacy fallback — matchAnswer from hardcoded pools
   const match = matchAnswer(guess, questionKey);
   return match ? { name: match.name, valid: true, rarity: 50 } : null;
 }
