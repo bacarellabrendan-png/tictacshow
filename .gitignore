@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Player data downloads (large CSVs, import via scripts/import_players.mjs)
+scripts/data/*.csv
+scripts/data/*.csv.gz
+scripts/data/*.txt
+scripts/data/*.html
+scripts/data/*.zip

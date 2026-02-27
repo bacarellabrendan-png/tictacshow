@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  ANSWER_POOLS, DIFFICULTY_META, ATHLETE_INDEX, SPORT_POOLS,
+  ANSWER_POOLS, DIFFICULTY_META, SPORT_POOLS,
   buildPuzzle, matchAnswer, normalizeStr,
 } from "./data/questions.js";
 
@@ -259,14 +259,29 @@ function RarityBar({ score, limitedData }) {
 }
 
 // ─── AUTOCOMPLETE INPUT ────────────────────────────────────────────────────────
-function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, placeholder, accentColor }) {
-  const [open, setOpen] = useState(false);
-  const [hi,   setHi]   = useState(0);
-  const wrapRef = useRef(null);
+function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, placeholder, accentColor, sport }) {
+  const [open, setOpen]               = useState(false);
+  const [hi,   setHi]                 = useState(0);
+  const [suggestions, setSuggestions]  = useState([]);
+  const wrapRef   = useRef(null);
+  const debounceT = useRef(null);
 
-  const suggestions = value.trim().length >= 1
-    ? ATHLETE_INDEX.filter(n => normalizeStr(n).includes(normalizeStr(value))).slice(0, 8)
-    : [];
+  // Query Supabase players table with debounce
+  useEffect(() => {
+    const q = value.trim();
+    if (q.length < 1) { setSuggestions([]); return; }
+    clearTimeout(debounceT.current);
+    debounceT.current = setTimeout(async () => {
+      const validSports = ["nba", "nfl", "mlb", "nhl", "soccer"];
+      const sportFilter = sport && validSports.includes(sport) ? `&sport=eq.${encodeURIComponent(sport)}` : "";
+      const r = await dbSelect("players",
+        `?name=ilike.*${encodeURIComponent(q)}*${sportFilter}&select=name&limit=8`);
+      if (r.ok && Array.isArray(r.data)) {
+        setSuggestions(r.data.map(row => row.name));
+      }
+    }, 150);
+    return () => clearTimeout(debounceT.current);
+  }, [value, sport]);
 
   useEffect(() => setHi(0), [value]);
 
@@ -1711,6 +1726,7 @@ export default function App() {
                       onChange={v => setMyAnswer(v)}
                       onSelect={v => setMyAnswer(v)}
                       onSubmit={game.isCpu ? submitAnswerCpu : submitAnswer}
+                      sport={game.sport}
                     />
                     <button className="sb" style={{ background: diffColor }}
                       onClick={game.isCpu ? submitAnswerCpu : submitAnswer}

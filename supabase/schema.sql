@@ -126,3 +126,29 @@ create policy "answer_stats_insert" on public.answer_stats
 drop policy if exists "answer_stats_update" on public.answer_stats;
 create policy "answer_stats_update" on public.answer_stats
   for update using (auth.uid() is not null);
+
+-- ── PLAYERS (autocomplete lookup) ─────────────────────────────────────────
+create table if not exists public.players (
+  id      bigint generated always as identity primary key,
+  name    text    not null,
+  sport   text    not null,   -- nba | nfl | mlb | nhl | soccer
+  unique (name, sport)
+);
+
+-- Enable the pg_trgm extension (needed for gin_trgm_ops index)
+create extension if not exists pg_trgm;
+
+-- Index for fast ILIKE prefix/contains search
+create index if not exists players_name_trgm_idx
+  on public.players using gin (name gin_trgm_ops);
+
+-- Index for sport-filtered queries
+create index if not exists players_sport_idx
+  on public.players (sport);
+
+alter table public.players enable row level security;
+
+-- Anyone can read (even anonymous), no one writes via API
+drop policy if exists "players_select" on public.players;
+create policy "players_select" on public.players
+  for select using (true);
