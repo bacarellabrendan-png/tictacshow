@@ -477,6 +477,7 @@ export default function App() {
   const [currentMove,   setCurrentMove]   = useState(null);
   const [myAnswer,      setMyAnswer]      = useState("");
   const [submitted,     setSubmitted]     = useState(false);
+  const [lockedValid,   setLockedValid]   = useState(null); // true | false | null
   const [copyMsg,       setCopyMsg]       = useState("");
   const [revealData,    setRevealData]    = useState(null);
   const [revealStep,    setRevealStep]    = useState(0);
@@ -578,6 +579,7 @@ export default function App() {
     if (fresh.phase === "retry" && cur.phase === "answering" && !showingReveal.current) {
       setSubmitted(false);
       setMyAnswer("");
+      setLockedValid(null);
       setCurrentMove(null); // triggers load-move effect to re-fetch the updated move
     }
     setGame(fresh);
@@ -610,7 +612,7 @@ export default function App() {
 
   function dismissReveal() {
     setRevealData(null); setRevealStep(0);
-    setSubmitted(false); setMyAnswer("");
+    setSubmitted(false); setMyAnswer(""); setLockedValid(null);
     resolving.current = false; showingReveal.current = false;
     // On same-answer retry, restore the new move so the player can answer again
     if (pendingRetryMove.current) {
@@ -649,7 +651,7 @@ export default function App() {
 
   function resetGameState(g) {
     setGame(g); gameRef.current = g;
-    setCurrentMove(null); setMyAnswer(""); setSubmitted(false);
+    setCurrentMove(null); setMyAnswer(""); setSubmitted(false); setLockedValid(null);
     setRevealData(null); setRevealStep(0);
     resolving.current = false; showingReveal.current = false; cpuThinking.current = false;
   }
@@ -854,6 +856,7 @@ export default function App() {
       : { p2_answer: myAnswer, p2_valid: !!match, p2_rarity: match?.rarity ?? null };
     await dbUpdate("moves", `?id=eq.${currentMove.id}`, patch);
     setSubmitted(true);
+    setLockedValid(!!match);
     const freshMv = await dbSelect("moves", `?id=eq.${currentMove.id}`);
     if (freshMv.ok && freshMv.data?.[0]) {
       const mv = freshMv.data[0];
@@ -875,6 +878,7 @@ export default function App() {
     };
     setCurrentMove(updatedMove);
     setSubmitted(true);
+    setLockedValid(!!match);
 
     // CPU "thinks" for 2-3 seconds
     const delay = 2000 + Math.random() * 1000;
@@ -1677,15 +1681,26 @@ export default function App() {
                     </button>
                   </div>
                 ) : (
-                  <div style={{
-                    background: SURF2, border: `1.5px solid ${PC[myRole ?? "p1"]}`,
-                    borderRadius: 10, padding: "0.9rem 1.2rem",
-                    color: PC[myRole ?? "p1"], fontFamily: "'Roboto Mono',monospace",
-                    fontSize: "0.85rem", textAlign: "center",
-                    display: "flex", alignItems: "center", gap: "0.6rem", justifyContent: "center",
-                  }}>
-                    <span className="spinner" style={{ borderTopColor: PC[myRole ?? "p1"] }} />
-                    Answer locked — waiting for {game.isCpu ? game.player2_name : "opponent"}…
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                    <div style={{
+                      background: SURF2, border: `1.5px solid ${PC[myRole ?? "p1"]}`,
+                      borderRadius: 10, padding: "0.9rem 1.2rem",
+                      color: PC[myRole ?? "p1"], fontFamily: "'Roboto Mono',monospace",
+                      fontSize: "0.85rem", textAlign: "center",
+                      display: "flex", alignItems: "center", gap: "0.6rem", justifyContent: "center",
+                    }}>
+                      <span className="spinner" style={{ borderTopColor: PC[myRole ?? "p1"] }} />
+                      Answer locked — waiting for {game.isCpu ? game.player2_name : "opponent"}…
+                    </div>
+                    {lockedValid === false && (
+                      <div style={{
+                        background: "#FC5C6512", border: "1px solid #FC5C6440",
+                        borderRadius: 8, padding: "0.6rem 0.9rem", textAlign: "center",
+                        fontSize: "0.78rem", color: "#FC5C65", fontFamily: "'Roboto Mono',monospace",
+                      }}>
+                        Not a valid answer for this question — your opponent may win this square
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
