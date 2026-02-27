@@ -73,9 +73,17 @@ async function signUp(email, password, username) {
     localStorage.setItem("tts_user", JSON.stringify({ id: u.id, email, username: uname }));
     return { ...r, confirmed: true };
   }
-  // No access_token = email confirmation is required.
-  // Supabase returns the user object directly (not wrapped in {user:...}).
-  if (r.data?.id || r.data?.user?.id) {
+  // 200 with user object but NO access_token:
+  // - If auto-confirm is OFF → email confirmation required
+  // - If auto-confirm is ON  → email already exists (Supabase hides this for security)
+  // Detect the duplicate-email case: identities array is empty for fake 200 responses
+  const u = r.data?.user ?? r.data;
+  if (u?.id) {
+    const identities = u.identities ?? r.data?.identities ?? [];
+    if (identities.length === 0) {
+      // Fake 200 — email already exists
+      return { ...r, ok: false, duplicateEmail: true };
+    }
     return { ...r, emailConfirmationRequired: true };
   }
   return r;
@@ -652,50 +660,55 @@ export default function App() {
   async function handleAuth(e) {
     e.preventDefault();
     setAuthError(""); setAuthInfo(""); setAuthLoading(true);
-    if (authMode === "signup") {
-      if (!authForm.username.trim()) { setAuthError("Username is required"); setAuthLoading(false); return; }
-      if (authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); setAuthLoading(false); return; }
-      const r = await signUp(authForm.email, authForm.password, authForm.username.trim());
-      if (r.confirmed) {
-        setUser(getUser());
-      } else if (r.emailConfirmationRequired) {
-        // Email confirmation is on — should be disabled in Supabase dashboard
-        setAuthError(
-          "Account created but email confirmation is required. " +
-          "Ask the site admin to disable 'Confirm email' in Supabase → Authentication → Settings."
-        );
-      } else {
-        // Surface the actual Supabase error — they use "msg" not "error_description"
-        const code   = r.data?.error_code ?? r.data?.code ?? "";
-        const errMsg = r.data?.msg || r.data?.message || r.data?.error_description
-          || (typeof r.data === "string" ? r.data : null);
-        console.error("signup failed:", r.status, r.data);
-        if (code === "user_already_exists" || r.status === 422) {
+    try {
+      if (authMode === "signup") {
+        if (!authForm.username.trim()) { setAuthError("Username is required"); setAuthLoading(false); return; }
+        if (authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); setAuthLoading(false); return; }
+        const r = await signUp(authForm.email, authForm.password, authForm.username.trim());
+        if (r.confirmed) {
+          setUser(getUser());
+        } else if (r.duplicateEmail) {
           setAuthError("An account with that email already exists. Try logging in instead.");
-        } else if (r.status === 0 || r.status >= 500) {
-          setAuthError("Connection error — please check your internet and try again.");
+        } else if (r.emailConfirmationRequired) {
+          setAuthError(
+            "Account created but email confirmation is required. " +
+            "Ask the site admin to disable 'Confirm email' in Supabase → Authentication → Settings."
+          );
         } else {
-          setAuthError(errMsg || `Sign up failed (${r.status}). Please try again.`);
+          const code   = r.data?.error_code ?? r.data?.code ?? "";
+          const errMsg = r.data?.msg || r.data?.message || r.data?.error_description
+            || (typeof r.data === "string" ? r.data : null);
+          console.error("signup failed:", r.status, r.data);
+          if (code === "user_already_exists" || r.status === 422) {
+            setAuthError("An account with that email already exists. Try logging in instead.");
+          } else if (r.status === 0 || r.status >= 500) {
+            setAuthError("Connection error — please check your internet and try again.");
+          } else {
+            setAuthError(errMsg || `Sign up failed (${r.status}). Please try again.`);
+          }
         }
-      }
-    } else {
-      const r = await signIn(authForm.email, authForm.password);
-      if (r.ok) {
-        setUser(getUser());
       } else {
-        const errCode = r.data?.error_code ?? "";
-        const errMsg  = r.data?.msg || r.data?.message || r.data?.error_description;
-        console.error("signin failed:", r.status, r.data);
-        if (errCode === "email_not_confirmed") {
-          setAuthError("Your email isn't confirmed yet. Check your inbox for the confirmation link.");
-        } else if (errCode === "invalid_credentials" || r.status === 400) {
-          setAuthError("Incorrect email or password.");
-        } else if (r.status === 0 || r.status >= 500) {
-          setAuthError("Connection error — please check your internet and try again.");
+        const r = await signIn(authForm.email, authForm.password);
+        if (r.ok) {
+          setUser(getUser());
         } else {
-          setAuthError(errMsg || `Login failed (${r.status}). Please try again.`);
+          const errCode = r.data?.error_code ?? "";
+          const errMsg  = r.data?.msg || r.data?.message || r.data?.error_description;
+          console.error("signin failed:", r.status, r.data);
+          if (errCode === "email_not_confirmed") {
+            setAuthError("Your email isn't confirmed yet. Check your inbox for the confirmation link.");
+          } else if (errCode === "invalid_credentials" || r.status === 400) {
+            setAuthError("Incorrect email or password.");
+          } else if (r.status === 0 || r.status >= 500) {
+            setAuthError("Connection error — please check your internet and try again.");
+          } else {
+            setAuthError(errMsg || `Login failed (${r.status}). Please try again.`);
+          }
         }
       }
+    } catch (err) {
+      console.error("auth error:", err);
+      setAuthError("Connection error — please check your internet and try again.");
     }
     setAuthLoading(false);
   }
