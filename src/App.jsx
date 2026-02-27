@@ -449,6 +449,42 @@ const GLOBAL_CSS = `
     background: ${SURF3} !important; transform: scale(1.04);
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   }
+
+  /* ─── Cell tooltip (desktop hover) ─── */
+  .cell-tooltip {
+    display: none; position: absolute; z-index: 10;
+    bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: ${BG}; border: 1px solid ${BORDER}; border-radius: 10px;
+    padding: 0.75rem; width: 220px; font-size: 0.75rem;
+    color: ${HI}; line-height: 1.5; text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: none;
+    font-family: 'Roboto Mono', monospace; font-weight: 500;
+  }
+  .cell-tooltip::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: ${BORDER};
+  }
+  .pickable:hover .cell-tooltip { display: block; }
+  @media (hover: none) { .pickable:hover .cell-tooltip { display: none; } }
+
+  /* ─── Clue text line clamp ─── */
+  .clue-text {
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* ─── Cell preview modal (mobile) ─── */
+  .cell-preview-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .cell-preview-modal {
+    background: ${SURF}; border: 1px solid ${BORDER}; border-radius: 14px;
+    padding: 1.5rem; max-width: 320px; width: 90%; text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
   .active-cell { box-shadow: 0 0 0 3px ${ACCENT}55 !important; }
   .win-cell { animation: pulse 1.2s infinite; }
 
@@ -508,6 +544,16 @@ const GLOBAL_CSS = `
   }
 `;
 
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function truncateClue(text, maxLen = 70) {
+  if (text.length <= maxLen) return text;
+  const cut = text.lastIndexOf(" ", maxLen);
+  return text.slice(0, cut > 0 ? cut : maxLen) + "…";
+}
+
+const isTouchDevice = () =>
+  typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
+
 // ─── SPORT META ────────────────────────────────────────────────────────────────
 const SPORT_META = [
   { key: "all",     label: "All Sports",      emoji: "🏆", sub: "Questions from every sport" },
@@ -554,6 +600,7 @@ export default function App() {
   const [copyMsg,       setCopyMsg]       = useState("");
   const [revealData,    setRevealData]    = useState(null);
   const [revealStep,    setRevealStep]    = useState(0);
+  const [previewCell,   setPreviewCell]   = useState(null);
 
   // Refs for stale-closure-safe async ops
   const gameRef          = useRef(null);
@@ -731,7 +778,7 @@ export default function App() {
   function resetGameState(g) {
     setGame(g); gameRef.current = g;
     setCurrentMove(null); setMyAnswer(""); setSubmitted(false);
-    setRevealData(null); setRevealStep(0);
+    setRevealData(null); setRevealStep(0); setPreviewCell(null);
     resolving.current = false; showingReveal.current = false; cpuThinking.current = false;
   }
 
@@ -1694,7 +1741,11 @@ export default function App() {
                       borderColor: isOwned ? `${PC[owner]}55` : isActive ? diffColor : BORDER,
                       background:  isOwned ? `${PC[owner]}18` : SURF,
                     }}
-                    onClick={() => canPick && (game.isCpu ? selectCellCpu(i) : selectCell(i))}>
+                    onClick={() => {
+                      if (!canPick) return;
+                      if (isTouchDevice()) { setPreviewCell(i); return; }
+                      game.isCpu ? selectCellCpu(i) : selectCell(i);
+                    }}>
                     {isOwned ? (
                       <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "3rem", color: PC[owner], lineHeight: 1 }}>
                         {owner === "p1" ? "X" : "O"}
@@ -1708,9 +1759,12 @@ export default function App() {
                             {q.sport}
                           </div>
                         )}
-                        <div style={{ fontSize: "0.7rem", color: isActive ? HI : MID, lineHeight: 1.5, fontFamily: "'Roboto Mono',monospace", fontWeight: 500 }}>
-                          {q ? (q.clue.length > 72 ? q.clue.slice(0, 70) + "…" : q.clue) : ""}
+                        <div className="clue-text" style={{ fontSize: "0.7rem", color: isActive ? HI : MID, lineHeight: 1.5, fontFamily: "'Roboto Mono',monospace", fontWeight: 500 }}>
+                          {q ? truncateClue(q.clue) : ""}
                         </div>
+                        {q && canPick && (
+                          <span className="cell-tooltip">{q.clue}</span>
+                        )}
                       </>
                     )}
                   </div>
@@ -1728,6 +1782,44 @@ export default function App() {
               {(game.phase === "answering" || game.phase === "retry") && !revealData && !submitted && "Both players answering…"}
               {(game.phase === "answering" || game.phase === "retry") && submitted && !revealData && "Answer locked in — waiting for opponent…"}
             </div>
+
+            {/* Cell preview modal (mobile) */}
+            {previewCell != null && (() => {
+              const pq = ANSWER_POOLS[game.cells[previewCell]?.questionKey];
+              const sportMeta = SPORT_META.find(s => s.key === (pq?.sport?.toLowerCase() ?? ""));
+              return (
+                <div className="cell-preview-overlay" onClick={() => setPreviewCell(null)}>
+                  <div className="cell-preview-modal" onClick={e => e.stopPropagation()}>
+                    {sportMeta && (
+                      <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{sportMeta.emoji}</div>
+                    )}
+                    <div style={{ fontSize: "0.6rem", color: LO, letterSpacing: "2px", textTransform: "uppercase", fontFamily: "'Roboto Mono',monospace", fontWeight: 700, marginBottom: "0.6rem" }}>
+                      {pq?.sport ?? ""}
+                    </div>
+                    <div style={{ fontSize: "0.95rem", color: HI, lineHeight: 1.7, marginBottom: "1.2rem" }}>
+                      {pq?.clue ?? ""}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: MID, marginBottom: "1rem", fontFamily: "'Roboto Mono',monospace" }}>
+                      Pick this square?
+                    </div>
+                    <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center" }}>
+                      <button className="sb" style={{ background: ACCENT, fontSize: "0.85rem", padding: "0.65rem 1.4rem" }}
+                        onClick={() => {
+                          const idx = previewCell;
+                          setPreviewCell(null);
+                          game.isCpu ? selectCellCpu(idx) : selectCell(idx);
+                        }}>
+                        Confirm
+                      </button>
+                      <button className="sb" style={{ background: SURF3, color: MID, fontSize: "0.85rem", padding: "0.65rem 1.4rem" }}
+                        onClick={() => setPreviewCell(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* ── Right: Sidebar ── */}
