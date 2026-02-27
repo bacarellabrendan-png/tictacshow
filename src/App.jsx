@@ -448,6 +448,7 @@ const GLOBAL_CSS = `
   .pickable:hover {
     background: ${SURF3} !important; transform: scale(1.04);
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    z-index: 5; overflow: visible;
   }
 
   /* ─── Cell tooltip (desktop hover) ─── */
