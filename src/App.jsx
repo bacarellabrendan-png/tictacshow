@@ -159,6 +159,72 @@ async function fetchAnswerStats(questionKey) {
   return { totalSubmissions: total, answerCounts };
 }
 
+/**
+ * Validate an answer against the player_facts database via RPC.
+ * Falls back to legacy matchAnswer() if question has no rules or RPC fails.
+ * Returns { name, valid, rarity } or null (invalid).
+ */
+async function validateAnswer(guess, questionKey) {
+  const pool = ANSWER_POOLS[questionKey];
+  if (!pool) return null;
+
+  // If question has no rules, fall back to legacy
+  if (!pool.rules || !pool.rules.length) {
+    const match = matchAnswer(guess, questionKey);
+    return match ? { name: match.name, valid: true, rarity: 50 } : null;
+  }
+
+  // Fuzzy-match guess against the players table to get the canonical name
+  const g = normalizeStr(guess);
+
+  // First check local answers array for a name match
+  let canonicalName = null;
+  for (const answer of pool.answers) {
+    if (normalizeStr(answer.name) === g) {
+      canonicalName = answer.name;
+      break;
+    }
+  }
+
+  // If not in local pool, try the players table (Supabase)
+  if (!canonicalName) {
+    try {
+      const r = await sbFetch(
+        `/rest/v1/players?display_name=ilike.${encodeURIComponent(guess.trim())}&limit=1`,
+        { method: "GET" }
+      );
+      if (r.ok && r.data?.[0]) {
+        canonicalName = r.data[0].display_name;
+      }
+    } catch { /* network failure — fall through */ }
+  }
+
+  if (!canonicalName) {
+    // Last resort: fall back to legacy matchAnswer
+    const match = matchAnswer(guess, questionKey);
+    return match ? { name: match.name, valid: true, rarity: 50 } : null;
+  }
+
+  // Call validate_answer RPC
+  try {
+    const r = await sbFetch("/rest/v1/rpc/validate_answer", {
+      method: "POST",
+      body: JSON.stringify({
+        p_player_name: canonicalName,
+        p_sport: pool.sport,
+        p_rules: pool.rules,
+      }),
+    });
+    if (r.ok && r.data === true) {
+      return { name: canonicalName, valid: true, rarity: 50 };
+    }
+  } catch { /* RPC failure — fall through to legacy */ }
+
+  // RPC said invalid or failed — fall back to legacy as safety net
+  const match = matchAnswer(guess, questionKey);
+  return match ? { name: match.name, valid: true, rarity: 50 } : null;
+}
+
 // ─── GAME LOGIC ────────────────────────────────────────────────────────────────
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
@@ -177,33 +243,30 @@ function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase()
 const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
 /*
-  cpuDiff controls answer quality only — completely independent of question difficulty.
-  easy   — picks common answers (rarity 50–99); falls back to any valid answer
-  medium — picks mid-tier answers (rarity 20–60); falls back to any valid answer
-  hard   — picks rare answers (rarity 1–30); falls back to mid-tier, then any valid answer
+  cpuDiff controls answer quality — picks from the answers array (CPU's "knowledge base").
+  easy   — picks from the first few names (popular / well-known)
+  medium — picks randomly from the full pool
+  hard   — picks from the last few names (obscure)
 */
 function cpuPickAnswer(qKey, cpuDiff) {
   const pool = ANSWER_POOLS[qKey]?.answers ?? [];
   if (!pool.length) return { name: "No answer", valid: false, rarity: null };
 
-  function pickFrom(candidates) {
-    const src = candidates.length ? candidates : pool;
-    const pick = src[Math.floor(Math.random() * src.length)];
-    return { name: pick.name, valid: true, rarity: pick.rarity };
-  }
-
+  let pick;
   if (cpuDiff === "easy") {
-    return pickFrom(pool.filter(a => a.rarity >= 50));
+    // Pick from first third (popular names listed first)
+    const slice = pool.slice(0, Math.max(3, Math.ceil(pool.length / 3)));
+    pick = slice[Math.floor(Math.random() * slice.length)];
+  } else if (cpuDiff === "hard") {
+    // Pick from last third (obscure names listed last)
+    const start = Math.max(0, pool.length - Math.max(3, Math.ceil(pool.length / 3)));
+    const slice = pool.slice(start);
+    pick = slice[Math.floor(Math.random() * slice.length)];
+  } else {
+    // medium — pick randomly from full pool
+    pick = pool[Math.floor(Math.random() * pool.length)];
   }
-
-  if (cpuDiff === "medium") {
-    return pickFrom(pool.filter(a => a.rarity >= 20 && a.rarity <= 60));
-  }
-
-  // hard — prefers rarest; falls back to mid-tier if no rare answers exist
-  const rare = pool.filter(a => a.rarity >= 1 && a.rarity <= 30);
-  if (rare.length) return pickFrom(rare);
-  return pickFrom(pool.filter(a => a.rarity >= 20 && a.rarity <= 60));
+  return { name: pick.name, valid: true, rarity: 50 };
 }
 
 function cpuPickCell(board) {
@@ -236,7 +299,7 @@ const ACCENT2 = "#4ECDC4";
 const PC      = { p1: ACCENT, p2: ACCENT2 };
 
 // ─── RARITY BAR ────────────────────────────────────────────────────────────────
-function RarityBar({ score, limitedData }) {
+function RarityBar({ score }) {
   const pct  = Math.max(2, Math.min(100, score));
   const col  = score < 10 ? "#FC5C65" : score < 30 ? "#F7B731" : ACCENT2;
   const tier = score < 10 ? "RARE" : score < 30 ? "UNCOMMON" : "COMMON";
@@ -249,11 +312,6 @@ function RarityBar({ score, limitedData }) {
       <div style={{ height: 5, background: BORDER, borderRadius: 3, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: col, borderRadius: 3, transition: "width 0.9s ease" }} />
       </div>
-      {limitedData && (
-        <div style={{ fontSize: "0.55rem", color: LO, marginTop: "0.25rem", fontStyle: "italic", fontFamily: "'Roboto Mono',monospace" }}>
-          based on limited data
-        </div>
-      )}
     </div>
   );
 }
@@ -903,7 +961,7 @@ export default function App() {
     if (submitted || !myAnswer.trim() || !game || !currentMove) return;
     const myRole = game.player1_id === user.id ? "p1" : "p2";
     const qKey   = game.cells[game.active_cell].questionKey;
-    const match  = matchAnswer(myAnswer, qKey);
+    const match  = await validateAnswer(myAnswer, qKey);
     const patch  = myRole === "p1"
       ? { p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null }
       : { p2_answer: myAnswer, p2_valid: !!match, p2_rarity: match?.rarity ?? null };
@@ -921,10 +979,10 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // SUBMIT ANSWER — CPU
   // ─────────────────────────────────────────────────────────────────────────────
-  function submitAnswerCpu() {
+  async function submitAnswerCpu() {
     if (submitted || !myAnswer.trim() || !game || !currentMove) return;
     const qKey  = game.cells[game.active_cell].questionKey;
-    const match = matchAnswer(myAnswer, qKey);
+    const match = await validateAnswer(myAnswer, qKey);
     const updatedMove = {
       ...currentMove,
       p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null,
@@ -986,6 +1044,7 @@ export default function App() {
     if (!mv.p1_valid && !mv.p2_valid)  result = "reset";
     else if (!mv.p1_valid)             result = "p2";
     else if (!mv.p2_valid)             result = "p1";
+    else if (mv.p1_rarity === mv.p2_rarity) result = Math.random() < 0.5 ? "p1" : "p2";
     else                               result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
 
     await dbUpdate("moves", `?id=eq.${mv.id}`, { result });
@@ -1039,6 +1098,7 @@ export default function App() {
     if (!mv.p1_valid && !mv.p2_valid)  result = "reset";
     else if (!mv.p1_valid)             result = "p2";
     else if (!mv.p2_valid)             result = "p1";
+    else if (mv.p1_rarity === mv.p2_rarity) result = Math.random() < 0.5 ? "p1" : "p2";
     else                               result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
 
     const newBoard  = [...g.board];
@@ -1864,14 +1924,13 @@ export default function App() {
                 const isMe   = myRole === p;
                 const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
                 const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
-                const hardcodedRarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
-                // Use live rarity if we have enough data (>= 20 submissions), else fall back to hardcoded
+                const defaultRarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
+                // Use live rarity if we have enough data (>= 20 submissions), else fall back to default (50)
                 const ls = revealData.liveStats;
                 const liveCount = ls && answer ? (ls.answerCounts[normalizeStr(answer)] ?? 0) : 0;
                 const hasLiveData = ls && ls.totalSubmissions >= 20;
                 const liveRarity = hasLiveData ? Math.round((liveCount / ls.totalSubmissions) * 100) : null;
-                const rarity = liveRarity ?? hardcodedRarity;
-                const limitedData = !hasLiveData && hardcodedRarity != null;
+                const rarity = liveRarity ?? defaultRarity;
                 const won    = revealData.result === p;
                 return (
                   <div key={p} style={{
@@ -1912,7 +1971,7 @@ export default function App() {
                             ✗ INVALID
                           </div>
                         ) : rarity != null ? (
-                          <RarityBar score={rarity} limitedData={limitedData} />
+                          <RarityBar score={rarity} />
                         ) : null}
                       </>
                     ) : (

@@ -1,253 +1,207 @@
 // ─── NBA QUESTIONS ────────────────────────────────────────────────────────────
-// rarity = % of players likely to give this answer (lower = rarer = wins the square)
+// Every question has TWO conditions joined by AND.
 
 export const NBA_POOLS = {
 
   // ── BEGINNER ─────────────────────────────────────────────────────────────────
 
-  q_nba_champ: { clue: "Name an NBA player who won 5 or more championships", sport: "NBA", answers: [
-    {name:"Michael Jordan",rarity:72},{name:"Magic Johnson",rarity:58},{name:"Kareem Abdul-Jabbar",rarity:45},
-    {name:"LeBron James",rarity:38},{name:"Kobe Bryant",rarity:35},{name:"Scottie Pippen",rarity:28},
-    {name:"Bill Russell",rarity:22},{name:"Robert Horry",rarity:14},{name:"John Havlicek",rarity:9},
-    {name:"Ron Harper",rarity:8},{name:"John Salley",rarity:5},{name:"Sam Jones",rarity:4},
+  q_nba_champ_foreign: { clue: "Name an NBA player who won a championship AND was born outside the United States", sport: "NBA", rules: [{ fact_type: "nba_champion" }, { fact_type: "born_outside_us" }], answers: [
+    {name:"Hakeem Olajuwon"},{name:"Tony Parker"},{name:"Manu Ginobili"},
+    {name:"Dirk Nowitzki"},{name:"Steve Nash"},{name:"Pau Gasol"},
+    {name:"Tim Duncan"},{name:"Nikola Jokic"},{name:"Giannis Antetokounmpo"},
+    {name:"Luol Deng"},{name:"Toni Kukoc"},{name:"Patrick Ewing"},
+    {name:"Luc Longley"},{name:"Rik Smits"},{name:"Sarunas Marciulionis"},
+    {name:"Boris Diaw"},{name:"Marco Belinelli"},{name:"Patty Mills"},
+    {name:"Goran Dragic"},{name:"Mario Chalmers"},{name:"Andrew Bogut"},
   ]},
 
-  q_nba_50pts: { clue: "Name an NBA player who scored 50+ points in a game multiple times", sport: "NBA", answers: [
-    {name:"Wilt Chamberlain",rarity:65},{name:"Michael Jordan",rarity:55},{name:"Kobe Bryant",rarity:50},
-    {name:"LeBron James",rarity:18},{name:"Elgin Baylor",rarity:20},{name:"Rick Barry",rarity:12},
-    {name:"Kevin Durant",rarity:15},{name:"James Harden",rarity:14},{name:"Damian Lillard",rarity:8},
-    {name:"Devin Booker",rarity:7},{name:"David Thompson",rarity:5},
+  q_nba_mvp_champ_same_year: { clue: "Name an NBA player who won the regular season MVP award AND won a championship in the same year", sport: "NBA", rules: [{ fact_type: "nba_mvp" }, { fact_type: "nba_champion_same_year_as_mvp" }], answers: [
+    {name:"LeBron James"},{name:"Michael Jordan"},{name:"Magic Johnson"},
+    {name:"Larry Bird"},{name:"Kareem Abdul-Jabbar"},{name:"Shaquille O'Neal"},
+    {name:"Tim Duncan"},{name:"Moses Malone"},{name:"Stephen Curry"},
+    {name:"Giannis Antetokounmpo"},{name:"Nikola Jokic"},{name:"Bob Pettit"},
+    {name:"Willis Reed"},{name:"Dave Cowens"},{name:"Bill Russell"},
   ]},
 
-  q_nba_mvp_multiple: { clue: "Name an NBA player who won 3 or more regular season MVP awards", sport: "NBA", answers: [
-    {name:"Kareem Abdul-Jabbar",rarity:60},{name:"Michael Jordan",rarity:72},{name:"LeBron James",rarity:68},
-    {name:"Bill Russell",rarity:28},{name:"Wilt Chamberlain",rarity:42},{name:"Moses Malone",rarity:22},
-    {name:"Larry Bird",rarity:38},{name:"Magic Johnson",rarity:35},
+  q_nba_top5_pick_allstar10: { clue: "Name an NBA player drafted in the top 5 AND selected to 10 or more All-Star games", sport: "NBA", rules: [{ fact_type: "nba_top_5_pick" }, { fact_type: "nba_10_plus_allstar" }], answers: [
+    {name:"LeBron James"},{name:"Shaquille O'Neal"},{name:"Magic Johnson"},
+    {name:"Patrick Ewing"},{name:"Allen Iverson"},{name:"Kareem Abdul-Jabbar"},
+    {name:"Tim Duncan"},{name:"Kevin Durant"},{name:"Dwight Howard"},
+    {name:"Kyrie Irving"},{name:"Derrick Rose"},{name:"Chris Webber"},
+    {name:"Jason Kidd"},{name:"Glenn Robinson"},{name:"Danny Manning"},
   ]},
 
-  q_nba_points_20k: { clue: "Name an NBA player who scored 25,000 or more career points", sport: "NBA", answers: [
-    {name:"LeBron James",rarity:82},{name:"Kareem Abdul-Jabbar",rarity:70},{name:"Karl Malone",rarity:55},
-    {name:"Kobe Bryant",rarity:75},{name:"Michael Jordan",rarity:78},{name:"Dirk Nowitzki",rarity:55},
-    {name:"Wilt Chamberlain",rarity:60},{name:"Shaquille O'Neal",rarity:62},{name:"Moses Malone",rarity:28},
-    {name:"Elvin Hayes",rarity:20},{name:"Hakeem Olajuwon",rarity:38},{name:"Oscar Robertson",rarity:30},
-    {name:"Dominique Wilkins",rarity:22},{name:"Tim Duncan",rarity:42},{name:"Kevin Durant",rarity:50},
-    {name:"Paul Pierce",rarity:25},{name:"Reggie Miller",rarity:22},{name:"Patrick Ewing",rarity:30},
+  q_nba_50pts_2000s: { clue: "Name an NBA player who scored 50 or more points in a game AND it happened in the 2000s or later", sport: "NBA", rules: [{ fact_type: "nba_50_point_game" }, { fact_type: "nba_50_point_game_2000s" }], answers: [
+    {name:"Kobe Bryant"},{name:"LeBron James"},{name:"James Harden"},
+    {name:"Kevin Durant"},{name:"Devin Booker"},{name:"Donovan Mitchell"},
+    {name:"Damian Lillard"},{name:"Luka Doncic"},{name:"Giannis Antetokounmpo"},
+    {name:"Joel Embiid"},{name:"Carmelo Anthony"},{name:"Gilbert Arenas"},
+    {name:"Tracy McGrady"},{name:"Dwyane Wade"},{name:"Karl-Anthony Towns"},
+    {name:"Kemba Walker"},{name:"Bradley Beal"},{name:"Kyrie Irving"},
   ]},
 
-  q_nba_all_time_scoring: { clue: "Name a player in the NBA all-time top 10 career scoring list", sport: "NBA", answers: [
-    {name:"LeBron James",rarity:88},{name:"Kareem Abdul-Jabbar",rarity:80},{name:"Karl Malone",rarity:68},
-    {name:"Kobe Bryant",rarity:82},{name:"Michael Jordan",rarity:85},{name:"Dirk Nowitzki",rarity:62},
-    {name:"Wilt Chamberlain",rarity:65},{name:"Shaquille O'Neal",rarity:72},{name:"Moses Malone",rarity:40},
-    {name:"Elvin Hayes",rarity:28},{name:"Kevin Durant",rarity:55},
+  q_nba_20k_pts_champ: { clue: "Name an NBA player who scored 20,000 or more career points AND won at least one championship", sport: "NBA", rules: [{ fact_type: "nba_20000_career_points" }, { fact_type: "nba_champion" }], answers: [
+    {name:"LeBron James"},{name:"Kareem Abdul-Jabbar"},{name:"Kobe Bryant"},
+    {name:"Michael Jordan"},{name:"Shaquille O'Neal"},{name:"Tim Duncan"},
+    {name:"Hakeem Olajuwon"},{name:"Moses Malone"},{name:"Kevin Durant"},
+    {name:"Dirk Nowitzki"},{name:"Magic Johnson"},{name:"Jerry West"},
+    {name:"Elgin Baylor"},{name:"Oscar Robertson"},{name:"Paul Pierce"},
   ]},
 
-  q_nba_lakers_champ: { clue: "Name a player who won an NBA championship with the Los Angeles Lakers", sport: "NBA", answers: [
-    {name:"Magic Johnson",rarity:82},{name:"Kareem Abdul-Jabbar",rarity:75},{name:"Kobe Bryant",rarity:90},
-    {name:"Shaquille O'Neal",rarity:85},{name:"LeBron James",rarity:72},{name:"James Worthy",rarity:48},
-    {name:"Anthony Davis",rarity:58},{name:"Derek Fisher",rarity:32},{name:"Pau Gasol",rarity:48},
-    {name:"Lamar Odom",rarity:30},{name:"Robert Horry",rarity:22},{name:"AC Green",rarity:18},
-    {name:"Byron Scott",rarity:16},{name:"Michael Cooper",rarity:14},{name:"Norm Nixon",rarity:8},
-    {name:"Kurt Rambis",rarity:6},{name:"Jamaal Wilkes",rarity:10},{name:"Rajon Rondo",rarity:18},
-    {name:"Alex Caruso",rarity:12},{name:"Kyle Kuzma",rarity:15},{name:"Dwight Howard",rarity:20},
-    {name:"Danny Green",rarity:14},{name:"Mychal Thompson",rarity:8},{name:"Bob McAdoo",rarity:8},
+  q_nba_lakers_celtics: { clue: "Name an NBA player who played for both the Los Angeles Lakers AND the Boston Celtics during their career", sport: "NBA", rules: [{ fact_type: "played_for_team", fact_value: "Lakers" }, { fact_type: "played_for_team", fact_value: "Celtics" }], answers: [
+    {name:"Gary Payton"},{name:"Antoine Walker"},{name:"Dominique Wilkins"},
+    {name:"Rick Fox"},{name:"Sherman Douglas"},{name:"Robert Parish"},
+    {name:"Randy Foye"},{name:"Dino Radja"},{name:"Kareem Abdul-Jabbar"},
+    {name:"Rajon Rondo"},{name:"Isaiah Thomas"},{name:"Chris Paul"},
+    {name:"Joe Johnson"},{name:"Kevin McHale"},{name:"Vlade Divac"},
+    {name:"Nate Archibald"},{name:"Danny Ainge"},{name:"Chris Mihm"},
   ]},
 
-  q_nba_bulls_champ: { clue: "Name a player who won an NBA championship with the Chicago Bulls", sport: "NBA", answers: [
-    {name:"Michael Jordan",rarity:95},{name:"Scottie Pippen",rarity:82},{name:"Dennis Rodman",rarity:68},
-    {name:"Steve Kerr",rarity:48},{name:"Toni Kukoc",rarity:38},{name:"Horace Grant",rarity:32},
-    {name:"John Paxson",rarity:26},{name:"Bill Cartwright",rarity:16},{name:"BJ Armstrong",rarity:18},
-    {name:"Luc Longley",rarity:14},{name:"Ron Harper",rarity:22},{name:"Will Perdue",rarity:5},
-    {name:"Jud Buechler",rarity:4},{name:"Craig Hodges",rarity:6},{name:"Scott Williams",rarity:5},
-    {name:"Stacey King",rarity:4},
+  q_nba_6th_man_champ: { clue: "Name an NBA player who won the Sixth Man of the Year Award AND also won a championship during their career", sport: "NBA", rules: [{ fact_type: "nba_sixth_man_award" }, { fact_type: "nba_champion" }], answers: [
+    {name:"Kevin McHale"},{name:"Manu Ginobili"},{name:"Jason Terry"},
+    {name:"Detlef Schrempf"},{name:"Ricky Pierce"},{name:"Lamar Odom"},
+    {name:"Taj Gibson"},{name:"Lou Williams"},{name:"Leandro Barbosa"},
+    {name:"Jamal Crawford"},{name:"Vinnie Johnson"},{name:"Bobby Jackson"},
+    {name:"Thabo Sefolosha"},{name:"Corey Brewer"},{name:"Dell Curry"},
+    {name:"Toney Douglas"},{name:"James Jones"},
   ]},
 
-  q_nba_heat_champ: { clue: "Name a player who won an NBA championship with the Miami Heat", sport: "NBA", answers: [
-    {name:"Dwyane Wade",rarity:88},{name:"LeBron James",rarity:78},{name:"Chris Bosh",rarity:65},
-    {name:"Shaquille O'Neal",rarity:62},{name:"Ray Allen",rarity:50},{name:"Alonzo Mourning",rarity:38},
-    {name:"Gary Payton",rarity:32},{name:"Udonis Haslem",rarity:25},{name:"Shane Battier",rarity:18},
-    {name:"Mario Chalmers",rarity:22},{name:"Antoine Walker",rarity:15},{name:"James Posey",rarity:12},
-    {name:"Jason Williams",rarity:10},{name:"Chris Andersen",rarity:8},{name:"Mike Miller",rarity:12},
-    {name:"Joel Anthony",rarity:5},{name:"Damon Jones",rarity:6},
-  ]},
-
-  q_nba_mvp_and_champ: { clue: "Name an NBA player who won both the regular season MVP award AND an NBA championship during their career", sport: "NBA", answers: [
-    {name:"LeBron James",rarity:88},{name:"Michael Jordan",rarity:90},{name:"Magic Johnson",rarity:80},
-    {name:"Larry Bird",rarity:75},{name:"Kareem Abdul-Jabbar",rarity:72},{name:"Shaquille O'Neal",rarity:68},
-    {name:"Tim Duncan",rarity:58},{name:"Moses Malone",rarity:45},{name:"Hakeem Olajuwon",rarity:48},
-    {name:"Dirk Nowitzki",rarity:55},{name:"Stephen Curry",rarity:62},{name:"Bill Russell",rarity:40},
-    {name:"Giannis Antetokounmpo",rarity:52},{name:"Nikola Jokic",rarity:42},{name:"Bob Pettit",rarity:20},
-    {name:"Willis Reed",rarity:22},{name:"Dave Cowens",rarity:15},
-  ]},
-
-  q_nba_warriors_champ: { clue: "Name a player who won an NBA championship with the Golden State Warriors (2015–2022)", sport: "NBA", answers: [
-    {name:"Stephen Curry",rarity:92},{name:"Kevin Durant",rarity:80},{name:"Klay Thompson",rarity:82},
-    {name:"Draymond Green",rarity:78},{name:"Andre Iguodala",rarity:55},{name:"Andrew Wiggins",rarity:38},
-    {name:"Jordan Poole",rarity:25},{name:"Kevon Looney",rarity:20},{name:"Harrison Barnes",rarity:30},
-    {name:"Andrew Bogut",rarity:22},{name:"Shaun Livingston",rarity:28},{name:"Gary Payton II",rarity:18},
-    {name:"Leandro Barbosa",rarity:10},{name:"Festus Ezeli",rarity:8},{name:"Otto Porter Jr",rarity:12},
-    {name:"Juan Toscano-Anderson",rarity:6},{name:"Moses Moody",rarity:8},{name:"Jonathan Kuminga",rarity:10},
-    {name:"Donte DiVincenzo",rarity:12},
+  q_nba_finals_mvp_1st_round: { clue: "Name an NBA player who won Finals MVP AND was drafted outside of the top 10 overall picks", sport: "NBA", rules: [{ fact_type: "nba_finals_mvp" }, { fact_type: "nba_drafted_outside_top_10" }], answers: [
+    {name:"Andre Iguodala"},{name:"Kawhi Leonard"},{name:"Tony Parker"},
+    {name:"Chauncey Billups"},{name:"Dwyane Wade"},{name:"LeBron James"},
+    {name:"Bill Walton"},{name:"Jo Jo White"},{name:"Tom Gola"},
+    {name:"Jerry West"},{name:"Cedric Maxwell"},{name:"Magic Johnson"},
+    {name:"Larry Bird"},{name:"Isiah Thomas"},{name:"Michael Jordan"},
+    {name:"Hakeem Olajuwon"},{name:"Shaquille O'Neal"},{name:"Tim Duncan"},
+    {name:"Dirk Nowitzki"},{name:"Giannis Antetokounmpo"},{name:"Stephen Curry"},
   ]},
 
   // ── KNOWLEDGEABLE ─────────────────────────────────────────────────────────────
 
-  q_nba_scoring: { clue: "Name an NBA player who won the scoring title 3 or more times", sport: "NBA", answers: [
-    {name:"Michael Jordan",rarity:70},{name:"Wilt Chamberlain",rarity:55},{name:"Allen Iverson",rarity:30},
-    {name:"Kevin Durant",rarity:25},{name:"James Harden",rarity:20},{name:"George Gervin",rarity:20},
-    {name:"Bob McAdoo",rarity:10},{name:"Neil Johnston",rarity:4},
+  q_nba_triple_dbl_season_champ: { clue: "Name an NBA player who averaged a triple-double for a full season AND won a championship during their career", sport: "NBA", rules: [{ fact_type: "nba_triple_double_season" }, { fact_type: "nba_champion" }], answers: [
+    {name:"Russell Westbrook"},{name:"Oscar Robertson"},{name:"Nikola Jokic"},
+    {name:"LeBron James"},{name:"Magic Johnson"},{name:"Jason Kidd"},
+    {name:"Draymond Green"},{name:"Rajon Rondo"},{name:"Larry Bird"},
+    {name:"Bob Cousy"},{name:"Wilt Chamberlain"},{name:"Michael Jordan"},
+    {name:"Scottie Pippen"},{name:"Tim Duncan"},{name:"Manu Ginobili"},
+    {name:"Tony Parker"},{name:"Stephen Curry"},{name:"Klay Thompson"},
   ]},
 
-  q_nba_rebounds_10k: { clue: "Name an NBA player with 10,000 or more career rebounds", sport: "NBA", answers: [
-    {name:"Wilt Chamberlain",rarity:62},{name:"Bill Russell",rarity:55},{name:"Kareem Abdul-Jabbar",rarity:48},
-    {name:"Elvin Hayes",rarity:22},{name:"Moses Malone",rarity:25},{name:"Tim Duncan",rarity:40},
-    {name:"Karl Malone",rarity:35},{name:"Robert Parish",rarity:18},{name:"Nate Thurmond",rarity:12},
-    {name:"Walt Bellamy",rarity:8},{name:"Kevin Garnett",rarity:38},{name:"Dwight Howard",rarity:32},
-    {name:"Shaquille O'Neal",rarity:42},{name:"Dennis Rodman",rarity:30},{name:"Buck Williams",rarity:8},
+  q_nba_undrafted_mvp: { clue: "Name an NBA player who was drafted outside the top 5 picks in their draft class AND won an NBA MVP award", sport: "NBA", rules: [{ fact_type: "nba_drafted_outside_top_5" }, { fact_type: "nba_mvp" }], answers: [
+    {name:"Steve Nash"},{name:"Dirk Nowitzki"},{name:"Giannis Antetokounmpo"},
+    {name:"Moses Malone"},{name:"Willis Reed"},{name:"Nikola Jokic"},
+    {name:"Bob Cousy"},{name:"Wes Unseld"},{name:"Dave Cowens"},
+    {name:"Dolph Schayes"},{name:"Dennis Rodman"},{name:"Oscar Robertson"},
+    {name:"Larry Bird"},{name:"Bill Russell"},{name:"Bob Pettit"},
+    {name:"Derrick Rose"},{name:"Karl Malone"},{name:"Charles Barkley"},
   ]},
 
-  q_nba_career_assists: { clue: "Name an NBA player among the all-time top 5 career assists leaders", sport: "NBA", answers: [
-    {name:"John Stockton",rarity:62},{name:"Jason Kidd",rarity:55},{name:"Steve Nash",rarity:45},
-    {name:"Mark Jackson",rarity:22},{name:"Magic Johnson",rarity:60},
+  q_nba_coach_500w_ring: { clue: "Name an NBA head coach who won 500 or more regular season games AND won at least one championship", sport: "NBA", rules: [{ fact_type: "nba_coach_500_wins" }, { fact_type: "nba_champion_coach" }], answers: [
+    {name:"Phil Jackson"},{name:"Pat Riley"},{name:"Gregg Popovich"},
+    {name:"Red Auerbach"},{name:"Chuck Daly"},{name:"Larry Brown"},
+    {name:"Doc Rivers"},{name:"Bill Fitch"},{name:"K.C. Jones"},
+    {name:"Bill Russell"},{name:"Tom Heinsohn"},{name:"Alex Hannum"},
+    {name:"Eddie Gottlieb"},{name:"Lenny Wilkens"},{name:"Don Nelson"},
+    {name:"Billy Cunningham"},{name:"Rick Adelman"},
   ]},
 
-  q_nba_assists: { clue: "Name an NBA player who averaged 10 or more assists per game for a full season", sport: "NBA", answers: [
-    {name:"Magic Johnson",rarity:60},{name:"John Stockton",rarity:55},{name:"Isiah Thomas",rarity:35},
-    {name:"Chris Paul",rarity:30},{name:"Jason Kidd",rarity:25},{name:"Kevin Porter",rarity:10},
-    {name:"Guy Rodgers",rarity:4},{name:"Norm Nixon",rarity:6},{name:"Kevin Johnson",rarity:8},
-    {name:"Tim Hardaway",rarity:7},{name:"Mark Jackson",rarity:12},
+  q_nba_scoring_title_assists_title: { clue: "Name an NBA player who won an NBA scoring title in at least one season AND averaged 7 or more assists per game for their career", sport: "NBA", rules: [{ fact_type: "nba_scoring_title" }, { fact_type: "nba_7_assists_career_avg" }], answers: [
+    {name:"Michael Jordan"},{name:"Oscar Robertson"},{name:"Allen Iverson"},
+    {name:"Nate Archibald"},{name:"Russell Westbrook"},{name:"James Harden"},
+    {name:"Pete Maravich"},{name:"Isiah Thomas"},{name:"Magic Johnson"},
+    {name:"Kevin Johnson"},{name:"Lenny Wilkens"},{name:"Jerry West"},
+    {name:"Kevin Durant"},{name:"John Havlicek"},{name:"David Thompson"},
+    {name:"George Gervin"},{name:"Adrian Dantley"},
   ]},
 
-  q_nba_steals_2k: { clue: "Name an NBA player with 2,000 or more career steals", sport: "NBA", answers: [
-    {name:"John Stockton",rarity:62},{name:"Jason Kidd",rarity:50},{name:"Michael Jordan",rarity:58},
-    {name:"Gary Payton",rarity:35},{name:"Maurice Cheeks",rarity:18},{name:"Chris Paul",rarity:30},
-    {name:"Scottie Pippen",rarity:25},{name:"Alvin Robertson",rarity:8},{name:"Karl Malone",rarity:15},
-    {name:"Mookie Blaylock",rarity:6},
+  q_nba_center_20ppg_2bpg: { clue: "Name an NBA center who averaged 20 or more points per game AND 2 or more blocks per game for their career", sport: "NBA", rules: [{ fact_type: "nba_center" }, { fact_type: "nba_20ppg_career" }, { fact_type: "nba_2bpg_career" }], answers: [
+    {name:"Kareem Abdul-Jabbar"},{name:"Hakeem Olajuwon"},{name:"Shaquille O'Neal"},
+    {name:"David Robinson"},{name:"Patrick Ewing"},{name:"Dikembe Mutombo"},
+    {name:"Alonzo Mourning"},{name:"Dwight Howard"},{name:"Joel Embiid"},
+    {name:"Anthony Davis"},{name:"Bob McAdoo"},{name:"Mark Eaton"},
+    {name:"Manute Bol"},{name:"Elmore Smith"},{name:"Tree Rollins"},
   ]},
 
-  q_nba_triple_doubles50: { clue: "Name an NBA player with 50 or more career triple-doubles", sport: "NBA", answers: [
-    {name:"Russell Westbrook",rarity:72},{name:"Magic Johnson",rarity:60},{name:"Jason Kidd",rarity:42},
-    {name:"LeBron James",rarity:55},{name:"Oscar Robertson",rarity:35},{name:"Rajon Rondo",rarity:20},
-    {name:"Draymond Green",rarity:18},{name:"Fat Lever",rarity:6},{name:"Wilt Chamberlain",rarity:22},
-    {name:"Nikola Jokic",rarity:38},{name:"James Harden",rarity:25},
+  q_nba_acc_college_20ppg_career: { clue: "Name an NBA player who played college basketball in the ACC AND averaged 20 or more points per game for their NBA career", sport: "NBA", rules: [{ fact_type: "college_acc" }, { fact_type: "nba_20ppg_career" }], answers: [
+    {name:"Michael Jordan"},{name:"Elgin Baylor"},{name:"Grant Hill"},
+    {name:"Bob McAdoo"},{name:"Buck Williams"},{name:"Len Bias"},
+    {name:"James Worthy"},{name:"Phil Ford"},{name:"Vince Carter"},
+    {name:"Tracy McGrady"},{name:"Danny Ferry"},{name:"Sam Perkins"},
+    {name:"Jeff Mullins"},{name:"Dennis Scott"},{name:"Bobby Hurley"},
   ]},
 
-  q_nba_spurs_champ: { clue: "Name a player who won an NBA championship with the San Antonio Spurs", sport: "NBA", answers: [
-    {name:"Tim Duncan",rarity:88},{name:"Tony Parker",rarity:75},{name:"Manu Ginobili",rarity:70},
-    {name:"David Robinson",rarity:60},{name:"Kawhi Leonard",rarity:55},{name:"Robert Horry",rarity:28},
-    {name:"Avery Johnson",rarity:30},{name:"Sean Elliott",rarity:22},{name:"Steve Kerr",rarity:38},
-    {name:"Bruce Bowen",rarity:22},{name:"Danny Green",rarity:28},{name:"Boris Diaw",rarity:22},
-    {name:"Patty Mills",rarity:18},{name:"Marco Belinelli",rarity:15},{name:"Tiago Splitter",rarity:10},
-    {name:"Mario Elie",rarity:15},{name:"Stephen Jackson",rarity:18},{name:"Michael Finley",rarity:14},
+  q_nba_all_def_20ppg_season: { clue: "Name an NBA player who was named to an All-Defensive team AND averaged 20 or more points per game in the same season", sport: "NBA", rules: [{ fact_type: "nba_all_defensive_team" }, { fact_type: "nba_all_def_20ppg_same_season" }], answers: [
+    {name:"Michael Jordan"},{name:"LeBron James"},{name:"Scottie Pippen"},
+    {name:"Gary Payton"},{name:"Kevin Durant"},{name:"Kawhi Leonard"},
+    {name:"Giannis Antetokounmpo"},{name:"Jimmy Butler"},{name:"Paul George"},
+    {name:"Draymond Green"},{name:"Luol Deng"},{name:"Ron Artest"},
+    {name:"Dennis Johnson"},{name:"Jerry Sloan"},{name:"Walt Frazier"},
+    {name:"Dave DeBusschere"},{name:"Bobby Jones"},
   ]},
 
-  q_nba_celtics_champ: { clue: "Name a player who won an NBA championship with the Boston Celtics since 2000", sport: "NBA", answers: [
-    {name:"Kevin Garnett",rarity:75},{name:"Paul Pierce",rarity:72},{name:"Ray Allen",rarity:68},
-    {name:"Rajon Rondo",rarity:52},{name:"Jayson Tatum",rarity:58},{name:"Jaylen Brown",rarity:55},
-    {name:"Jrue Holiday",rarity:35},{name:"Al Horford",rarity:28},{name:"Marcus Smart",rarity:32},
-    {name:"Derrick White",rarity:22},{name:"Robert Williams III",rarity:18},{name:"Kristaps Porzingis",rarity:25},
-    {name:"Sam Hauser",rarity:10},{name:"Payton Pritchard",rarity:12},{name:"Leon Powe",rarity:8},
-    {name:"Glen Davis",rarity:8},{name:"Kendrick Perkins",rarity:15},{name:"Tony Allen",rarity:12},
-    {name:"P.J. Brown",rarity:5},{name:"Eddie House",rarity:6},
-  ]},
-
-  q_nba_first_pick: { clue: "Name a player who was selected #1 overall in the NBA Draft", sport: "NBA", answers: [
-    {name:"LeBron James",rarity:88},{name:"Anthony Davis",rarity:72},{name:"Shaquille O'Neal",rarity:82},
-    {name:"Tim Duncan",rarity:75},{name:"Allen Iverson",rarity:70},{name:"Patrick Ewing",rarity:65},
-    {name:"Hakeem Olajuwon",rarity:68},{name:"Kyrie Irving",rarity:60},{name:"Zion Williamson",rarity:52},
-    {name:"Derrick Rose",rarity:50},{name:"Blake Griffin",rarity:58},{name:"John Wall",rarity:48},
-    {name:"Andrea Bargnani",rarity:28},{name:"Greg Oden",rarity:32},{name:"Kwame Brown",rarity:38},
-    {name:"Kenyon Martin",rarity:16},{name:"Elton Brand",rarity:18},{name:"Chris Webber",rarity:40},
-    {name:"Larry Johnson",rarity:26},{name:"Magic Johnson",rarity:78},{name:"David Robinson",rarity:58},
-  ]},
-
-  q_nba_30ppg_season: { clue: "Name an NBA player who averaged 30+ points per game in a regular season", sport: "NBA", answers: [
-    {name:"Wilt Chamberlain",rarity:75},{name:"Michael Jordan",rarity:80},{name:"Kobe Bryant",rarity:55},
-    {name:"LeBron James",rarity:38},{name:"James Harden",rarity:48},{name:"Kevin Durant",rarity:42},
-    {name:"Rick Barry",rarity:30},{name:"Elgin Baylor",rarity:40},{name:"Oscar Robertson",rarity:35},
-    {name:"Pete Maravich",rarity:28},{name:"Allen Iverson",rarity:38},{name:"Dirk Nowitzki",rarity:22},
-    {name:"Tracy McGrady",rarity:25},{name:"George Gervin",rarity:24},{name:"David Thompson",rarity:12},
-    {name:"Bob McAdoo",rarity:15},{name:"Dominique Wilkins",rarity:18},{name:"Dwyane Wade",rarity:20},
-    {name:"Joel Embiid",rarity:22},{name:"Giannis Antetokounmpo",rarity:18},
-  ]},
-
-  q_nba_steals_career: { clue: "Name an NBA player among the all-time top 5 career steals leaders", sport: "NBA", answers: [
-    {name:"John Stockton",rarity:62},{name:"Jason Kidd",rarity:52},{name:"Michael Jordan",rarity:58},
-    {name:"Gary Payton",rarity:35},{name:"Maurice Cheeks",rarity:18},
-  ]},
-
-  q_nba_finals_mvp_notable: { clue: "Name an NBA Finals MVP who played for the team that lost the series", sport: "NBA", answers: [
-    {name:"Jerry West",rarity:35},{name:"Chauncey Billups",rarity:45},{name:"Andre Iguodala",rarity:40},
-    {name:"Kawhi Leonard",rarity:50},{name:"Giannis Antetokounmpo",rarity:42},{name:"Tony Parker",rarity:35},
-    {name:"Dirk Nowitzki",rarity:48},{name:"Dwyane Wade",rarity:52},
+  q_nba_point_guard_champ_10assists: { clue: "Name an NBA point guard who averaged 10 or more assists per game in a season AND won a championship during their career", sport: "NBA", rules: [{ fact_type: "nba_point_guard" }, { fact_type: "nba_10_assists_season" }, { fact_type: "nba_champion" }], answers: [
+    {name:"Magic Johnson"},{name:"John Stockton"},{name:"Chris Paul"},
+    {name:"Isiah Thomas"},{name:"Kevin Johnson"},{name:"Jason Kidd"},
+    {name:"Bob Cousy"},{name:"Rajon Rondo"},{name:"Tim Hardaway"},
+    {name:"Mark Jackson"},{name:"Steve Nash"},{name:"Norm Nixon"},
+    {name:"Guy Rodgers"},{name:"Dennis Johnson"},{name:"Terry Porter"},
   ]},
 
   // ── EXPERT ───────────────────────────────────────────────────────────────────
 
-  q_nba_bust: { clue: "Name an NBA player drafted top-5 overall who never made an All-Star game", sport: "NBA", answers: [
-    {name:"Kwame Brown",rarity:40},{name:"Anthony Bennett",rarity:35},{name:"Michael Olowokandi",rarity:22},
-    {name:"Andrea Bargnani",rarity:20},{name:"Hasheem Thabeet",rarity:18},{name:"Adam Morrison",rarity:12},
-    {name:"Marvin Williams",rarity:10},{name:"Olden Polynice",rarity:5},{name:"Jonathan Bender",rarity:4},
-    {name:"Pervis Ellison",rarity:3},{name:"Joe Smith",rarity:8},{name:"Stromile Swift",rarity:4},
+  q_nba_foreign_born_allstar_champ: { clue: "Name a foreign-born NBA player who was selected to 5 or more All-Star games AND won at least one championship", sport: "NBA", rules: [{ fact_type: "born_outside_us" }, { fact_type: "nba_5_plus_allstar" }, { fact_type: "nba_champion" }], answers: [
+    {name:"Hakeem Olajuwon"},{name:"Tony Parker"},{name:"Dirk Nowitzki"},
+    {name:"Pau Gasol"},{name:"Giannis Antetokounmpo"},{name:"Nikola Jokic"},
+    {name:"Manu Ginobili"},{name:"Tim Duncan"},{name:"Patrick Ewing"},
+    {name:"Steve Nash"},{name:"Vlade Divac"},{name:"Peja Stojakovic"},
+    {name:"Toni Kukoc"},{name:"Rik Smits"},{name:"Chris Bosh"},
+    {name:"Luol Deng"},{name:"Detlef Schrempf"},
   ]},
 
-  q_nba_dpoy: { clue: "Name an NBA player who won Defensive Player of the Year 3 or more times", sport: "NBA", answers: [
-    {name:"Dikembe Mutombo",rarity:50},{name:"Dwight Howard",rarity:45},{name:"Ben Wallace",rarity:40},
-    {name:"Rudy Gobert",rarity:35},{name:"Mark Eaton",rarity:15},{name:"Sidney Moncrief",rarity:10},
-    {name:"Alonzo Mourning",rarity:18},
+  q_nba_dpoy_all_nba: { clue: "Name an NBA player who won Defensive Player of the Year AND was also named to an All-NBA team in the same season", sport: "NBA", rules: [{ fact_type: "nba_dpoy" }, { fact_type: "nba_dpoy_all_nba_same_season" }], answers: [
+    {name:"Michael Jordan"},{name:"Hakeem Olajuwon"},{name:"Kevin Garnett"},
+    {name:"David Robinson"},{name:"Giannis Antetokounmpo"},{name:"Kawhi Leonard"},
+    {name:"Ben Wallace"},{name:"Dwight Howard"},{name:"Dikembe Mutombo"},
+    {name:"Draymond Green"},{name:"Anthony Davis"},{name:"Rudy Gobert"},
+    {name:"Sidney Moncrief"},{name:"Bobby Jones"},{name:"Alvin Robertson"},
+    {name:"Mark Eaton"},{name:"Dennis Rodman"},
   ]},
 
-  q_nba_60pts: { clue: "Name an NBA player who scored 60 or more points in a single game (post-1975)", sport: "NBA", answers: [
-    {name:"Kobe Bryant",rarity:72},{name:"Devin Booker",rarity:30},{name:"David Thompson",rarity:10},
-    {name:"David Robinson",rarity:20},{name:"Michael Jordan",rarity:55},{name:"James Harden",rarity:25},
-    {name:"LeBron James",rarity:22},{name:"Donovan Mitchell",rarity:15},{name:"Luka Doncic",rarity:18},
-    {name:"Giannis Antetokounmpo",rarity:12},{name:"Damian Lillard",rarity:14},{name:"Carmelo Anthony",rarity:20},
-    {name:"Karl-Anthony Towns",rarity:8},{name:"Kemba Walker",rarity:10},
+  q_nba_50pts_and_won_ring: { clue: "Name an NBA player who scored 50 or more points in a game AND won at least one NBA championship", sport: "NBA", rules: [{ fact_type: "nba_50_point_game" }, { fact_type: "nba_champion" }], answers: [
+    {name:"Michael Jordan"},{name:"Kobe Bryant"},{name:"LeBron James"},
+    {name:"Wilt Chamberlain"},{name:"Elgin Baylor"},{name:"Rick Barry"},
+    {name:"Kevin Durant"},{name:"Stephen Curry"},{name:"Jerry West"},
+    {name:"Kareem Abdul-Jabbar"},{name:"Dwyane Wade"},{name:"Magic Johnson"},
+    {name:"Shaquille O'Neal"},{name:"Hakeem Olajuwon"},{name:"Tim Duncan"},
+    {name:"Isiah Thomas"},{name:"Larry Bird"},{name:"Moses Malone"},
+    {name:"Giannis Antetokounmpo"},{name:"Nikola Jokic"},
   ]},
 
-  q_nba_score_rebound: { clue: "Name an NBA player who led the league in both scoring AND rebounding in the same season", sport: "NBA", answers: [
-    {name:"Wilt Chamberlain",rarity:75},{name:"Bob Pettit",rarity:20},{name:"Neil Johnston",rarity:8},
-    {name:"Kevin Garnett",rarity:15},{name:"Giannis Antetokounmpo",rarity:12},
-  ]},
-
-  q_nba_triple_double_season: { clue: "Name an NBA player who averaged a triple-double for an entire season", sport: "NBA", answers: [
-    {name:"Russell Westbrook",rarity:72},{name:"Oscar Robertson",rarity:40},{name:"Nikola Jokic",rarity:30},
-    {name:"LeBron James",rarity:12},
-  ]},
-
-  q_nba_undrafted_star: { clue: "Name an NBA player who went undrafted but was named to at least 3 All-Star teams", sport: "NBA", answers: [
-    {name:"Ben Wallace",rarity:62},{name:"Brad Miller",rarity:10},{name:"Udonis Haslem",rarity:8},
-    {name:"Fred VanVleet",rarity:15},{name:"Jose Calderon",rarity:6},
-  ]},
-
-  q_nba_oldest_youngest: { clue: "Name an NBA player who was selected to the All-Star game at age 19 or younger", sport: "NBA", answers: [
-    {name:"LeBron James",rarity:70},{name:"Kobe Bryant",rarity:65},{name:"Kevin Garnett",rarity:35},
-    {name:"Dwight Howard",rarity:28},{name:"Jermaine O'Neal",rarity:10},{name:"Zion Williamson",rarity:20},
-    {name:"Luka Doncic",rarity:15},
-  ]},
-
-  q_nba_block_leaders: { clue: "Name an NBA player among the all-time top 5 career blocks leaders", sport: "NBA", answers: [
-    {name:"Hakeem Olajuwon",rarity:62},{name:"Dikembe Mutombo",rarity:55},{name:"Kareem Abdul-Jabbar",rarity:45},
-    {name:"Mark Eaton",rarity:18},{name:"Tim Duncan",rarity:38},{name:"David Robinson",rarity:30},
-    {name:"Patrick Ewing",rarity:25},{name:"Tree Rollins",rarity:6},{name:"Robert Parish",rarity:10},
+  q_nba_scoring_champ_no_ring: { clue: "Name an NBA player who won the scoring title AND never won an NBA championship during their career", sport: "NBA", rules: [{ fact_type: "nba_scoring_title" }, { fact_type: "nba_never_won_championship" }], answers: [
+    {name:"Carmelo Anthony"},{name:"Kevin Durant"},{name:"Allen Iverson"},
+    {name:"Dominique Wilkins"},{name:"Adrian Dantley"},{name:"Richie Guerin"},
+    {name:"Pete Maravich"},{name:"Bob McAdoo"},{name:"Neil Johnston"},
+    {name:"George Gervin"},{name:"James Harden"},{name:"Damian Lillard"},
+    {name:"Joel Embiid"},{name:"Bernard King"},{name:"Max Zaslofsky"},
   ]},
 
 };
 
 // ── Difficulty tiers ──────────────────────────────────────────────────────────
 export const NBA_BEGINNER = [
-  "q_nba_champ","q_nba_50pts","q_nba_mvp_multiple","q_nba_points_20k",
-  "q_nba_all_time_scoring","q_nba_lakers_champ","q_nba_bulls_champ",
-  "q_nba_heat_champ","q_nba_mvp_and_champ","q_nba_warriors_champ",
+  "q_nba_champ_foreign","q_nba_mvp_champ_same_year","q_nba_top5_pick_allstar10",
+  "q_nba_50pts_2000s","q_nba_20k_pts_champ","q_nba_lakers_celtics",
+  "q_nba_6th_man_champ","q_nba_finals_mvp_1st_round",
 ];
 
 export const NBA_KNOWLEDGEABLE = [
-  "q_nba_scoring","q_nba_rebounds_10k","q_nba_career_assists","q_nba_assists",
-  "q_nba_steals_2k","q_nba_triple_doubles50","q_nba_spurs_champ","q_nba_celtics_champ",
-  "q_nba_first_pick","q_nba_30ppg_season","q_nba_steals_career","q_nba_finals_mvp_notable",
+  "q_nba_triple_dbl_season_champ","q_nba_undrafted_mvp","q_nba_coach_500w_ring",
+  "q_nba_scoring_title_assists_title","q_nba_center_20ppg_2bpg",
+  "q_nba_acc_college_20ppg_career","q_nba_all_def_20ppg_season",
+  "q_nba_point_guard_champ_10assists",
 ];
 
 export const NBA_EXPERT = [
-  "q_nba_bust","q_nba_dpoy","q_nba_60pts","q_nba_score_rebound",
-  "q_nba_triple_double_season","q_nba_undrafted_star","q_nba_oldest_youngest",
-  "q_nba_block_leaders",
+  "q_nba_foreign_born_allstar_champ","q_nba_dpoy_all_nba",
+  "q_nba_50pts_and_won_ring","q_nba_scoring_champ_no_ring",
 ];

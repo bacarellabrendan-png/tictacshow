@@ -135,14 +135,3 @@ export function matchAnswer(guess, questionKey) {
   }
   return null;
 }
-
-/** Flat, deduplicated, sorted list of every athlete name — used for autocomplete. */
-export const ATHLETE_INDEX = (() => {
-  const seen = {}, list = [];
-  Object.values(ANSWER_POOLS).forEach(pool =>
-    pool.answers.forEach(a => {
-      if (!seen[a.name]) { seen[a.name] = true; list.push(a.name); }
-    })
-  );
-  return list.sort((a, b) => a.localeCompare(b));
-})();

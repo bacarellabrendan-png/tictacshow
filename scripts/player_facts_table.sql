@@ -1,7 +1,7 @@
--- ─── PLAYER_FACTS TABLE ─────────────────────────────────────────────────────
--- Stores factual attributes about athletes for answer validation.
--- Each row says: "this player, in this sport, has this fact (optionally with a value)."
+-- Standalone SQL for running in the Supabase dashboard.
+-- Creates the player_facts table, indexes, RLS policy, and validate_answer RPC.
 
+-- ─── TABLE ──────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS player_facts (
   id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   player_name TEXT    NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS player_facts (
   UNIQUE (player_name, sport, fact_type, fact_value)
 );
 
--- Indexes for the RPC lookup patterns
+-- ─── INDEXES ────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_player_facts_name_type
   ON player_facts (player_name, fact_type);
 
@@ -24,17 +24,19 @@ CREATE INDEX IF NOT EXISTS idx_player_facts_sport
 -- ─── RLS ────────────────────────────────────────────────────────────────────
 ALTER TABLE player_facts ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "player_facts_select" ON player_facts
-  FOR SELECT USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'player_facts' AND policyname = 'player_facts_select'
+  ) THEN
+    CREATE POLICY "player_facts_select" ON player_facts
+      FOR SELECT USING (true);
+  END IF;
+END
+$$;
 
 -- ─── VALIDATE_ANSWER RPC ────────────────────────────────────────────────────
--- Loops through each rule, checks if a matching player_facts row exists.
--- Returns true only if ALL rules are satisfied (AND logic).
---
--- Rule format (JSONB array):
---   { "fact_type": "nba_champion" }                            → existence check
---   { "fact_type": "played_for_team", "fact_value": "Lakers" } → exact match
-
 CREATE OR REPLACE FUNCTION validate_answer(
   p_player_name TEXT,
   p_sport       TEXT,

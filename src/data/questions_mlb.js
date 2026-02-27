@@ -1,197 +1,204 @@
 // ─── MLB QUESTIONS ────────────────────────────────────────────────────────────
+// Every question has TWO conditions joined by AND.
 
 export const MLB_POOLS = {
 
   // ── BEGINNER ─────────────────────────────────────────────────────────────────
 
-  q_mlb_hr: { clue: "Name an MLB player who hit 500 or more career home runs", sport: "MLB", answers: [
-    {name:"Barry Bonds",rarity:65},{name:"Hank Aaron",rarity:60},{name:"Babe Ruth",rarity:70},
-    {name:"Alex Rodriguez",rarity:45},{name:"Willie Mays",rarity:42},{name:"Ken Griffey Jr",rarity:35},
-    {name:"Albert Pujols",rarity:40},{name:"Jim Thome",rarity:18},{name:"Sammy Sosa",rarity:28},
-    {name:"Frank Thomas",rarity:20},{name:"David Ortiz",rarity:30},{name:"Manny Ramirez",rarity:22},
-    {name:"Mark McGwire",rarity:25},{name:"Reggie Jackson",rarity:15},{name:"Gary Sheffield",rarity:12},
-    {name:"Mike Schmidt",rarity:10},{name:"Harmon Killebrew",rarity:7},{name:"Rafael Palmeiro",rarity:8},
-    {name:"Eddie Mathews",rarity:5},{name:"Ernie Banks",rarity:9},
+  q_mlb_cy_yankees: { clue: "Name an MLB pitcher who won the Cy Young Award AND played for the New York Yankees at some point in their career", sport: "MLB", rules: [{ fact_type: "mlb_cy_young" }, { fact_type: "played_for_team", fact_value: "Yankees" }], answers: [
+    {name:"Roger Clemens"},{name:"Randy Johnson"},{name:"CC Sabathia"},
+    {name:"Sparky Lyle"},{name:"Whitey Ford"},{name:"Bob Turley"},
+    {name:"Mike Mussina"},{name:"Bob Welch"},{name:"Corey Kluber"},
+    {name:"Gerrit Cole"},{name:"David Cone"},{name:"Tom Gordon"},
+    {name:"Ron Guidry"},{name:"Denny McLain"},{name:"Pat Hentgen"},
+    {name:"Vida Blue"},{name:"Jack McDowell"},
   ]},
 
-  q_mlb_batting: { clue: "Name an MLB player who hit .400 or above in a single season since 1900", sport: "MLB", answers: [
-    {name:"Ted Williams",rarity:60},{name:"Ty Cobb",rarity:50},{name:"Rogers Hornsby",rarity:45},
-    {name:"George Sisler",rarity:20},{name:"Harry Heilmann",rarity:10},{name:"Babe Ruth",rarity:15},
-    {name:"Bill Terry",rarity:8},{name:"Jesse Burkett",rarity:5},
+  q_mlb_300hr_300sb: { clue: "Name an MLB player with 300 or more career home runs AND 300 or more career stolen bases", sport: "MLB", rules: [{ fact_type: "mlb_300_home_runs" }, { fact_type: "mlb_300_stolen_bases" }], answers: [
+    {name:"Willie Mays"},{name:"Barry Bonds"},{name:"Andre Dawson"},
+    {name:"Bobby Bonds"},{name:"Reggie Sanders"},{name:"Steve Finley"},
+    {name:"Raul Mondesi"},{name:"Eric Davis"},{name:"Larry Doby"},
+    {name:"Chili Davis"},{name:"Howard Johnson"},{name:"Ron Gant"},
+    {name:"Cesar Cedeno"},{name:"Dale Murphy"},{name:"Henry Rodriguez"},
   ]},
 
-  q_mlb_3000_hits: { clue: "Name an MLB player with 3,000 or more career hits", sport: "MLB", answers: [
-    {name:"Pete Rose",rarity:72},{name:"Ty Cobb",rarity:55},{name:"Hank Aaron",rarity:58},
-    {name:"Stan Musial",rarity:40},{name:"Derek Jeter",rarity:65},{name:"Willie Mays",rarity:50},
-    {name:"Albert Pujols",rarity:38},{name:"Ichiro Suzuki",rarity:48},{name:"Cal Ripken Jr",rarity:52},
-    {name:"Eddie Murray",rarity:25},{name:"Paul Molitor",rarity:22},{name:"Tony Gwynn",rarity:40},
-    {name:"George Brett",rarity:32},{name:"Robin Yount",rarity:18},{name:"Dave Winfield",rarity:20},
-    {name:"Wade Boggs",rarity:28},{name:"Craig Biggio",rarity:22},{name:"Rod Carew",rarity:20},
-    {name:"Rickey Henderson",rarity:25},{name:"Lou Brock",rarity:18},{name:"Adrian Beltre",rarity:20},
-    {name:"Rafael Palmeiro",rarity:12},{name:"Miguel Cabrera",rarity:30},{name:"Carl Yastrzemski",rarity:22},
+  q_mlb_300avg_2500hits: { clue: "Name an MLB player who batted .300 or higher for their career AND had 2,500 or more career hits", sport: "MLB", rules: [{ fact_type: "mlb_300_career_avg" }, { fact_type: "mlb_2500_career_hits" }], answers: [
+    {name:"Pete Rose"},{name:"Ty Cobb"},{name:"Hank Aaron"},
+    {name:"Stan Musial"},{name:"Derek Jeter"},{name:"Willie Mays"},
+    {name:"Albert Pujols"},{name:"Ichiro Suzuki"},{name:"Cal Ripken Jr"},
+    {name:"Paul Molitor"},{name:"Tony Gwynn"},{name:"George Brett"},
+    {name:"Robin Yount"},{name:"Rod Carew"},{name:"Rickey Henderson"},
+    {name:"Lou Brock"},{name:"Wade Boggs"},{name:"Eddie Murray"},
+    {name:"Dave Winfield"},{name:"Craig Biggio"},{name:"Frank Robinson"},
+    {name:"Al Simmons"},{name:"Rogers Hornsby"},{name:"Tris Speaker"},
   ]},
 
-  q_mlb_cy_young: { clue: "Name an MLB pitcher who won the Cy Young Award 3 or more times", sport: "MLB", answers: [
-    {name:"Roger Clemens",rarity:60},{name:"Randy Johnson",rarity:50},{name:"Greg Maddux",rarity:45},
-    {name:"Clayton Kershaw",rarity:35},{name:"Pedro Martinez",rarity:30},{name:"Steve Carlton",rarity:25},
-    {name:"Tom Seaver",rarity:18},
+  q_mlb_ws_mvp_mvp: { clue: "Name an MLB player who won the World Series MVP AND also won the regular season MVP award during their career", sport: "MLB", rules: [{ fact_type: "mlb_ws_mvp" }, { fact_type: "mlb_mvp" }], answers: [
+    {name:"Barry Bonds"},{name:"Mike Schmidt"},{name:"Willie Stargell"},
+    {name:"Bob Gibson"},{name:"Sandy Koufax"},{name:"Mickey Mantle"},
+    {name:"Yogi Berra"},{name:"Lou Brock"},{name:"Orlando Cepeda"},
+    {name:"Hank Aaron"},{name:"Frank Robinson"},{name:"Reggie Jackson"},
+    {name:"Dustin Pedroia"},{name:"Manny Ramirez"},{name:"David Ortiz"},
   ]},
 
-  q_mlb_ws_rings3: { clue: "Name an MLB player who won 3 or more World Series rings as a player", sport: "MLB", answers: [
-    {name:"Yogi Berra",rarity:55},{name:"Joe DiMaggio",rarity:52},{name:"Mickey Mantle",rarity:58},
-    {name:"Babe Ruth",rarity:60},{name:"Whitey Ford",rarity:28},{name:"Derek Jeter",rarity:48},
-    {name:"Roger Maris",rarity:18},{name:"Phil Rizzuto",rarity:12},{name:"Bernie Williams",rarity:20},
-    {name:"Andy Pettitte",rarity:22},{name:"Mariano Rivera",rarity:40},{name:"Elston Howard",rarity:8},
-    {name:"Hank Bauer",rarity:6},{name:"Gil McDougald",rarity:5},
+  q_mlb_cy_dodgers: { clue: "Name an MLB pitcher who won the Cy Young Award AND played for the Los Angeles Dodgers at some point in their career", sport: "MLB", rules: [{ fact_type: "mlb_cy_young" }, { fact_type: "played_for_team", fact_value: "Dodgers" }], answers: [
+    {name:"Clayton Kershaw"},{name:"Sandy Koufax"},{name:"Don Drysdale"},
+    {name:"Orel Hershiser"},{name:"Fernando Valenzuela"},{name:"Mike Marshall"},
+    {name:"Pedro Martinez"},{name:"Eric Gagne"},{name:"Brandon Webb"},
+    {name:"Randy Johnson"},{name:"Bob Welch"},{name:"Rick Sutcliffe"},
+    {name:"Bret Saberhagen"},{name:"Trevor Bauer"},{name:"Walker Buehler"},
   ]},
 
-  q_mlb_yankees_ws: { clue: "Name a player who won a World Series with the New York Yankees since 1996", sport: "MLB", answers: [
-    {name:"Derek Jeter",rarity:88},{name:"Mariano Rivera",rarity:85},{name:"Bernie Williams",rarity:72},
-    {name:"Andy Pettitte",rarity:75},{name:"Jorge Posada",rarity:68},{name:"Paul O'Neill",rarity:55},
-    {name:"Tino Martinez",rarity:45},{name:"Scott Brosius",rarity:30},{name:"David Wells",rarity:28},
-    {name:"Orlando Hernandez",rarity:20},{name:"Chuck Knoblauch",rarity:22},{name:"David Cone",rarity:30},
-    {name:"Roger Clemens",rarity:38},{name:"Alex Rodriguez",rarity:42},{name:"Hideki Matsui",rarity:35},
-    {name:"Johnny Damon",rarity:28},{name:"Robinson Cano",rarity:22},{name:"CC Sabathia",rarity:25},
-    {name:"Nick Swisher",rarity:15},{name:"Mark Teixeira",rarity:22},
+  q_mlb_3000k_300w: { clue: "Name an MLB pitcher with 3,000 or more career strikeouts AND 300 or more career wins", sport: "MLB", rules: [{ fact_type: "mlb_3000_strikeouts" }, { fact_type: "mlb_300_wins" }], answers: [
+    {name:"Nolan Ryan"},{name:"Roger Clemens"},{name:"Randy Johnson"},
+    {name:"Greg Maddux"},{name:"Steve Carlton"},{name:"Tom Seaver"},
+    {name:"Walter Johnson"},{name:"Bert Blyleven"},{name:"Don Sutton"},
+    {name:"Phil Niekro"},{name:"Gaylord Perry"},{name:"Bob Gibson"},
+    {name:"Curt Schilling"},{name:"Pedro Martinez"},{name:"Cy Young"},
   ]},
 
-  q_mlb_300_wins: { clue: "Name an MLB pitcher with 300 or more career wins", sport: "MLB", answers: [
-    {name:"Nolan Ryan",rarity:60},{name:"Roger Clemens",rarity:50},{name:"Randy Johnson",rarity:48},
-    {name:"Greg Maddux",rarity:42},{name:"Tom Seaver",rarity:25},{name:"Steve Carlton",rarity:20},
-    {name:"Warren Spahn",rarity:15},{name:"Don Sutton",rarity:12},{name:"Phil Niekro",rarity:8},
-    {name:"Gaylord Perry",rarity:7},{name:"Early Wynn",rarity:5},{name:"Kid Nichols",rarity:2},
+  q_mlb_ws_ring_red_sox_yankees: { clue: "Name an MLB player who won a World Series with the Boston Red Sox AND at some point played for the New York Yankees", sport: "MLB", rules: [{ fact_type: "mlb_ws_winner_red_sox" }, { fact_type: "played_for_team", fact_value: "Yankees" }], answers: [
+    {name:"Roger Clemens"},{name:"Johnny Damon"},{name:"Wade Boggs"},
+    {name:"Pedro Martinez"},{name:"Derek Lowe"},{name:"Keith Foulke"},
+    {name:"Curt Schilling"},{name:"Bill Buckner"},{name:"Bucky Dent"},
+    {name:"David Price"},{name:"Nathan Eovaldi"},{name:"Manny Ramirez"},
+    {name:"Jacoby Ellsbury"},{name:"Nick Punto"},{name:"Adrian Gonzalez"},
+  ]},
+
+  q_mlb_500hr_hof: { clue: "Name an MLB player who hit 500 or more career home runs AND was inducted into the Hall of Fame", sport: "MLB", rules: [{ fact_type: "mlb_500_home_runs" }, { fact_type: "mlb_hall_of_fame" }], answers: [
+    {name:"Hank Aaron"},{name:"Babe Ruth"},{name:"Willie Mays"},
+    {name:"Ken Griffey Jr"},{name:"Jim Thome"},{name:"Ernie Banks"},
+    {name:"Mike Schmidt"},{name:"Reggie Jackson"},{name:"Harmon Killebrew"},
+    {name:"Eddie Mathews"},{name:"Mel Ott"},{name:"Ted Williams"},
+    {name:"Mickey Mantle"},{name:"Jimmie Foxx"},{name:"Willie McCovey"},
+    {name:"Frank Robinson"},{name:"Frank Thomas"},{name:"David Ortiz"},
   ]},
 
   // ── KNOWLEDGEABLE ─────────────────────────────────────────────────────────────
 
-  q_mlb_stolen: { clue: "Name an MLB player with 900 or more career stolen bases", sport: "MLB", answers: [
-    {name:"Rickey Henderson",rarity:70},{name:"Lou Brock",rarity:40},{name:"Ty Cobb",rarity:20},
-    {name:"Tim Raines",rarity:18},{name:"Vince Coleman",rarity:12},{name:"Billy Hamilton",rarity:15},
-    {name:"Arlie Latham",rarity:4},{name:"Eddie Collins",rarity:8},
+  q_mlb_cy_young_red_sox: { clue: "Name an MLB pitcher who won the Cy Young Award AND played for the Boston Red Sox at some point in their career", sport: "MLB", rules: [{ fact_type: "mlb_cy_young" }, { fact_type: "played_for_team", fact_value: "Red Sox" }], answers: [
+    {name:"Pedro Martinez"},{name:"Roger Clemens"},{name:"Curt Schilling"},
+    {name:"Randy Johnson"},{name:"Derek Lowe"},{name:"Tim Wakefield"},
+    {name:"Bret Saberhagen"},{name:"Rick Sutcliffe"},{name:"Bob Welch"},
+    {name:"Zack Greinke"},{name:"Cole Hamels"},{name:"Chris Sale"},
+    {name:"Jake Peavy"},{name:"Johan Santana"},{name:"David Price"},
+    {name:"Roy Halladay"},
   ]},
 
-  q_mlb_strikeouts: { clue: "Name an MLB pitcher with 3,500 or more career strikeouts", sport: "MLB", answers: [
-    {name:"Nolan Ryan",rarity:70},{name:"Randy Johnson",rarity:55},{name:"Roger Clemens",rarity:45},
-    {name:"Pedro Martinez",rarity:28},{name:"Greg Maddux",rarity:25},{name:"Steve Carlton",rarity:30},
-    {name:"Bob Gibson",rarity:22},{name:"Walter Johnson",rarity:18},{name:"Tom Seaver",rarity:20},
-    {name:"Bert Blyleven",rarity:15},{name:"Curt Schilling",rarity:14},{name:"Don Sutton",rarity:12},
-    {name:"Gaylord Perry",rarity:8},{name:"Justin Verlander",rarity:20},
+  q_mlb_batting_title_ws: { clue: "Name an MLB hitter who won a batting title AND won the World Series at some point in their career", sport: "MLB", rules: [{ fact_type: "mlb_batting_title" }, { fact_type: "mlb_ws_winner" }], answers: [
+    {name:"Ted Williams"},{name:"Tony Gwynn"},{name:"Wade Boggs"},
+    {name:"Rod Carew"},{name:"Pete Rose"},{name:"Mickey Mantle"},
+    {name:"Joe DiMaggio"},{name:"Stan Musial"},{name:"Richie Ashburn"},
+    {name:"Ferris Fain"},{name:"Carl Yastrzemski"},{name:"George Brett"},
+    {name:"Freddie Freeman"},{name:"Albert Pujols"},{name:"Derek Jeter"},
+    {name:"Frank Robinson"},{name:"Robinson Cano"},{name:"Don Mattingly"},
+    {name:"Jeff Bagwell"},{name:"Paul O'Neill"},
   ]},
 
-  q_mlb_red_sox_ws: { clue: "Name a player who won the World Series with the Boston Red Sox since 2000", sport: "MLB", answers: [
-    {name:"David Ortiz",rarity:88},{name:"Pedro Martinez",rarity:72},{name:"Manny Ramirez",rarity:70},
-    {name:"Curt Schilling",rarity:62},{name:"Johnny Damon",rarity:55},{name:"Jason Varitek",rarity:45},
-    {name:"Dustin Pedroia",rarity:48},{name:"Kevin Youkilis",rarity:38},{name:"Josh Beckett",rarity:42},
-    {name:"Jonathan Papelbon",rarity:35},{name:"Kevin Millar",rarity:28},{name:"Tim Wakefield",rarity:22},
-    {name:"Jacoby Ellsbury",rarity:32},{name:"Jon Lester",rarity:38},{name:"Mike Lowell",rarity:32},
-    {name:"Clay Buchholz",rarity:22},{name:"David Price",rarity:18},{name:"Craig Kimbrel",rarity:20},
-    {name:"J.D. Drew",rarity:25},{name:"Xander Bogaerts",rarity:15},
+  q_mlb_30hr_30sb_ws: { clue: "Name an MLB player who hit 30 or more home runs AND stole 30 or more bases in the same season AND won a World Series during their career", sport: "MLB", rules: [{ fact_type: "mlb_30_30_season" }, { fact_type: "mlb_ws_winner" }], answers: [
+    {name:"Willie Mays"},{name:"Barry Bonds"},{name:"Bobby Bonds"},
+    {name:"Eric Davis"},{name:"Darryl Strawberry"},{name:"Reggie Sanders"},
+    {name:"Larry Walker"},{name:"Ellis Burks"},{name:"Marquis Grissom"},
+    {name:"Ron Gant"},{name:"Alfonso Soriano"},{name:"Derek Jeter"},
+    {name:"Alex Rodriguez"},{name:"Trot Nixon"},{name:"Vladimir Guerrero"},
   ]},
 
-  q_mlb_dodgers_ws: { clue: "Name a player who won the World Series with the Los Angeles Dodgers", sport: "MLB", answers: [
-    {name:"Clayton Kershaw",rarity:78},{name:"Mookie Betts",rarity:68},{name:"Cody Bellinger",rarity:60},
-    {name:"Corey Seager",rarity:52},{name:"Justin Turner",rarity:45},{name:"Walker Buehler",rarity:35},
-    {name:"Kenley Jansen",rarity:40},{name:"Kirk Gibson",rarity:62},{name:"Orel Hershiser",rarity:65},
-    {name:"Steve Sax",rarity:22},{name:"Fernando Valenzuela",rarity:55},{name:"Pedro Guerrero",rarity:35},
-    {name:"Max Muncy",rarity:28},{name:"Chris Taylor",rarity:18},{name:"Julio Urias",rarity:22},
+  q_mlb_no_hitter_ws: { clue: "Name an MLB pitcher who threw a no-hitter AND won a World Series during their career", sport: "MLB", rules: [{ fact_type: "mlb_no_hitter" }, { fact_type: "mlb_ws_winner" }], answers: [
+    {name:"Sandy Koufax"},{name:"Nolan Ryan"},{name:"Don Larsen"},
+    {name:"Bob Gibson"},{name:"Jim Bunning"},{name:"Catfish Hunter"},
+    {name:"Tom Seaver"},{name:"Jim Palmer"},{name:"John Candelaria"},
+    {name:"Dennis Martinez"},{name:"Roy Halladay"},{name:"Mike Witt"},
+    {name:"David Cone"},{name:"David Wells"},{name:"Mark Buehrle"},
+    {name:"Randy Johnson"},{name:"Len Barker"},{name:"Tom Browning"},
+    {name:"Bob Forsch"},{name:"Allie Reynolds"},
   ]},
 
-  q_mlb_ss_300hr: { clue: "Name an MLB shortstop with 300 or more career home runs", sport: "MLB", answers: [
-    {name:"Alex Rodriguez",rarity:65},{name:"Derek Jeter",rarity:35},{name:"Ernie Banks",rarity:30},
-    {name:"Cal Ripken Jr",rarity:55},{name:"Barry Larkin",rarity:15},{name:"Miguel Tejada",rarity:12},
-    {name:"Nomar Garciaparra",rarity:10},{name:"Alan Trammell",rarity:8},{name:"Robin Yount",rarity:12},
-    {name:"Trea Turner",rarity:10},
+  q_mlb_ss_allstar_ws: { clue: "Name an MLB shortstop who was selected to at least 5 All-Star games AND won a World Series during their career", sport: "MLB", rules: [{ fact_type: "mlb_shortstop_5_allstar" }, { fact_type: "mlb_ws_winner" }], answers: [
+    {name:"Derek Jeter"},{name:"Cal Ripken Jr"},{name:"Ernie Banks"},
+    {name:"Ozzie Smith"},{name:"Alan Trammell"},{name:"Robin Yount"},
+    {name:"Arky Vaughan"},{name:"Lou Boudreau"},{name:"Luke Appling"},
+    {name:"Pee Wee Reese"},{name:"Phil Rizzuto"},{name:"Luis Aparicio"},
+    {name:"Barry Larkin"},{name:"Alex Rodriguez"},{name:"Nomar Garciaparra"},
   ]},
 
-  q_mlb_200hits_5: { clue: "Name an MLB player who had 200 or more hits in 5 or more different seasons", sport: "MLB", answers: [
-    {name:"Pete Rose",rarity:55},{name:"Ichiro Suzuki",rarity:70},{name:"Ty Cobb",rarity:42},
-    {name:"Wade Boggs",rarity:35},{name:"Derek Jeter",rarity:30},{name:"Rogers Hornsby",rarity:20},
-    {name:"Chuck Klein",rarity:8},{name:"Paul Waner",rarity:10},{name:"Lou Gehrig",rarity:25},
-    {name:"Al Simmons",rarity:6},{name:"Charlie Gehringer",rarity:5},
+  q_mlb_manager_ws_twice: { clue: "Name an MLB manager who won 2 or more World Series championships AND won 1,500 or more career regular season games", sport: "MLB", rules: [{ fact_type: "mlb_manager_2_ws" }, { fact_type: "mlb_manager_1500_wins" }], answers: [
+    {name:"Joe McCarthy"},{name:"Sparky Anderson"},{name:"Tony La Russa"},
+    {name:"Joe Torre"},{name:"Casey Stengel"},{name:"Miller Huggins"},
+    {name:"Walter Alston"},{name:"Connie Mack"},{name:"Frank Chance"},
+    {name:"Pat Moran"},{name:"Al Lopez"},{name:"Bill McKechnie"},
+    {name:"Buck Showalter"},{name:"Bobby Cox"},{name:"Dusty Baker"},
   ]},
 
-  q_mlb_perfect_game: { clue: "Name an MLB pitcher who threw a perfect game", sport: "MLB", answers: [
-    {name:"Roy Halladay",rarity:48},{name:"Felix Hernandez",rarity:42},{name:"Dallas Braden",rarity:20},
-    {name:"Philip Humber",rarity:15},{name:"Matt Cain",rarity:25},{name:"Don Larsen",rarity:52},
-    {name:"David Cone",rarity:38},{name:"David Wells",rarity:35},{name:"Dennis Martinez",rarity:28},
-    {name:"Kenny Rogers",rarity:22},{name:"Len Barker",rarity:18},{name:"Mike Witt",rarity:15},
-    {name:"Tom Browning",rarity:18},{name:"Catfish Hunter",rarity:30},{name:"Jim Bunning",rarity:22},
-    {name:"Sandy Koufax",rarity:40},{name:"Randy Johnson",rarity:38},{name:"Mark Buehrle",rarity:28},
+  q_mlb_closer_300sv_ws: { clue: "Name an MLB closer who recorded 300 or more career saves AND won a World Series during their career", sport: "MLB", rules: [{ fact_type: "mlb_300_saves" }, { fact_type: "mlb_ws_winner" }], answers: [
+    {name:"Mariano Rivera"},{name:"Rollie Fingers"},{name:"Goose Gossage"},
+    {name:"Lee Smith"},{name:"John Smoltz"},{name:"Jonathan Papelbon"},
+    {name:"Billy Wagner"},{name:"Dennis Eckersley"},{name:"Trevor Hoffman"},
+    {name:"Craig Kimbrel"},{name:"Jose Mesa"},{name:"Jeff Shaw"},
+    {name:"Tom Henke"},{name:"Jeff Reardon"},{name:"Randy Myers"},
   ]},
 
-  q_mlb_manager_2000: { clue: "Name an MLB manager with 2,000 or more career wins", sport: "MLB", answers: [
-    {name:"Connie Mack",rarity:30},{name:"John McGraw",rarity:20},{name:"Tony La Russa",rarity:45},
-    {name:"Bobby Cox",rarity:38},{name:"Joe Torre",rarity:42},{name:"Sparky Anderson",rarity:28},
-    {name:"Dusty Baker",rarity:22},{name:"Bruce Bochy",rarity:18},{name:"Bucky Harris",rarity:5},
-    {name:"Joe McCarthy",rarity:10},{name:"Walter Alston",rarity:8},{name:"Leo Durocher",rarity:6},
-  ]},
-
-  q_mlb_gold_glove_ss5: { clue: "Name an MLB shortstop who won 5 or more Gold Glove awards", sport: "MLB", answers: [
-    {name:"Ozzie Smith",rarity:72},{name:"Omar Vizquel",rarity:45},{name:"Luis Aparicio",rarity:28},
-    {name:"Mark Belanger",rarity:12},{name:"Dave Concepcion",rarity:10},{name:"Derek Jeter",rarity:35},
-    {name:"Troy Tulowitzki",rarity:20},{name:"Brendan Ryan",rarity:4},
+  q_mlb_40hr_dodgers: { clue: "Name an MLB hitter who hit 40 or more home runs in a season AND played for the Los Angeles Dodgers at some point in their career", sport: "MLB", rules: [{ fact_type: "mlb_40_hr_season" }, { fact_type: "played_for_team", fact_value: "Dodgers" }], answers: [
+    {name:"Duke Snider"},{name:"Pedro Guerrero"},{name:"Gary Sheffield"},
+    {name:"Shawn Green"},{name:"Mike Piazza"},{name:"Cody Bellinger"},
+    {name:"Manny Ramirez"},{name:"Matt Kemp"},{name:"Joc Pederson"},
+    {name:"Freddie Freeman"},{name:"Edwin Rios"},{name:"Carl Furillo"},
+    {name:"Roy Campanella"},{name:"Jim Wynn"},{name:"Frank Howard"},
+    {name:"Steve Garvey"},{name:"Reggie Smith"},
   ]},
 
   // ── EXPERT ───────────────────────────────────────────────────────────────────
 
-  q_mlb_triple_crown: { clue: "Name an MLB player who won the Triple Crown since 1950", sport: "MLB", answers: [
-    {name:"Miguel Cabrera",rarity:40},{name:"Mickey Mantle",rarity:35},{name:"Carl Yastrzemski",rarity:30},
-    {name:"Frank Robinson",rarity:22},
+  q_mlb_pitcher_cg_ws: { clue: "Name an MLB pitcher who threw 20 or more complete games in a season AND won a World Series during their career", sport: "MLB", rules: [{ fact_type: "mlb_20_complete_game_season" }, { fact_type: "mlb_ws_winner" }], answers: [
+    {name:"Sandy Koufax"},{name:"Bob Gibson"},{name:"Tom Seaver"},
+    {name:"Steve Carlton"},{name:"Ferguson Jenkins"},{name:"Catfish Hunter"},
+    {name:"Jim Palmer"},{name:"Gaylord Perry"},{name:"Don Sutton"},
+    {name:"Phil Niekro"},{name:"Nolan Ryan"},{name:"Warren Spahn"},
+    {name:"Juan Marichal"},{name:"Mickey Lolich"},{name:"Vida Blue"},
+    {name:"Curt Schilling"},{name:"Roger Clemens"},{name:"Randy Johnson"},
   ]},
 
-  q_mlb_no_hitter: { clue: "Name an MLB pitcher who threw 2 or more career no-hitters", sport: "MLB", answers: [
-    {name:"Nolan Ryan",rarity:70},{name:"Sandy Koufax",rarity:40},{name:"Max Scherzer",rarity:22},
-    {name:"Justin Verlander",rarity:18},{name:"Bob Feller",rarity:20},{name:"Cy Young",rarity:18},
-    {name:"Jim Maloney",rarity:6},{name:"Allie Reynolds",rarity:5},{name:"Virgil Trucks",rarity:5},
-    {name:"Larry Corcoran",rarity:4},{name:"Bob Forsch",rarity:4},{name:"Ken Holtzman",rarity:5},
+  q_mlb_cy_young_ws_same_year: { clue: "Name an MLB pitcher who won the Cy Young Award AND won the World Series in the same year", sport: "MLB", rules: [{ fact_type: "mlb_cy_young" }, { fact_type: "mlb_cy_young_ws_same_year" }], answers: [
+    {name:"Sandy Koufax"},{name:"Bob Gibson"},{name:"Randy Johnson"},
+    {name:"Roger Clemens"},{name:"Greg Maddux"},{name:"Pedro Martinez"},
+    {name:"Orel Hershiser"},{name:"Rick Sutcliffe"},{name:"Ron Guidry"},
+    {name:"Vern Law"},{name:"Vernon Gomez"},{name:"Denny McLain"},
+    {name:"Mike McCormick"},{name:"Mike Cuellar"},{name:"Jim Perry"},
   ]},
 
-  q_mlb_steals100: { clue: "Name an MLB player who stole 100 or more bases in a single season", sport: "MLB", answers: [
-    {name:"Rickey Henderson",rarity:72},{name:"Lou Brock",rarity:45},{name:"Vince Coleman",rarity:40},
-    {name:"Maury Wills",rarity:25},
+  q_mlb_batting_champ_foreign: { clue: "Name an MLB player born outside the United States who won a batting title AND was inducted into the Hall of Fame", sport: "MLB", rules: [{ fact_type: "born_outside_us" }, { fact_type: "mlb_batting_title" }, { fact_type: "mlb_hall_of_fame" }], answers: [
+    {name:"Roberto Clemente"},{name:"Rod Carew"},{name:"Tony Gwynn"},
+    {name:"Vladimir Guerrero"},{name:"Ichiro Suzuki"},{name:"Albert Pujols"},
+    {name:"Miguel Cabrera"},{name:"Martin Dihigo"},{name:"Lefty O'Doul"},
+    {name:"Cesar Cedeno"},{name:"Matty Alou"},{name:"Andres Galarraga"},
+    {name:"Jorge Posada"},{name:"Orlando Cepeda"},{name:"Roberto Alomar"},
   ]},
 
-  q_mlb_300_300: { clue: "Name an MLB player with 300+ career home runs AND 300+ career stolen bases", sport: "MLB", answers: [
-    {name:"Willie Mays",rarity:60},{name:"Barry Bonds",rarity:55},{name:"Andre Dawson",rarity:20},
-    {name:"Reggie Sanders",rarity:5},{name:"Steve Finley",rarity:4},{name:"Raul Mondesi",rarity:5},
-    {name:"Eric Davis",rarity:6},{name:"Larry Doby",rarity:8},{name:"Chili Davis",rarity:5},
-  ]},
-
-  q_mlb_pitcher_20k: { clue: "Name an MLB pitcher who struck out 20 batters in a single game", sport: "MLB", answers: [
-    {name:"Roger Clemens",rarity:65},{name:"Kerry Wood",rarity:40},{name:"Max Scherzer",rarity:30},
-    {name:"Randy Johnson",rarity:15},{name:"Tom Cheney",rarity:5},
-  ]},
-
-  q_mlb_cy_consecutive: { clue: "Name an MLB pitcher who won back-to-back Cy Young Awards", sport: "MLB", answers: [
-    {name:"Randy Johnson",rarity:55},{name:"Greg Maddux",rarity:50},{name:"Roger Clemens",rarity:48},
-    {name:"Clayton Kershaw",rarity:38},{name:"Pedro Martinez",rarity:42},{name:"Tim Lincecum",rarity:22},
-    {name:"Gaylord Perry",rarity:8},{name:"Bret Saberhagen",rarity:10},{name:"Denny McLain",rarity:8},
-    {name:"Sandy Koufax",rarity:18},{name:"Dwight Gooden",rarity:12},{name:"Zack Greinke",rarity:10},
-  ]},
-
-  q_mlb_consecutive_games: { clue: "Name an MLB player who played in 500 or more consecutive games", sport: "MLB", answers: [
-    {name:"Cal Ripken Jr",rarity:88},{name:"Lou Gehrig",rarity:78},{name:"Everett Scott",rarity:38},
-    {name:"Steve Garvey",rarity:32},{name:"Billy Williams",rarity:28},{name:"Joe Sewell",rarity:22},
-    {name:"Stan Musial",rarity:18},{name:"Eddie Yost",rarity:12},{name:"Gus Suhr",rarity:8},
-    {name:"Pete Rose",rarity:15},{name:"Dale Murphy",rarity:10},
+  q_mlb_sb300_hr200: { clue: "Name an MLB player with 300 or more career stolen bases AND 200 or more career home runs", sport: "MLB", rules: [{ fact_type: "mlb_300_stolen_bases" }, { fact_type: "mlb_200_home_runs" }], answers: [
+    {name:"Willie Mays"},{name:"Barry Bonds"},{name:"Bobby Bonds"},
+    {name:"Andre Dawson"},{name:"Rickey Henderson"},{name:"Larry Walker"},
+    {name:"Reggie Sanders"},{name:"Steve Finley"},{name:"Eric Davis"},
+    {name:"Craig Biggio"},{name:"Cesar Cedeno"},{name:"Dale Murphy"},
+    {name:"Devon White"},{name:"Carlos Beltran"},{name:"Alex Rodriguez"},
+    {name:"Alfonso Soriano"},{name:"Gary Sheffield"},{name:"Vladimir Guerrero"},
+    {name:"Jim Edmonds"},{name:"Shawn Green"},
   ]},
 
 };
 
 // ── Difficulty tiers ──────────────────────────────────────────────────────────
 export const MLB_BEGINNER = [
-  "q_mlb_hr","q_mlb_batting","q_mlb_3000_hits","q_mlb_cy_young",
-  "q_mlb_ws_rings3","q_mlb_yankees_ws","q_mlb_300_wins",
+  "q_mlb_cy_yankees","q_mlb_300hr_300sb","q_mlb_300avg_2500hits",
+  "q_mlb_ws_mvp_mvp","q_mlb_cy_dodgers","q_mlb_3000k_300w",
+  "q_mlb_ws_ring_red_sox_yankees","q_mlb_500hr_hof",
 ];
 
 export const MLB_KNOWLEDGEABLE = [
-  "q_mlb_stolen","q_mlb_strikeouts","q_mlb_red_sox_ws","q_mlb_dodgers_ws",
-  "q_mlb_ss_300hr","q_mlb_200hits_5","q_mlb_perfect_game",
-  "q_mlb_manager_2000","q_mlb_gold_glove_ss5",
+  "q_mlb_cy_young_red_sox","q_mlb_batting_title_ws","q_mlb_30hr_30sb_ws",
+  "q_mlb_no_hitter_ws","q_mlb_ss_allstar_ws","q_mlb_manager_ws_twice",
+  "q_mlb_closer_300sv_ws","q_mlb_40hr_dodgers",
 ];
 
 export const MLB_EXPERT = [
-  "q_mlb_triple_crown","q_mlb_no_hitter","q_mlb_steals100",
-  "q_mlb_300_300","q_mlb_pitcher_20k","q_mlb_cy_consecutive",
-  "q_mlb_consecutive_games",
+  "q_mlb_pitcher_cg_ws","q_mlb_cy_young_ws_same_year",
+  "q_mlb_batting_champ_foreign","q_mlb_sb300_hr200",
 ];
