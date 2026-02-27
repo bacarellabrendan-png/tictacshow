@@ -84,7 +84,11 @@ create policy "games_insert" on public.games
 
 drop policy if exists "games_update" on public.games;
 create policy "games_update" on public.games
-  for update using (auth.uid() = player1_id or auth.uid() = player2_id);
+  for update using (
+    auth.uid() = player1_id
+    or auth.uid() = player2_id
+    or (phase = 'waiting' and player2_id is null and auth.uid() is not null)
+  );
 
 -- Moves: any authenticated user can read / insert / update
 drop policy if exists "moves_select" on public.moves;

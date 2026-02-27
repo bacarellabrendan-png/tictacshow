@@ -792,13 +792,15 @@ export default function App() {
     if (g.player1_id === user.id) { setJoinError("You can't join your own game."); return; }
     const upd = await dbUpdate("games", `?id=eq.${g.id}`,
       { player2_id: user.id, player2_name: user.username, phase: "choosing" });
-    if (upd.ok) {
+    // Supabase returns empty array when RLS blocks the update (still HTTP 200)
+    if (upd.ok && Array.isArray(upd.data) && upd.data.length > 0) {
       const fresh = await dbSelect("games", `?id=eq.${g.id}`);
       resetGameState(fresh.data[0]);
       setScreen("game");
       window.history.replaceState({}, "", window.location.pathname);
     } else {
-      setJoinError("Could not join game. Please try again.");
+      console.error("joinGame update failed:", upd.status, upd.data);
+      setJoinError("Could not join game — the update was blocked. Ask the host to recreate the game, or try again.");
     }
   }
 
