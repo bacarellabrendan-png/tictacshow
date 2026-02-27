@@ -1741,11 +1741,7 @@ export default function App() {
                       borderColor: isOwned ? `${PC[owner]}55` : isActive ? diffColor : BORDER,
                       background:  isOwned ? `${PC[owner]}18` : SURF,
                     }}
-                    onClick={() => {
-                      if (!canPick) return;
-                      if (isTouchDevice()) { setPreviewCell(i); return; }
-                      game.isCpu ? selectCellCpu(i) : selectCell(i);
-                    }}>
+                    onClick={() => canPick && setPreviewCell(i)}>
                     {isOwned ? (
                       <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "3rem", color: PC[owner], lineHeight: 1 }}>
                         {owner === "p1" ? "X" : "O"}
@@ -1783,7 +1779,7 @@ export default function App() {
               {(game.phase === "answering" || game.phase === "retry") && submitted && !revealData && "Answer locked in — waiting for opponent…"}
             </div>
 
-            {/* Cell preview modal (mobile) */}
+            {/* Cell preview modal — confirm before picking */}
             {previewCell != null && (() => {
               const pq = ANSWER_POOLS[game.cells[previewCell]?.questionKey];
               const sportMeta = SPORT_META.find(s => s.key === (pq?.sport?.toLowerCase() ?? ""));
@@ -1796,11 +1792,8 @@ export default function App() {
                     <div style={{ fontSize: "0.6rem", color: LO, letterSpacing: "2px", textTransform: "uppercase", fontFamily: "'Roboto Mono',monospace", fontWeight: 700, marginBottom: "0.6rem" }}>
                       {pq?.sport ?? ""}
                     </div>
-                    <div style={{ fontSize: "0.95rem", color: HI, lineHeight: 1.7, marginBottom: "1.2rem" }}>
+                    <div style={{ fontSize: "0.95rem", color: HI, lineHeight: 1.7, marginBottom: "1.4rem" }}>
                       {pq?.clue ?? ""}
-                    </div>
-                    <div style={{ fontSize: "0.75rem", color: MID, marginBottom: "1rem", fontFamily: "'Roboto Mono',monospace" }}>
-                      Pick this square?
                     </div>
                     <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center" }}>
                       <button className="sb" style={{ background: ACCENT, fontSize: "0.85rem", padding: "0.65rem 1.4rem" }}
@@ -1809,11 +1802,11 @@ export default function App() {
                           setPreviewCell(null);
                           game.isCpu ? selectCellCpu(idx) : selectCell(idx);
                         }}>
-                        Confirm
+                        PICK THIS SQUARE
                       </button>
                       <button className="sb" style={{ background: SURF3, color: MID, fontSize: "0.85rem", padding: "0.65rem 1.4rem" }}
                         onClick={() => setPreviewCell(null)}>
-                        Cancel
+                        BACK
                       </button>
                     </div>
                   </div>
