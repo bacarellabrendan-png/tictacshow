@@ -132,6 +132,33 @@ async function dbUpdate(table, qs, body) {
   });
 }
 
+/** Track an answer submission for live rarity. Select → increment or insert. */
+async function trackAnswer(questionKey, answerText) {
+  const norm = normalizeStr(answerText);
+  const sel = await dbSelect("answer_stats",
+    `?question_key=eq.${encodeURIComponent(questionKey)}&answer_text=eq.${encodeURIComponent(norm)}`);
+  if (sel.ok && sel.data?.[0]) {
+    await dbUpdate("answer_stats", `?id=eq.${sel.data[0].id}`,
+      { submission_count: sel.data[0].submission_count + 1 });
+  } else {
+    await dbInsert("answer_stats",
+      { question_key: questionKey, answer_text: norm, submission_count: 1 });
+  }
+}
+
+/** Fetch live rarity stats for a question. Returns { totalSubmissions, answerCounts: Map<normalizedAnswer, count> } */
+async function fetchAnswerStats(questionKey) {
+  const r = await dbSelect("answer_stats", `?question_key=eq.${encodeURIComponent(questionKey)}`);
+  if (!r.ok || !Array.isArray(r.data)) return null;
+  const answerCounts = {};
+  let total = 0;
+  for (const row of r.data) {
+    answerCounts[row.answer_text] = row.submission_count;
+    total += row.submission_count;
+  }
+  return { totalSubmissions: total, answerCounts };
+}
+
 // ─── GAME LOGIC ────────────────────────────────────────────────────────────────
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
@@ -209,7 +236,7 @@ const ACCENT2 = "#4ECDC4";
 const PC      = { p1: ACCENT, p2: ACCENT2 };
 
 // ─── RARITY BAR ────────────────────────────────────────────────────────────────
-function RarityBar({ score }) {
+function RarityBar({ score, limitedData }) {
   const pct  = Math.max(2, Math.min(100, score));
   const col  = score < 10 ? "#FC5C65" : score < 30 ? "#F7B731" : ACCENT2;
   const tier = score < 10 ? "RARE" : score < 30 ? "UNCOMMON" : "COMMON";
@@ -217,11 +244,16 @@ function RarityBar({ score }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
         <span style={{ fontSize: "0.65rem", color: LO, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>POPULARITY</span>
-        <span style={{ fontSize: "0.65rem", color: col, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>{tier} · {score}%</span>
+        <span style={{ fontSize: "0.65rem", color: col, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>{tier} · {Math.round(score)}%</span>
       </div>
       <div style={{ height: 5, background: BORDER, borderRadius: 3, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: col, borderRadius: 3, transition: "width 0.9s ease" }} />
       </div>
+      {limitedData && (
+        <div style={{ fontSize: "0.55rem", color: LO, marginTop: "0.25rem", fontStyle: "italic", fontFamily: "'Roboto Mono',monospace" }}>
+          based on limited data
+        </div>
+      )}
     </div>
   );
 }
@@ -602,12 +634,16 @@ export default function App() {
       : (g.choosing_player === "p1" ? g.player2_name : g.player1_name);
     // Snapshot the question NOW — active_cell may be nulled when game state updates
     const revealQ = ANSWER_POOLS[move.question_key] ?? null;
-    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ });
+    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, liveStats: null });
     setRevealStep(0);
     // Stagger the answer cards in — no auto-close, user clicks Continue
     setTimeout(() => setRevealStep(1), 350);
     setTimeout(() => setRevealStep(2), 800);
     setTimeout(() => setRevealStep(3), 1400);
+    // Fetch live rarity stats in background — updates revealData when available
+    fetchAnswerStats(move.question_key).then(stats => {
+      if (stats) setRevealData(prev => prev ? { ...prev, liveStats: stats } : prev);
+    });
   }
 
   function dismissReveal() {
@@ -859,6 +895,7 @@ export default function App() {
       ? { p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null }
       : { p2_answer: myAnswer, p2_valid: !!match, p2_rarity: match?.rarity ?? null };
     await dbUpdate("moves", `?id=eq.${currentMove.id}`, patch);
+    trackAnswer(qKey, myAnswer); // fire-and-forget — don't block the UI
     setSubmitted(true);
     setLockedValid(!!match);
     const freshMv = await dbSelect("moves", `?id=eq.${currentMove.id}`);
@@ -883,6 +920,7 @@ export default function App() {
     setCurrentMove(updatedMove);
     setSubmitted(true);
     setLockedValid(!!match);
+    trackAnswer(qKey, myAnswer); // fire-and-forget
 
     // CPU "thinks" for 2-3 seconds
     const delay = 2000 + Math.random() * 1000;
@@ -1825,7 +1863,14 @@ export default function App() {
                 const isMe   = myRole === p;
                 const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
                 const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
-                const rarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
+                const hardcodedRarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
+                // Use live rarity if we have enough data (>= 20 submissions), else fall back to hardcoded
+                const ls = revealData.liveStats;
+                const liveCount = ls && answer ? (ls.answerCounts[normalizeStr(answer)] ?? 0) : 0;
+                const hasLiveData = ls && ls.totalSubmissions >= 20;
+                const liveRarity = hasLiveData ? Math.round((liveCount / ls.totalSubmissions) * 100) : null;
+                const rarity = liveRarity ?? hardcodedRarity;
+                const limitedData = !hasLiveData && hardcodedRarity != null;
                 const won    = revealData.result === p;
                 return (
                   <div key={p} style={{
@@ -1866,7 +1911,7 @@ export default function App() {
                             ✗ INVALID
                           </div>
                         ) : rarity != null ? (
-                          <RarityBar score={rarity} />
+                          <RarityBar score={rarity} limitedData={limitedData} />
                         ) : null}
                       </>
                     ) : (

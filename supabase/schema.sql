@@ -103,3 +103,26 @@ create policy "moves_insert" on public.moves
 drop policy if exists "moves_update" on public.moves;
 create policy "moves_update" on public.moves
   for update using (auth.uid() is not null);
+
+-- ── ANSWER STATS (live rarity tracking) ────────────────────────────────────
+create table if not exists public.answer_stats (
+  id                bigint generated always as identity primary key,
+  question_key      text        not null,
+  answer_text       text        not null,
+  submission_count  integer     not null default 1,
+  unique (question_key, answer_text)
+);
+
+alter table public.answer_stats enable row level security;
+
+drop policy if exists "answer_stats_select" on public.answer_stats;
+create policy "answer_stats_select" on public.answer_stats
+  for select using (true);
+
+drop policy if exists "answer_stats_insert" on public.answer_stats;
+create policy "answer_stats_insert" on public.answer_stats
+  for insert with check (auth.uid() is not null);
+
+drop policy if exists "answer_stats_update" on public.answer_stats;
+create policy "answer_stats_update" on public.answer_stats
+  for update using (auth.uid() is not null);
