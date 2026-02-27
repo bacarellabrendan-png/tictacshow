@@ -9,6 +9,7 @@ create table if not exists public.games (
 
   -- game config (set at creation, never changes)
   difficulty      text        not null default 'beginner',
+  sport           text        not null default 'all',
   cells           jsonb       not null default '[]',
   -- cells is a 9-element array: [{ questionKey: "q_nba_champ" }, ...]
 

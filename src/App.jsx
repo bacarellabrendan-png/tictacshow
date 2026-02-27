@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  ANSWER_POOLS, DIFFICULTY_META, ATHLETE_INDEX,
+  ANSWER_POOLS, DIFFICULTY_META, ATHLETE_INDEX, SPORT_POOLS,
   buildPuzzle, matchAnswer, normalizeStr,
 } from "./data/questions.js";
 
@@ -628,13 +628,16 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   /** Pick a fresh question key not already used on the board (excluding the active cell). */
-  function getNewQuestionKey(cells, activeCellIdx) {
+  function getNewQuestionKey(cells, activeCellIdx, gameSport) {
     const usedKeys = new Set(cells.filter((_, i) => i !== activeCellIdx).map(c => c.questionKey));
-    const allKeys  = Object.keys(ANSWER_POOLS);
-    const available = allKeys.filter(k => !usedKeys.has(k));
+    // Use the sport-specific pool if a sport filter is active, otherwise all keys
+    const pool = (gameSport && gameSport !== "all" && SPORT_POOLS[gameSport])
+      ? SPORT_POOLS[gameSport]
+      : Object.keys(ANSWER_POOLS);
+    const available = pool.filter(k => !usedKeys.has(k));
     return available.length > 0
       ? available[Math.floor(Math.random() * available.length)]
-      : allKeys[Math.floor(Math.random() * allKeys.length)];
+      : pool[Math.floor(Math.random() * pool.length)];
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -753,6 +756,7 @@ export default function App() {
       const payload = {
         invite_code: genCode(),
         difficulty: qDiff,
+        sport,
         cells: buildPuzzle(qDiff, sport),
         player1_id: user.id,
         player1_name: user.username,
@@ -906,7 +910,7 @@ export default function App() {
     // ── Same answer: replace question on same square, same player retries ──
     if (mv.p1_valid && mv.p2_valid &&
         normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "")) {
-      const newKey   = getNewQuestionKey(g.cells, g.active_cell);
+      const newKey   = getNewQuestionKey(g.cells, g.active_cell, g.sport);
       const newCells = g.cells.map((c, i) => i === g.active_cell ? { questionKey: newKey } : c);
       // Clear answers on the move and update its question key
       await dbUpdate("moves", `?id=eq.${mv.id}`, {
@@ -968,7 +972,7 @@ export default function App() {
     // ── Same answer: replace question on same square, same player retries ──
     if (mv.p1_valid && mv.p2_valid &&
         normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "")) {
-      const newKey   = getNewQuestionKey(g.cells, g.active_cell);
+      const newKey   = getNewQuestionKey(g.cells, g.active_cell, g.sport);
       const newCells = g.cells.map((c, i) => i === g.active_cell ? { questionKey: newKey } : c);
       const newMove  = {
         id: `move-${Date.now()}`, game_id: g.id, cell_index: g.active_cell,
