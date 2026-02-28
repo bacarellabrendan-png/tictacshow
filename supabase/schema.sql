@@ -74,3 +74,29 @@ BEGIN
   RETURN TRUE;
 END;
 $$;
+
+-- ─── ANSWER_STATS TABLE ─────────────────────────────────────────────────────
+-- Tracks per-question answer submissions so live rarity can override position-based rarity.
+
+CREATE TABLE IF NOT EXISTS answer_stats (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  question_key     TEXT    NOT NULL,
+  answer_text      TEXT    NOT NULL,
+  submission_count INT     NOT NULL DEFAULT 1,
+  UNIQUE (question_key, answer_text)
+);
+
+CREATE INDEX IF NOT EXISTS idx_answer_stats_question
+  ON answer_stats (question_key);
+
+-- ─── RLS ────────────────────────────────────────────────────────────────────
+ALTER TABLE answer_stats ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "answer_stats_select" ON answer_stats
+  FOR SELECT USING (true);
+
+CREATE POLICY "answer_stats_insert" ON answer_stats
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "answer_stats_update" ON answer_stats
+  FOR UPDATE USING (true);

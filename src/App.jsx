@@ -171,10 +171,9 @@ async function validateAnswer(guess, questionKey) {
   const g = normalizeStr(guess);
 
   // 1. Check local answers array first (instant, no network)
-  for (const answer of pool.answers) {
-    if (normalizeStr(answer.name) === g) {
-      return { name: answer.name, valid: true, rarity: 50 };
-    }
+  const localIdx = pool.answers.findIndex(a => normalizeStr(a.name) === g);
+  if (localIdx !== -1) {
+    return { name: pool.answers[localIdx].name, valid: true, rarity: calculatePositionRarity(localIdx, pool.answers.length) };
   }
 
   // 2. Check the players table — if the player exists for this sport, accept it
@@ -185,13 +184,16 @@ async function validateAnswer(guess, questionKey) {
       { method: "GET" }
     );
     if (r.ok && r.data?.[0]) {
-      return { name: r.data[0].name, valid: true, rarity: 50 };
+      return { name: r.data[0].name, valid: true, rarity: 5 };
     }
   } catch { /* network failure — fall through to legacy */ }
 
   // 3. Legacy fallback — matchAnswer from hardcoded pools
   const match = matchAnswer(guess, questionKey);
-  return match ? { name: match.name, valid: true, rarity: 50 } : null;
+  if (!match) return null;
+  const fallbackIdx = pool.answers.findIndex(a => normalizeStr(a.name) === normalizeStr(match.name));
+  const fallbackRarity = fallbackIdx !== -1 ? calculatePositionRarity(fallbackIdx, pool.answers.length) : 5;
+  return { name: match.name, valid: true, rarity: fallbackRarity };
 }
 
 // ─── GAME LOGIC ────────────────────────────────────────────────────────────────
@@ -221,21 +223,20 @@ function cpuPickAnswer(qKey, cpuDiff) {
   const pool = ANSWER_POOLS[qKey]?.answers ?? [];
   if (!pool.length) return { name: "No answer", valid: false, rarity: null };
 
-  let pick;
+  let pickIndex;
   if (cpuDiff === "easy") {
     // Pick from first third (popular names listed first)
-    const slice = pool.slice(0, Math.max(3, Math.ceil(pool.length / 3)));
-    pick = slice[Math.floor(Math.random() * slice.length)];
+    const end = Math.max(3, Math.ceil(pool.length / 3));
+    pickIndex = Math.floor(Math.random() * end);
   } else if (cpuDiff === "hard") {
     // Pick from last third (obscure names listed last)
     const start = Math.max(0, pool.length - Math.max(3, Math.ceil(pool.length / 3)));
-    const slice = pool.slice(start);
-    pick = slice[Math.floor(Math.random() * slice.length)];
+    pickIndex = start + Math.floor(Math.random() * (pool.length - start));
   } else {
     // medium — pick randomly from full pool
-    pick = pool[Math.floor(Math.random() * pool.length)];
+    pickIndex = Math.floor(Math.random() * pool.length);
   }
-  return { name: pick.name, valid: true, rarity: 50 };
+  return { name: pool[pickIndex].name, valid: true, rarity: calculatePositionRarity(pickIndex, pool.length) };
 }
 
 function cpuPickCell(board) {
@@ -546,6 +547,11 @@ const GLOBAL_CSS = `
 `;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
+function calculatePositionRarity(index, poolSize) {
+  if (poolSize <= 1) return 50;
+  return Math.max(1, Math.min(99, Math.round(95 - (index / (poolSize - 1)) * 90)));
+}
+
 function truncateClue(text, maxLen = 70) {
   if (text.length <= maxLen) return text;
   const cut = text.lastIndexOf(" ", maxLen);
@@ -1979,13 +1985,11 @@ export default function App() {
                 const isMe   = myRole === p;
                 const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
                 const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
-                const defaultRarity = p === "p1" ? revealData.move.p1_rarity : revealData.move.p2_rarity;
-                // Use live rarity if we have enough data (>= 20 submissions), else fall back to default (50)
+                // Live rarity from answer_stats — only show when 50+ submissions exist
                 const ls = revealData.liveStats;
                 const liveCount = ls && answer ? (ls.answerCounts[normalizeStr(answer)] ?? 0) : 0;
-                const hasLiveData = ls && ls.totalSubmissions >= 20;
-                const liveRarity = hasLiveData ? Math.round((liveCount / ls.totalSubmissions) * 100) : null;
-                const rarity = liveRarity ?? defaultRarity;
+                const hasEnoughData = ls && ls.totalSubmissions >= 50;
+                const rarity = hasEnoughData ? Math.round((liveCount / ls.totalSubmissions) * 100) : null;
                 const won    = revealData.result === p;
                 return (
                   <div key={p} style={{
@@ -2025,9 +2029,13 @@ export default function App() {
                           }}>
                             ✗ INVALID
                           </div>
-                        ) : rarity != null ? (
+                        ) : hasEnoughData && rarity != null ? (
                           <RarityBar score={rarity} />
-                        ) : null}
+                        ) : (
+                          <div style={{ fontSize: "0.7rem", color: LO, fontFamily: "'Roboto Mono',monospace", letterSpacing: "0.5px", marginTop: "0.3rem" }}>
+                            Not enough data yet
+                          </div>
+                        )}
                       </>
                     ) : (
                       <div style={{ fontSize: "2.8rem", color: SURF3, textAlign: "center", padding: "0.6rem 0", fontFamily: "'Bebas Neue',cursive", letterSpacing: "4px" }}>
@@ -2063,12 +2071,21 @@ export default function App() {
                     <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "2rem", letterSpacing: "3px", color: PC[revealData.result] }}>
                       {revealData.winnerName} WINS THE SQUARE!
                     </div>
-                    {revealData.move[`${revealData.result}_rarity`] != null &&
-                     revealData.move[`${revealData.result === "p1" ? "p2" : "p1"}_rarity`] != null && (
-                      <div style={{ color: MID, fontSize: "0.85rem", marginTop: "0.35rem", fontStyle: "italic" }}>
-                        Rarity: {revealData.move[`${revealData.result}_rarity`]}% vs {revealData.move[`${revealData.result === "p1" ? "p2" : "p1"}_rarity`]}%
-                      </div>
-                    )}
+                    {(() => {
+                      const ls = revealData.liveStats;
+                      if (!ls || ls.totalSubmissions < 50) return null;
+                      const wKey = revealData.result;
+                      const lKey = wKey === "p1" ? "p2" : "p1";
+                      const wAnswer = revealData.move[`${wKey}_answer`];
+                      const lAnswer = revealData.move[`${lKey}_answer`];
+                      const wRarity = Math.round(((ls.answerCounts[normalizeStr(wAnswer)] ?? 0) / ls.totalSubmissions) * 100);
+                      const lRarity = Math.round(((ls.answerCounts[normalizeStr(lAnswer)] ?? 0) / ls.totalSubmissions) * 100);
+                      return (
+                        <div style={{ color: MID, fontSize: "0.85rem", marginTop: "0.35rem", fontStyle: "italic" }}>
+                          Rarity: {wRarity}% vs {lRarity}%
+                        </div>
+                      );
+                    })()}
                   </>
                 )}
               </div>
