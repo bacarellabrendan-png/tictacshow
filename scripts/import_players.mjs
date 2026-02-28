@@ -34,11 +34,11 @@ function loadNames(sport) {
 function postBatch(rows) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify(rows);
-    const url = new URL('/rest/v1/players', SUPABASE_URL);
+    const url = new URL('/rest/v1/players?on_conflict=name,sport', SUPABASE_URL);
     const opts = {
       method: 'POST',
       hostname: url.hostname,
-      path: url.pathname,
+      path: url.pathname + url.search,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${SERVICE_KEY}`,
