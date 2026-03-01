@@ -221,6 +221,368 @@ export const SOCCER_POOLS = {
     {name:"Ronaldo Nazario"},{name:"Luis Figo"},
   ]},
 
+  // ── NEW — BEGINNER (Team + Team) ──────────────────────────────────────────
+  q_soccer_real_madrid_juventus: { clue: "Name a player who played for both Real Madrid AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Real Madrid" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Cristiano Ronaldo"},{name:"Zinedine Zidane"},{name:"Luis Figo"},
+    {name:"Fabio Cannavaro"},{name:"Gonzalo Higuain"},{name:"Alvaro Morata"},
+    {name:"Sami Khedira"},{name:"Emerson"},{name:"Edgar Davids"},
+    {name:"Luca Toni"},{name:"Antonio Cassano"},
+  ]},
+  q_soccer_barcelona_psg: { clue: "Name a player who played for both Barcelona AND Paris Saint-Germain", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Barcelona" }, { fact_type: "played_for_team", fact_value: "Paris Saint-Germain" }], answers: [
+    {name:"Neymar"},{name:"Lionel Messi"},{name:"Ronaldinho"},
+    {name:"Dani Alves"},{name:"Xavi Simons"},{name:"Rafinha"},
+    {name:"Maxwell"},{name:"Ludovic Giuly"},{name:"Sergi Roberto"},
+    {name:"Mauro Icardi"},{name:"Leandro Paredes"},
+  ]},
+  q_soccer_manchester_united_real_madrid: { clue: "Name a player who played for both Manchester United AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester United" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"David Beckham"},{name:"Cristiano Ronaldo"},{name:"Ruud van Nistelrooy"},
+    {name:"Gabriel Heinze"},{name:"Casemiro"},{name:"Angel Di Maria"},
+    {name:"Javier Hernandez"},{name:"Michael Owen"},{name:"Raphael Varane"},
+    {name:"Edwin van der Sar"},
+  ]},
+  q_soccer_liverpool_real_madrid: { clue: "Name a player who played for both Liverpool AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Liverpool" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Xabi Alonso"},{name:"Michael Owen"},{name:"Steve McManaman"},
+    {name:"Fernando Torres"},{name:"Nicolas Anelka"},{name:"Nuri Sahin"},
+    {name:"Jerzy Dudek"},{name:"Antonio Nunez"},{name:"Alvaro Arbeloa"},
+  ]},
+  q_soccer_chelsea_real_madrid: { clue: "Name a player who played for both Chelsea AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Chelsea" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Eden Hazard"},{name:"Claude Makelele"},{name:"Thibaut Courtois"},
+    {name:"Fernando Torres"},{name:"Michael Essien"},{name:"Mateo Kovacic"},
+    {name:"Ricardo Carvalho"},{name:"Arjen Robben"},{name:"Eidur Gudjohnsen"},
+    {name:"Alvaro Morata"},
+  ]},
+  q_soccer_ac_milan_juventus: { clue: "Name a player who played for both AC Milan AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "AC Milan" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Andrea Pirlo"},{name:"Gonzalo Higuain"},{name:"Zlatan Ibrahimovic"},
+    {name:"Alessandro Del Piero"},{name:"Filippo Inzaghi"},{name:"Leonardo Bonucci"},
+    {name:"Patrick Vieira"},{name:"Gianluigi Buffon"},{name:"Clarence Seedorf"},
+    {name:"Luca Toni"},{name:"Christian Vieri"},
+  ]},
+  q_soccer_bayern_munich_real_madrid: { clue: "Name a player who played for both Bayern Munich AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Bayern Munich" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Toni Kroos"},{name:"Arjen Robben"},{name:"James Rodriguez"},
+    {name:"Xabi Alonso"},{name:"Michael Ballack"},{name:"Ze Roberto"},
+    {name:"Alvaro Odriozola"},{name:"David Alaba"},{name:"Bernat"},
+  ]},
+  q_soccer_inter_milan_juventus: { clue: "Name a player who played for both Inter Milan AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Inter Milan" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Zlatan Ibrahimovic"},{name:"Roberto Baggio"},{name:"Patrick Vieira"},
+    {name:"Edgar Davids"},{name:"Alvaro Morata"},{name:"Arturo Vidal"},
+    {name:"Christian Vieri"},{name:"Andrea Pirlo"},{name:"Ronaldo Nazario"},
+    {name:"Hernan Crespo"},{name:"Luis Figo"},
+  ]},
+  q_soccer_manchester_city_barcelona: { clue: "Name a player who played for both Manchester City AND Barcelona", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester City" }, { fact_type: "played_for_team", fact_value: "Barcelona" }], answers: [
+    {name:"Sergio Aguero"},{name:"Yaya Toure"},{name:"Eric Garcia"},
+    {name:"Ferran Torres"},{name:"Claudio Bravo"},{name:"Joao Cancelo"},
+    {name:"Ilkay Gundogan"},{name:"Marc-Andre ter Stegen"},{name:"Roque Santa Cruz"},
+  ]},
+  q_soccer_arsenal_barcelona: { clue: "Name a player who played for both Arsenal AND Barcelona", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Arsenal" }, { fact_type: "played_for_team", fact_value: "Barcelona" }], answers: [
+    {name:"Thierry Henry"},{name:"Cesc Fabregas"},{name:"Marc Overmars"},
+    {name:"Emmanuel Petit"},{name:"Alexander Hleb"},{name:"Giovanni van Bronckhorst"},
+    {name:"Alex Song"},{name:"Thomas Vermaelen"},{name:"Alexis Sanchez"},
+    {name:"Pierre-Emerick Aubameyang"},
+  ]},
+  q_soccer_tottenham_real_madrid: { clue: "Name a player who played for both Tottenham AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Tottenham" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Gareth Bale"},{name:"Luka Modric"},{name:"Rafael van der Vaart"},
+    {name:"Emmanuel Adebayor"},{name:"Robbie Keane"},{name:"Jonathan Woodgate"},
+    {name:"Pedro Mendes"},{name:"Sergio Reguilon"},
+  ]},
+  q_soccer_liverpool_barcelona: { clue: "Name a player who played for both Liverpool AND Barcelona", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Liverpool" }, { fact_type: "played_for_team", fact_value: "Barcelona" }], answers: [
+    {name:"Luis Suarez"},{name:"Javier Mascherano"},{name:"Philippe Coutinho"},
+    {name:"Michael Owen"},{name:"Gary Lineker"},{name:"Mark Hughes"},
+    {name:"Patrick Kluivert"},{name:"Thiago Alcantara"},{name:"Bolo Zenden"},
+  ]},
+  q_soccer_manchester_united_juventus: { clue: "Name a player who played for both Manchester United AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester United" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Cristiano Ronaldo"},{name:"Paul Pogba"},{name:"Patrice Evra"},
+    {name:"David Beckham"},{name:"Edwin van der Sar"},{name:"Andy Cole"},
+    {name:"Edgar Davids"},{name:"Teddy Sheringham"},{name:"Federico Chiesa"},
+    {name:"Angel Di Maria"},
+  ]},
+  q_soccer_chelsea_ac_milan: { clue: "Name a player who played for both Chelsea AND AC Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Chelsea" }, { fact_type: "played_for_team", fact_value: "AC Milan" }], answers: [
+    {name:"Andriy Shevchenko"},{name:"Ruben Loftus-Cheek"},{name:"Fikayo Tomori"},
+    {name:"Olivier Giroud"},{name:"Ricardo Carvalho"},{name:"Tiemoue Bakayoko"},
+    {name:"George Weah"},{name:"Hernan Crespo"},{name:"Marcel Desailly"},
+    {name:"Fernando Torres"},
+  ]},
+
+  // ── NEW — KNOWLEDGEABLE (Team + Team) ─────────────────────────────────────
+  q_soccer_real_madrid_ac_milan: { clue: "Name a player who played for both Real Madrid AND AC Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Real Madrid" }, { fact_type: "played_for_team", fact_value: "AC Milan" }], answers: [
+    {name:"Kaka"},{name:"David Beckham"},{name:"Ronaldo Nazario"},
+    {name:"Clarence Seedorf"},{name:"Fabio Cannavaro"},{name:"Robinho"},
+    {name:"Theo Hernandez"},{name:"Brahim Diaz"},{name:"Huntelaar"},
+  ]},
+  q_soccer_barcelona_bayern_munich: { clue: "Name a player who played for both Barcelona AND Bayern Munich", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Barcelona" }, { fact_type: "played_for_team", fact_value: "Bayern Munich" }], answers: [
+    {name:"Robert Lewandowski"},{name:"Philippe Coutinho"},{name:"Arturo Vidal"},
+    {name:"Thiago Alcantara"},{name:"Eric Maxim Choupo-Moting"},{name:"Douglas Costa"},
+    {name:"Javier Martinez"},{name:"Bernd Schuster"},{name:"Mark Hughes"},
+  ]},
+  q_soccer_manchester_united_inter_milan: { clue: "Name a player who played for both Manchester United AND Inter Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester United" }, { fact_type: "played_for_team", fact_value: "Inter Milan" }], answers: [
+    {name:"Romelu Lukaku"},{name:"Alexis Sanchez"},{name:"Ashley Young"},
+    {name:"Nemanja Vidic"},{name:"Henrikh Mkhitaryan"},{name:"Paul Ince"},
+    {name:"Laurent Blanc"},{name:"Diego Forlan"},{name:"Andy Cole"},
+    {name:"Matteo Darmian"},
+  ]},
+  q_soccer_psg_real_madrid: { clue: "Name a player who played for both Paris Saint-Germain AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Paris Saint-Germain" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Kylian Mbappe"},{name:"Angel Di Maria"},{name:"David Beckham"},
+    {name:"Sergio Ramos"},{name:"Keylor Navas"},{name:"Achraf Hakimi"},
+    {name:"Lassana Diarra"},{name:"Nicolas Anelka"},{name:"Jese Rodriguez"},
+  ]},
+  q_soccer_liverpool_chelsea: { clue: "Name a player who played for both Liverpool AND Chelsea", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Liverpool" }, { fact_type: "played_for_team", fact_value: "Chelsea" }], answers: [
+    {name:"Fernando Torres"},{name:"Daniel Sturridge"},{name:"Nicolas Anelka"},
+    {name:"Raul Meireles"},{name:"Joe Cole"},{name:"Yossi Benayoun"},
+    {name:"Albert Riera"},{name:"Victor Moses"},{name:"Emre Can"},
+    {name:"Fabinho"},
+  ]},
+  q_soccer_atletico_madrid_barcelona: { clue: "Name a player who played for both Atletico Madrid AND Barcelona", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Atletico Madrid" }, { fact_type: "played_for_team", fact_value: "Barcelona" }], answers: [
+    {name:"Luis Suarez"},{name:"Antoine Griezmann"},{name:"David Villa"},
+    {name:"Arda Turan"},{name:"Filipe Luis"},{name:"Alexis Sanchez"},
+    {name:"Zlatan Ibrahimovic"},{name:"Fernando Torres"},{name:"Simao"},
+  ]},
+  q_soccer_borussia_dortmund_bayern_munich: { clue: "Name a player who played for both Borussia Dortmund AND Bayern Munich", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Borussia Dortmund" }, { fact_type: "played_for_team", fact_value: "Bayern Munich" }], answers: [
+    {name:"Robert Lewandowski"},{name:"Mario Gotze"},{name:"Mats Hummels"},
+    {name:"Emre Can"},{name:"Thomas Delaney"},{name:"Niklas Sule"},
+    {name:"Manuel Akanji"},{name:"Sebastian Kehl"},{name:"Andre Schurrle"},
+  ]},
+  q_soccer_chelsea_bayern_munich: { clue: "Name a player who played for both Chelsea AND Bayern Munich", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Chelsea" }, { fact_type: "played_for_team", fact_value: "Bayern Munich" }], answers: [
+    {name:"Arjen Robben"},{name:"Michael Ballack"},{name:"Arturo Vidal"},
+    {name:"Jorginho"},{name:"Claudio Pizarro"},{name:"Ze Roberto"},
+    {name:"Callum Hudson-Odoi"},{name:"Mario Gomez"},{name:"Robert Lewandowski"},
+  ]},
+  q_soccer_real_madrid_manchester_city: { clue: "Name a player who played for both Real Madrid AND Manchester City", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Real Madrid" }, { fact_type: "played_for_team", fact_value: "Manchester City" }], answers: [
+    {name:"Robinho"},{name:"Emmanuel Adebayor"},{name:"Nicolas Anelka"},
+    {name:"Alvaro Negredo"},{name:"Edin Dzeko"},{name:"Joao Cancelo"},
+    {name:"David Alaba"},{name:"Brahim Diaz"},{name:"Danilo"},
+  ]},
+  q_soccer_psg_juventus: { clue: "Name a player who played for both Paris Saint-Germain AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Paris Saint-Germain" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Gianluigi Buffon"},{name:"Zlatan Ibrahimovic"},{name:"Moise Kean"},
+    {name:"Dani Alves"},{name:"Blaise Matuidi"},{name:"Adrien Rabiot"},
+    {name:"Leandro Paredes"},{name:"Angel Di Maria"},{name:"Kingsley Coman"},
+  ]},
+  q_soccer_liverpool_manchester_city: { clue: "Name a player who played for both Liverpool AND Manchester City", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Liverpool" }, { fact_type: "played_for_team", fact_value: "Manchester City" }], answers: [
+    {name:"Raheem Sterling"},{name:"James Milner"},{name:"Nicolas Anelka"},
+    {name:"Robbie Fowler"},{name:"Steve McManaman"},{name:"Albert Riera"},
+    {name:"Dietmar Hamann"},{name:"Craig Bellamy"},{name:"Daniel Sturridge"},
+  ]},
+  q_soccer_chelsea_atletico_madrid: { clue: "Name a player who played for both Chelsea AND Atletico Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Chelsea" }, { fact_type: "played_for_team", fact_value: "Atletico Madrid" }], answers: [
+    {name:"Diego Costa"},{name:"Fernando Torres"},{name:"Thibaut Courtois"},
+    {name:"Filipe Luis"},{name:"Alvaro Morata"},{name:"Radamel Falcao"},
+    {name:"Hernan Crespo"},{name:"Joao Felix"},{name:"Saul Niguez"},
+  ]},
+  q_soccer_cup_real_madrid: { clue: "Name a player who won the FIFA World Cup AND played for Real Madrid", sport: "Soccer", rules: [{ fact_type: "won_award", fact_value: "FIFA World Cup" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Zinedine Zidane"},{name:"Roberto Carlos"},{name:"Ronaldo Nazario"},
+    {name:"Kylian Mbappe"},{name:"Raphael Varane"},{name:"Toni Kroos"},
+    {name:"Sergio Ramos"},{name:"Iker Casillas"},{name:"Xabi Alonso"},
+    {name:"Fabio Cannavaro"},{name:"Karim Benzema"},
+  ]},
+
+  // ── NEW — EXPERT (Team + Team) ────────────────────────────────────────────
+  q_soccer_inter_milan_real_madrid: { clue: "Name a player who played for both Inter Milan AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Inter Milan" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Ronaldo Nazario"},{name:"Luis Figo"},{name:"Samuel Eto'o"},
+    {name:"Roberto Carlos"},{name:"Christian Vieri"},{name:"Wesley Sneijder"},
+    {name:"Walter Samuel"},{name:"Fabio Cannavaro"},{name:"Clarence Seedorf"},
+    {name:"Achraf Hakimi"},
+  ]},
+  q_soccer_ac_milan_psg: { clue: "Name a player who played for both AC Milan AND Paris Saint-Germain", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "AC Milan" }, { fact_type: "played_for_team", fact_value: "Paris Saint-Germain" }], answers: [
+    {name:"Zlatan Ibrahimovic"},{name:"Ronaldinho"},{name:"David Beckham"},
+    {name:"Thiago Silva"},{name:"George Weah"},{name:"Gianluigi Donnarumma"},
+    {name:"Leonardo"},{name:"Djamel Mesbah"},{name:"Rai"},
+  ]},
+  q_soccer_manchester_united_ac_milan: { clue: "Name a player who played for both Manchester United AND AC Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester United" }, { fact_type: "played_for_team", fact_value: "AC Milan" }], answers: [
+    {name:"David Beckham"},{name:"Zlatan Ibrahimovic"},{name:"Diogo Dalot"},
+    {name:"Mark Hughes"},{name:"Ralph Milne"},{name:"Ray Wilkins"},
+    {name:"Jaap Stam"},{name:"Clarence Seedorf"},{name:"Robinho"},
+  ]},
+  q_soccer_arsenal_real_madrid: { clue: "Name a player who played for both Arsenal AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Arsenal" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Mesut Ozil"},{name:"Emmanuel Adebayor"},{name:"Nicolas Anelka"},
+    {name:"Jose Antonio Reyes"},{name:"Julio Baptista"},{name:"Santi Cazorla"},
+    {name:"Nacho Monreal"},{name:"Martin Odegaard"},{name:"Dani Ceballos"},
+  ]},
+  q_soccer_juventus_bayern_munich: { clue: "Name a player who played for both Juventus AND Bayern Munich", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Juventus" }, { fact_type: "played_for_team", fact_value: "Bayern Munich" }], answers: [
+    {name:"Arturo Vidal"},{name:"Douglas Costa"},{name:"Kingsley Coman"},
+    {name:"Medhi Benatia"},{name:"Luca Toni"},{name:"Ciro Ferrara"},
+    {name:"Stefan Lichtsteiner"},{name:"Miralem Pjanic"},{name:"Emre Can"},
+  ]},
+  q_soccer_chelsea_juventus: { clue: "Name a player who played for both Chelsea AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Chelsea" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Gonzalo Higuain"},{name:"Juan Cuadrado"},{name:"Alvaro Morata"},
+    {name:"Miralem Pjanic"},{name:"Emerson Palmieri"},{name:"Gianluca Vialli"},
+    {name:"Denis Zakaria"},{name:"Didier Deschamps"},{name:"Patrick Vieira"},
+  ]},
+  q_soccer_atletico_madrid_ac_milan: { clue: "Name a player who played for both Atletico Madrid AND AC Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Atletico Madrid" }, { fact_type: "played_for_team", fact_value: "AC Milan" }], answers: [
+    {name:"Fernando Torres"},{name:"Kaka"},{name:"Diego Costa"},
+    {name:"Mario Mandzukic"},{name:"Alessio Cerci"},{name:"Gonzalo Higuain"},
+    {name:"Santiago Solari"},{name:"Christian Vieri"},{name:"Filippo Inzaghi"},
+  ]},
+  q_soccer_manchester_united_psg: { clue: "Name a player who played for both Manchester United AND Paris Saint-Germain", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester United" }, { fact_type: "played_for_team", fact_value: "Paris Saint-Germain" }], answers: [
+    {name:"David Beckham"},{name:"Angel Di Maria"},{name:"Zlatan Ibrahimovic"},
+    {name:"Edinson Cavani"},{name:"Ander Herrera"},{name:"Rafael"},
+    {name:"Sergio Romero"},{name:"Eric Bailly"},{name:"Marcos Rojo"},
+  ]},
+  q_soccer_napoli_psg: { clue: "Name a player who played for both Napoli AND Paris Saint-Germain", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Napoli" }, { fact_type: "played_for_team", fact_value: "Paris Saint-Germain" }], answers: [
+    {name:"Edinson Cavani"},{name:"Ezequiel Lavezzi"},{name:"Fabian Ruiz"},
+    {name:"Allan"},{name:"Marek Hamsik"},{name:"Jorginho"},
+    {name:"Dries Mertens"},{name:"Kim Min-jae"},{name:"Keylor Navas"},
+  ]},
+  q_soccer_liverpool_juventus: { clue: "Name a player who played for both Liverpool AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Liverpool" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Emre Can"},{name:"Ian Rush"},{name:"Arthur Melo"},
+    {name:"Alberto Aquilani"},{name:"Michael Owen"},{name:"Christian Ziege"},
+    {name:"Igor Tudor"},{name:"Liam Brady"},{name:"Craig Johnston"},
+  ]},
+  q_soccer_dortmund_real_madrid: { clue: "Name a player who played for both Borussia Dortmund AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Borussia Dortmund" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Jude Bellingham"},{name:"Nuri Sahin"},{name:"Achraf Hakimi"},
+    {name:"Raphael Guerreiro"},{name:"Reinier"},{name:"Andre Schurrle"},
+    {name:"Shinji Kagawa"},{name:"Ilkay Gundogan"},{name:"Thomas Delaney"},
+  ]},
+  q_soccer_arsenal_inter_milan: { clue: "Name a player who played for both Arsenal AND Inter Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Arsenal" }, { fact_type: "played_for_team", fact_value: "Inter Milan" }], answers: [
+    {name:"Patrick Vieira"},{name:"Alexis Sanchez"},{name:"Robin van Persie"},
+    {name:"Henrikh Mkhitaryan"},{name:"Lukas Podolski"},{name:"Emmanuel Adebayor"},
+    {name:"Thierry Henry"},{name:"Nicolas Anelka"},{name:"Mikael Silvestre"},
+  ]},
+  q_soccer_manchester_city_juventus: { clue: "Name a player who played for both Manchester City AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester City" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Carlos Tevez"},{name:"Joao Cancelo"},{name:"Danilo"},
+    {name:"Edin Dzeko"},{name:"Patrick Vieira"},{name:"Alvaro Morata"},
+    {name:"Felipe Melo"},{name:"Nolito"},{name:"Martin Caceres"},
+  ]},
+  q_soccer_tottenham_inter_milan: { clue: "Name a player who played for both Tottenham AND Inter Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Tottenham" }, { fact_type: "played_for_team", fact_value: "Inter Milan" }], answers: [
+    {name:"Christian Eriksen"},{name:"Ivan Perisic"},{name:"Dejan Kulusevski"},
+    {name:"Moussa Sissoko"},{name:"Davinson Sanchez"},{name:"Giovani Lo Celso"},
+    {name:"Kevin-Prince Boateng"},{name:"Nacer Chadli"},{name:"Stevan Jovetic"},
+  ]},
+  q_soccer_liverpool_bayern_munich: { clue: "Name a player who played for both Liverpool AND Bayern Munich", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Liverpool" }, { fact_type: "played_for_team", fact_value: "Bayern Munich" }], answers: [
+    {name:"Xabi Alonso"},{name:"Thiago Alcantara"},{name:"Sadio Mane"},
+    {name:"Coutinho"},{name:"Christian Ziege"},{name:"Markus Babbel"},
+    {name:"Dietmar Hamann"},{name:"Sean Dundee"},{name:"Karl-Heinz Riedle"},
+  ]},
+  q_soccer_chelsea_psg: { clue: "Name a player who played for both Chelsea AND Paris Saint-Germain", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Chelsea" }, { fact_type: "played_for_team", fact_value: "Paris Saint-Germain" }], answers: [
+    {name:"Thiago Silva"},{name:"David Luiz"},{name:"Edinson Cavani"},
+    {name:"Marquinhos"},{name:"Nicolas Anelka"},{name:"Claude Makelele"},
+    {name:"George Weah"},{name:"Hernan Crespo"},{name:"Mateo Kovacic"},
+  ]},
+
+  // ── NEW BATCH 3 ───────────────────────────────────────────────────────────
+  q_soccer_barcelona_ac_milan: { clue: "Name a player who played for both Barcelona AND AC Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Barcelona" }, { fact_type: "played_for_team", fact_value: "AC Milan" }], answers: [
+    {name:"Ronaldinho"},{name:"Zlatan Ibrahimovic"},{name:"Rivaldo"},
+    {name:"Edgar Davids"},{name:"Kaka"},{name:"Marc Bartra"},
+    {name:"Kevin-Prince Boateng"},{name:"Maxi Lopez"},{name:"Luca Toni"},
+  ]},
+  q_soccer_arsenal_chelsea: { clue: "Name a player who played for both Arsenal AND Chelsea", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Arsenal" }, { fact_type: "played_for_team", fact_value: "Chelsea" }], answers: [
+    {name:"Cesc Fabregas"},{name:"Olivier Giroud"},{name:"Petr Cech"},
+    {name:"Ashley Cole"},{name:"David Luiz"},{name:"William Gallas"},
+    {name:"Emmanuel Petit"},{name:"Nicolas Anelka"},{name:"Willian"},
+  ]},
+  q_soccer_manchester_united_chelsea: { clue: "Name a player who played for both Manchester United AND Chelsea", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester United" }, { fact_type: "played_for_team", fact_value: "Chelsea" }], answers: [
+    {name:"Juan Mata"},{name:"Nemanja Matic"},{name:"Mark Hughes"},
+    {name:"Radamel Falcao"},{name:"Samuel Eto'o"},{name:"Michael Ballack"},
+    {name:"Ray Wilkins"},{name:"Romelu Lukaku"},{name:"Jadon Sancho"},
+  ]},
+  q_soccer_porto_real_madrid: { clue: "Name a player who played for both Porto AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Porto" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Pepe"},{name:"Ricardo Carvalho"},{name:"Deco"},
+    {name:"Casemiro"},{name:"Eder Militao"},{name:"Danilo"},
+    {name:"James Rodriguez"},{name:"Falcao"},{name:"Fabio Coentrao"},
+  ]},
+  q_soccer_inter_milan_ac_milan: { clue: "Name a player who played for both Inter Milan AND AC Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Inter Milan" }, { fact_type: "played_for_team", fact_value: "AC Milan" }], answers: [
+    {name:"Zlatan Ibrahimovic"},{name:"Andrea Pirlo"},{name:"Ronaldo Nazario"},
+    {name:"Clarence Seedorf"},{name:"Roberto Baggio"},{name:"Christian Vieri"},
+    {name:"Edgar Davids"},{name:"Hernan Crespo"},{name:"Hakan Calhanoglu"},
+    {name:"Mario Balotelli"},
+  ]},
+  q_soccer_barcelona_chelsea: { clue: "Name a player who played for both Barcelona AND Chelsea", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Barcelona" }, { fact_type: "played_for_team", fact_value: "Chelsea" }], answers: [
+    {name:"Cesc Fabregas"},{name:"Pedro"},{name:"Alexis Sanchez"},
+    {name:"Samuel Eto'o"},{name:"Eidur Gudjohnsen"},{name:"Deco"},
+    {name:"Marc Cucurella"},{name:"Pierre-Emerick Aubameyang"},{name:"Olivier Giroud"},
+  ]},
+  q_soccer_benfica_real_madrid: { clue: "Name a player who played for both Benfica AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Benfica" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Angel Di Maria"},{name:"Fabio Coentrao"},{name:"Ozil"},
+    {name:"David Luiz"},{name:"Axel Witsel"},{name:"Nemanja Matic"},
+    {name:"Julio Cesar"},{name:"Carlos Marchena"},{name:"Lazar Markovic"},
+  ]},
+  q_soccer_manchester_united_liverpool: { clue: "Name a player who played for both Manchester United AND Liverpool", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester United" }, { fact_type: "played_for_team", fact_value: "Liverpool" }], answers: [
+    {name:"Michael Owen"},{name:"Peter Beardsley"},{name:"Paul Ince"},
+    {name:"Phil Chisnall"},{name:"John Gidman"},{name:"Ted MacDougall"},
+    {name:"Allenby Chilton"},{name:"Thomas McNulty"},{name:"Jack Warner"},
+  ]},
+  q_soccer_valencia_barcelona: { clue: "Name a player who played for both Valencia AND Barcelona", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Valencia" }, { fact_type: "played_for_team", fact_value: "Barcelona" }], answers: [
+    {name:"David Villa"},{name:"Jordi Alba"},{name:"Paco Alcacer"},
+    {name:"Munir El Haddadi"},{name:"Denis Suarez"},{name:"Martin Montoya"},
+    {name:"Simao"},{name:"Gary Neville"},{name:"Claudio Bravo"},
+  ]},
+  q_soccer_ballon_barcelona: { clue: "Name a player who won the Ballon d'Or AND played for Barcelona", sport: "Soccer", rules: [{ fact_type: "won_award", fact_value: "Ballon d'Or" }, { fact_type: "played_for_team", fact_value: "Barcelona" }], answers: [
+    {name:"Lionel Messi"},{name:"Ronaldinho"},{name:"Rivaldo"},
+    {name:"Hristo Stoichkov"},{name:"Johan Cruyff"},{name:"Luis Figo"},
+    {name:"Michael Laudrup"},{name:"Neymar"},{name:"Robert Lewandowski"},
+  ]},
+  q_soccer_tottenham_manchester_united: { clue: "Name a player who played for both Tottenham AND Manchester United", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Tottenham" }, { fact_type: "played_for_team", fact_value: "Manchester United" }], answers: [
+    {name:"Michael Carrick"},{name:"Teddy Sheringham"},{name:"Dimitar Berbatov"},
+    {name:"Steve Perryman"},{name:"Ray Clemence"},{name:"Les Ferdinand"},
+    {name:"Garth Crooks"},{name:"Eric Djemba-Djemba"},{name:"Kleber"},
+  ]},
+  q_soccer_atletico_madrid_real_madrid: { clue: "Name a player who played for both Atletico Madrid AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Atletico Madrid" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Thibaut Courtois"},{name:"Hugo Sanchez"},{name:"Fernando Torres"},
+    {name:"Luis Aragones"},{name:"Raul"},{name:"Bernd Schuster"},
+    {name:"Jimmy Floyd Hasselbaink"},{name:"Sergio Aguero"},{name:"Marcos Llorente"},
+  ]},
+  q_soccer_arsenal_manchester_city: { clue: "Name a player who played for both Arsenal AND Manchester City", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Arsenal" }, { fact_type: "played_for_team", fact_value: "Manchester City" }], answers: [
+    {name:"Emmanuel Adebayor"},{name:"Samir Nasri"},{name:"Gael Clichy"},
+    {name:"Bacary Sagna"},{name:"Kolo Toure"},{name:"Patrick Vieira"},
+    {name:"Nicolas Anelka"},{name:"Oleksandr Zinchenko"},{name:"Raheem Sterling"},
+  ]},
+  q_soccer_liverpool_ac_milan: { clue: "Name a player who played for both Liverpool AND AC Milan", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Liverpool" }, { fact_type: "played_for_team", fact_value: "AC Milan" }], answers: [
+    {name:"Mario Balotelli"},{name:"Divock Origi"},{name:"Alberto Aquilani"},
+    {name:"Christian Ziege"},{name:"Andriy Shevchenko"},{name:"Suso"},
+    {name:"Robbie Fowler"},{name:"Mark Hughes"},{name:"Ray Kennedy"},
+  ]},
+  q_soccer_psg_bayern_munich: { clue: "Name a player who played for both Paris Saint-Germain AND Bayern Munich", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Paris Saint-Germain" }, { fact_type: "played_for_team", fact_value: "Bayern Munich" }], answers: [
+    {name:"Kingsley Coman"},{name:"Eric Maxim Choupo-Moting"},{name:"Juan Bernat"},
+    {name:"Jerome Boateng"},{name:"Lucas Hernandez"},{name:"Nordi Mukiele"},
+    {name:"Julian Draxler"},{name:"Corentin Tolisso"},{name:"Edouard Cisse"},
+  ]},
+  q_soccer_dortmund_barcelona: { clue: "Name a player who played for both Borussia Dortmund AND Barcelona", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Borussia Dortmund" }, { fact_type: "played_for_team", fact_value: "Barcelona" }], answers: [
+    {name:"Ousmane Dembele"},{name:"Marc Bartra"},{name:"Pierre-Emerick Aubameyang"},
+    {name:"Robert Lewandowski"},{name:"Alexander Isak"},{name:"Paco Alcacer"},
+    {name:"Martin Braithwaite"},{name:"Kevin-Prince Boateng"},{name:"Emre Mor"},
+  ]},
+  q_soccer_roma_juventus: { clue: "Name a player who played for both Roma AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Roma" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Miralem Pjanic"},{name:"Leonardo Bonucci"},{name:"Mehdi Benatia"},
+    {name:"Gonzalo Higuain"},{name:"Wojciech Szczesny"},{name:"Mattia De Sciglio"},
+    {name:"Patrick Vieira"},{name:"Fabio Capello"},{name:"Zbigniew Boniek"},
+  ]},
+  q_soccer_real_madrid_roma: { clue: "Name a player who played for both Real Madrid AND Roma", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Real Madrid" }, { fact_type: "played_for_team", fact_value: "Roma" }], answers: [
+    {name:"Antonio Cassano"},{name:"Walter Samuel"},{name:"Santiago Solari"},
+    {name:"Steve McManaman"},{name:"Emerson"},{name:"Jonathan Woodgate"},
+    {name:"Borja Mayoral"},{name:"Carles Perez"},{name:"Luca Pellegrini"},
+  ]},
+  q_soccer_barcelona_juventus: { clue: "Name a player who played for both Barcelona AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Barcelona" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Dani Alves"},{name:"Arthur Melo"},{name:"Miralem Pjanic"},
+    {name:"Lilian Thuram"},{name:"Edgar Davids"},{name:"Thierry Henry"},
+    {name:"Gianluca Zambrotta"},{name:"Patrick Kluivert"},{name:"Luis Suarez"},
+  ]},
+  q_soccer_manchester_city_chelsea: { clue: "Name a player who played for both Manchester City AND Chelsea", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Manchester City" }, { fact_type: "played_for_team", fact_value: "Chelsea" }], answers: [
+    {name:"Frank Lampard"},{name:"Shaun Wright-Phillips"},{name:"Wayne Bridge"},
+    {name:"Daniel Sturridge"},{name:"Raheem Sterling"},{name:"Nicolas Anelka"},
+    {name:"Cole Palmer"},{name:"Joao Cancelo"},{name:"Mateo Kovacic"},
+  ]},
+  q_soccer_atletico_madrid_liverpool: { clue: "Name a player who played for both Atletico Madrid AND Liverpool", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Atletico Madrid" }, { fact_type: "played_for_team", fact_value: "Liverpool" }], answers: [
+    {name:"Fernando Torres"},{name:"Luis Suarez"},{name:"Luis Garcia"},
+    {name:"Albert Riera"},{name:"Fabio Borini"},{name:"Maxi Rodriguez"},
+    {name:"Javier Mascherano"},{name:"Emre Can"},{name:"Diego Forlan"},
+  ]},
+  q_soccer_napoli_juventus: { clue: "Name a player who played for both Napoli AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Napoli" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Gonzalo Higuain"},{name:"Marek Hamsik"},{name:"Fabio Cannavaro"},
+    {name:"Fabio Quagliarella"},{name:"Simone Verdi"},{name:"Emanuele Giaccherini"},
+    {name:"Mirko Vucinic"},{name:"Christian Maggio"},{name:"Maurizio Domizzi"},
+  ]},
+  q_soccer_arsenal_juventus: { clue: "Name a player who played for both Arsenal AND Juventus", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Arsenal" }, { fact_type: "played_for_team", fact_value: "Juventus" }], answers: [
+    {name:"Thierry Henry"},{name:"Patrick Vieira"},{name:"Liam Brady"},
+    {name:"David Platt"},{name:"Wojciech Szczesny"},{name:"Nicolas Anelka"},
+    {name:"Aaron Ramsey"},{name:"Arthur Melo"},{name:"Alexis Sanchez"},
+  ]},
+  q_soccer_sevilla_real_madrid: { clue: "Name a player who played for both Sevilla AND Real Madrid", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Sevilla" }, { fact_type: "played_for_team", fact_value: "Real Madrid" }], answers: [
+    {name:"Sergio Ramos"},{name:"Jesus Navas"},{name:"Ivan Rakitic"},
+    {name:"Alvaro Negredo"},{name:"Federico Fazio"},{name:"Alberto Moreno"},
+    {name:"Diego Perotti"},{name:"Daniel Alves"},{name:"Julio Baptista"},
+  ]},
+  q_soccer_tottenham_chelsea: { clue: "Name a player who played for both Tottenham AND Chelsea", sport: "Soccer", rules: [{ fact_type: "played_for_team", fact_value: "Tottenham" }, { fact_type: "played_for_team", fact_value: "Chelsea" }], answers: [
+    {name:"William Gallas"},{name:"Gus Poyet"},{name:"Carlton Cole"},
+    {name:"Jimmy Greaves"},{name:"Pat Jennings"},{name:"Graham Roberts"},
+    {name:"Bobby Smith"},{name:"Terry Venables"},{name:"Scott Parker"},
+  ]},
+
 };
 
 // ── Difficulty tiers ──────────────────────────────────────────────────────────
@@ -228,15 +590,50 @@ export const SOCCER_BEGINNER = [
   "q_soccer_ucl_prem","q_soccer_ballon_wc","q_soccer_prem_la_liga",
   "q_soccer_ucl_50goals_non_spanish","q_soccer_wc_ucl","q_soccer_pl_title_ucl",
   "q_soccer_200goals_pl","q_soccer_wc_and_cl_winner",
+  "q_soccer_real_madrid_juventus","q_soccer_barcelona_psg",
+  "q_soccer_manchester_united_real_madrid","q_soccer_liverpool_real_madrid",
+  "q_soccer_chelsea_real_madrid","q_soccer_ac_milan_juventus",
+  "q_soccer_bayern_munich_real_madrid","q_soccer_inter_milan_juventus",
+  "q_soccer_manchester_city_barcelona","q_soccer_arsenal_barcelona",
+  "q_soccer_tottenham_real_madrid","q_soccer_liverpool_barcelona",
+  "q_soccer_manchester_united_juventus","q_soccer_chelsea_ac_milan",
+  "q_soccer_inter_milan_ac_milan","q_soccer_arsenal_chelsea",
+  "q_soccer_manchester_united_chelsea","q_soccer_manchester_united_liverpool",
+  "q_soccer_ballon_barcelona","q_soccer_atletico_madrid_real_madrid",
+  "q_soccer_arsenal_manchester_city","q_soccer_tottenham_chelsea",
 ];
 
 export const SOCCER_KNOWLEDGEABLE = [
   "q_soccer_pl_german","q_soccer_serie_a_ucl","q_soccer_bundesliga_ucl",
   "q_soccer_ligue1_ucl","q_soccer_spain_both_clubs","q_soccer_wc_final_scorer_ucl",
   "q_soccer_100cl_non_madrid","q_soccer_int_50goals_ucl","q_soccer_golden_boot_ucl",
+  "q_soccer_real_madrid_ac_milan","q_soccer_barcelona_bayern_munich",
+  "q_soccer_manchester_united_inter_milan","q_soccer_psg_real_madrid",
+  "q_soccer_liverpool_chelsea","q_soccer_atletico_madrid_barcelona",
+  "q_soccer_borussia_dortmund_bayern_munich","q_soccer_chelsea_bayern_munich",
+  "q_soccer_real_madrid_manchester_city","q_soccer_psg_juventus",
+  "q_soccer_liverpool_manchester_city","q_soccer_chelsea_atletico_madrid",
+  "q_soccer_cup_real_madrid","q_soccer_barcelona_ac_milan",
+  "q_soccer_tottenham_manchester_united","q_soccer_liverpool_ac_milan",
+  "q_soccer_psg_bayern_munich","q_soccer_dortmund_barcelona",
+  "q_soccer_manchester_city_chelsea","q_soccer_atletico_madrid_liverpool",
+  "q_soccer_napoli_juventus",
 ];
 
 export const SOCCER_EXPERT = [
   "q_soccer_invincibles_foreign","q_soccer_wc_hat_trick","q_soccer_manager_league_ucl",
   "q_soccer_pl_golden_boot_wc","q_soccer_ucl_final_two_clubs",
+  "q_soccer_inter_milan_real_madrid","q_soccer_ac_milan_psg",
+  "q_soccer_manchester_united_ac_milan","q_soccer_arsenal_real_madrid",
+  "q_soccer_juventus_bayern_munich","q_soccer_chelsea_juventus",
+  "q_soccer_atletico_madrid_ac_milan","q_soccer_manchester_united_psg",
+  "q_soccer_napoli_psg","q_soccer_liverpool_juventus",
+  "q_soccer_dortmund_real_madrid","q_soccer_arsenal_inter_milan",
+  "q_soccer_manchester_city_juventus","q_soccer_tottenham_inter_milan",
+  "q_soccer_liverpool_bayern_munich","q_soccer_chelsea_psg",
+  "q_soccer_benfica_real_madrid","q_soccer_porto_real_madrid",
+  "q_soccer_roma_juventus","q_soccer_valencia_barcelona",
+  "q_soccer_real_madrid_roma","q_soccer_barcelona_juventus",
+  "q_soccer_arsenal_juventus","q_soccer_sevilla_real_madrid",
+  "q_soccer_barcelona_chelsea",
 ];
