@@ -75,6 +75,68 @@ BEGIN
 END;
 $$;
 
+-- ─── VALIDATE_BOARD RPC ────────────────────────────────────────────────────
+-- Checks all 9 intersections of a 3×3 board in one call.
+-- Used by the board generator to verify every cell has enough valid answers.
+--
+-- p_row_facts / p_col_facts: JSONB arrays of 3 objects each:
+--   [{"type":"played_for_team","value":"Lakers"}, ...]
+-- Returns: { "valid": true, "counts": [8,12,5,15,7,3,22,9,11] }
+--   counts is row-major (cell 0 = row0×col0, cell 1 = row0×col1, …)
+
+CREATE OR REPLACE FUNCTION validate_board(
+  p_sport       TEXT,
+  p_row_facts   JSONB,
+  p_col_facts   JSONB,
+  p_min_answers INT DEFAULT 6
+)
+RETURNS JSONB
+LANGUAGE plpgsql STABLE
+AS $$
+DECLARE
+  r         INT;
+  c         INT;
+  rf        JSONB;
+  cf        JSONB;
+  cnt       INT;
+  counts    JSONB := '[]'::JSONB;
+  all_valid BOOLEAN := TRUE;
+BEGIN
+  FOR r IN 0..2 LOOP
+    rf := p_row_facts->r;
+    FOR c IN 0..2 LOOP
+      cf := p_col_facts->c;
+
+      SELECT COUNT(DISTINCT sub.pname) INTO cnt
+      FROM (
+        SELECT LOWER(pf.player_name) AS pname
+          FROM player_facts pf
+         WHERE pf.sport      = p_sport
+           AND pf.fact_type  = rf->>'type'
+           AND pf.fact_value = rf->>'value'
+        INTERSECT
+        SELECT LOWER(pf.player_name) AS pname
+          FROM player_facts pf
+         WHERE pf.sport      = p_sport
+           AND pf.fact_type  = cf->>'type'
+           AND pf.fact_value = cf->>'value'
+      ) sub;
+
+      counts := counts || to_jsonb(cnt);
+      IF cnt < p_min_answers THEN
+        all_valid := FALSE;
+      END IF;
+    END LOOP;
+  END LOOP;
+
+  RETURN jsonb_build_object('valid', all_valid, 'counts', counts);
+END;
+$$;
+
+-- Composite index for board generator queries (sport + fact_type + fact_value)
+CREATE INDEX IF NOT EXISTS idx_player_facts_sport_type_value
+  ON player_facts (sport, fact_type, fact_value);
+
 -- ─── ANSWER_STATS TABLE ─────────────────────────────────────────────────────
 -- Tracks per-question answer submissions so live rarity can override position-based rarity.
 
