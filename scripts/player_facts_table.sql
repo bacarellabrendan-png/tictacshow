@@ -21,6 +21,9 @@ CREATE INDEX IF NOT EXISTS idx_player_facts_type_value
 CREATE INDEX IF NOT EXISTS idx_player_facts_sport
   ON player_facts (sport);
 
+CREATE INDEX IF NOT EXISTS idx_player_facts_lower_name
+  ON player_facts (LOWER(player_name), sport, fact_type);
+
 -- ─── RLS ────────────────────────────────────────────────────────────────────
 ALTER TABLE player_facts ENABLE ROW LEVEL SECURITY;
 
@@ -54,7 +57,7 @@ BEGIN
     IF rule ? 'fact_value' THEN
       SELECT EXISTS(
         SELECT 1 FROM player_facts
-        WHERE player_name = p_player_name
+        WHERE LOWER(player_name) = LOWER(p_player_name)
           AND sport       = p_sport
           AND fact_type   = rule->>'fact_type'
           AND fact_value  = rule->>'fact_value'
@@ -62,7 +65,7 @@ BEGIN
     ELSE
       SELECT EXISTS(
         SELECT 1 FROM player_facts
-        WHERE player_name = p_player_name
+        WHERE LOWER(player_name) = LOWER(p_player_name)
           AND sport       = p_sport
           AND fact_type   = rule->>'fact_type'
       ) INTO found;

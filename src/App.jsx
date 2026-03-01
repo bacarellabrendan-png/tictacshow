@@ -176,24 +176,24 @@ async function validateAnswer(guess, questionKey) {
     return { name: pool.answers[localIdx].name, valid: true, rarity: calculatePositionRarity(localIdx, pool.answers.length) };
   }
 
-  // 2. Check the players table — if the player exists for this sport, accept it
-  const sport = (pool.sport || "").toLowerCase();
-  try {
-    const r = await sbFetch(
-      `/rest/v1/players?name=ilike.${encodeURIComponent(guess.trim())}&sport=eq.${encodeURIComponent(sport)}&limit=1`,
-      { method: "GET" }
-    );
-    if (r.ok && r.data?.[0]) {
-      return { name: r.data[0].name, valid: true, rarity: 5 };
-    }
-  } catch { /* network failure — fall through to legacy */ }
+  // 2. Strict validation via player_facts RPC — checks ALL rules are satisfied
+  if (pool.rules?.length) {
+    try {
+      const r = await sbFetch('/rest/v1/rpc/validate_answer', {
+        method: 'POST',
+        body: JSON.stringify({
+          p_player_name: guess.trim(),
+          p_sport: pool.sport,
+          p_rules: pool.rules,
+        }),
+      });
+      if (r.ok && r.data === true) {
+        return { name: guess.trim(), valid: true, rarity: 5 };
+      }
+    } catch { /* network failure — reject */ }
+  }
 
-  // 3. Legacy fallback — matchAnswer from hardcoded pools
-  const match = matchAnswer(guess, questionKey);
-  if (!match) return null;
-  const fallbackIdx = pool.answers.findIndex(a => normalizeStr(a.name) === normalizeStr(match.name));
-  const fallbackRarity = fallbackIdx !== -1 ? calculatePositionRarity(fallbackIdx, pool.answers.length) : 5;
-  return { name: match.name, valid: true, rarity: fallbackRarity };
+  return null;
 }
 
 // ─── GAME LOGIC ────────────────────────────────────────────────────────────────
