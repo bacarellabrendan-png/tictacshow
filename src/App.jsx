@@ -742,7 +742,7 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // REVEAL
   // ─────────────────────────────────────────────────────────────────────────────
-  function triggerReveal(move, g) {
+  function triggerReveal(move, g, preStats) {
     showingReveal.current = true;
     const winnerName =
       move.result === "p1" ? g.player1_name :
@@ -760,14 +760,14 @@ export default function App() {
       ? { sport: activeCell.sport, clue: cellClue(activeCell) }
       : (ANSWER_POOLS[move.question_key] ?? null);
     const qKey = activeCell ? cellKey(activeCell) : move.question_key;
-    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, liveStats: null });
+    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, liveStats: preStats || null });
     setRevealStep(0);
     // Stagger the answer cards in — no auto-close, user clicks Continue
     setTimeout(() => setRevealStep(1), 350);
     setTimeout(() => setRevealStep(2), 800);
     setTimeout(() => setRevealStep(3), 1400);
-    // Fetch live rarity stats in background — updates revealData when available
-    if (qKey) fetchAnswerStats(qKey).then(stats => {
+    // Fetch live rarity stats in background (skip if pre-fetched)
+    if (!preStats && qKey) fetchAnswerStats(qKey).then(stats => {
       if (stats) setRevealData(prev => prev ? { ...prev, liveStats: stats } : prev);
     });
   }
@@ -1075,7 +1075,7 @@ export default function App() {
 
     // CPU "thinks" for 2-3 seconds
     const delay = 2000 + Math.random() * 1000;
-    setTimeout(() => {
+    setTimeout(async () => {
       const g = gameRef.current;
       if (!g) return;
       const cpuAns = cpuPickAnswer(cell, g.cpuDiff ?? "medium");
@@ -1085,7 +1085,7 @@ export default function App() {
         p2_valid:  cpuAns.valid,
         p2_rarity: cpuAns.rarity,
       };
-      resolveCpuMove(finalMove);
+      await resolveCpuMove(finalMove);
     }, delay);
   }
 
@@ -1121,12 +1121,32 @@ export default function App() {
       return;
     }
 
+    // ── Determine winner — use live rarity when both answers are valid ──
     let result;
-    if (!mv.p1_valid && !mv.p2_valid)  result = "reset";
-    else if (!mv.p1_valid)             result = "p2";
-    else if (!mv.p2_valid)             result = "p1";
-    else if (mv.p1_rarity === mv.p2_rarity) result = Math.random() < 0.5 ? "p1" : "p2";
-    else                               result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
+    let liveStats = null;
+    if (!mv.p1_valid && !mv.p2_valid) {
+      result = "reset";
+    } else if (!mv.p1_valid) {
+      result = "p2";
+    } else if (!mv.p2_valid) {
+      result = "p1";
+    } else {
+      // Both valid — fetch live answer_stats for rarity-based tiebreak
+      const cell = g.cells[g.active_cell];
+      const qKey = cellKey(cell);
+      liveStats = await fetchAnswerStats(qKey);
+      if (liveStats && liveStats.totalSubmissions >= 2) {
+        const p1Count = liveStats.answerCounts[normalizeStr(mv.p1_answer)] ?? 0;
+        const p2Count = liveStats.answerCounts[normalizeStr(mv.p2_answer)] ?? 0;
+        // Lower count = rarer = wins
+        if (p1Count === p2Count) result = Math.random() < 0.5 ? "p1" : "p2";
+        else result = p1Count <= p2Count ? "p1" : "p2";
+      } else {
+        // Not enough data — fall back to stored position-based rarity
+        if (mv.p1_rarity === mv.p2_rarity) result = Math.random() < 0.5 ? "p1" : "p2";
+        else result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
+      }
+    }
 
     await dbUpdate("moves", `?id=eq.${mv.id}`, { result });
     const newBoard  = [...g.board];
@@ -1136,7 +1156,7 @@ export default function App() {
     const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
     // Simple alternation — the other player always picks next
     const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
-    triggerReveal({ ...mv, result }, g);
+    triggerReveal({ ...mv, result }, g, liveStats);
     await dbUpdate("games", `?id=eq.${game.id}`, {
       board: newBoard, scores: newScores, active_cell: null,
       phase: check ? "gameover" : "choosing", choosing_player: nextPick,
@@ -1155,7 +1175,7 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // RESOLVE MOVE — CPU
   // ─────────────────────────────────────────────────────────────────────────────
-  function resolveCpuMove(mv) {
+  async function resolveCpuMove(mv) {
     const g = gameRef.current;
     if (!g) return;
 
@@ -1175,12 +1195,32 @@ export default function App() {
       return;
     }
 
+    // ── Determine winner — use live rarity when both answers are valid ──
     let result;
-    if (!mv.p1_valid && !mv.p2_valid)  result = "reset";
-    else if (!mv.p1_valid)             result = "p2";
-    else if (!mv.p2_valid)             result = "p1";
-    else if (mv.p1_rarity === mv.p2_rarity) result = Math.random() < 0.5 ? "p1" : "p2";
-    else                               result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
+    let liveStats = null;
+    if (!mv.p1_valid && !mv.p2_valid) {
+      result = "reset";
+    } else if (!mv.p1_valid) {
+      result = "p2";
+    } else if (!mv.p2_valid) {
+      result = "p1";
+    } else {
+      // Both valid — fetch live answer_stats for rarity-based tiebreak
+      const cell = g.cells[g.active_cell];
+      const qKey = cellKey(cell);
+      liveStats = await fetchAnswerStats(qKey);
+      if (liveStats && liveStats.totalSubmissions >= 2) {
+        const p1Count = liveStats.answerCounts[normalizeStr(mv.p1_answer)] ?? 0;
+        const p2Count = liveStats.answerCounts[normalizeStr(mv.p2_answer)] ?? 0;
+        // Lower count = rarer = wins
+        if (p1Count === p2Count) result = Math.random() < 0.5 ? "p1" : "p2";
+        else result = p1Count <= p2Count ? "p1" : "p2";
+      } else {
+        // Not enough data — fall back to stored position-based rarity
+        if (mv.p1_rarity === mv.p2_rarity) result = Math.random() < 0.5 ? "p1" : "p2";
+        else result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
+      }
+    }
 
     const newBoard  = [...g.board];
     newBoard[g.active_cell] = result === "reset" ? "reset" : result;
@@ -1189,7 +1229,7 @@ export default function App() {
     const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
     // Simple alternation — the other player always picks next
     const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
-    triggerReveal({ ...mv, result }, g);
+    triggerReveal({ ...mv, result }, g, liveStats);
     const updated = {
       ...g, board: newBoard, scores: newScores, active_cell: null,
       phase: check ? "gameover" : "choosing", choosing_player: nextPick,
@@ -2062,10 +2102,10 @@ export default function App() {
                 const isMe   = myRole === p;
                 const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
                 const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
-                // Live rarity from answer_stats — only show when 50+ submissions exist
+                // Live rarity from answer_stats — show when 10+ submissions exist
                 const ls = revealData.liveStats;
                 const liveCount = ls && answer ? (ls.answerCounts[normalizeStr(answer)] ?? 0) : 0;
-                const hasEnoughData = ls && ls.totalSubmissions >= 50;
+                const hasEnoughData = ls && ls.totalSubmissions >= 10;
                 const rarity = hasEnoughData ? Math.round((liveCount / ls.totalSubmissions) * 100) : null;
                 const won    = revealData.result === p;
                 return (
@@ -2150,7 +2190,7 @@ export default function App() {
                     </div>
                     {(() => {
                       const ls = revealData.liveStats;
-                      if (!ls || ls.totalSubmissions < 50) return null;
+                      if (!ls || ls.totalSubmissions < 10) return null;
                       const wKey = revealData.result;
                       const lKey = wKey === "p1" ? "p2" : "p1";
                       const wAnswer = revealData.move[`${wKey}_answer`];
