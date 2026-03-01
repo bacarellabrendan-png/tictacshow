@@ -1,8 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  ANSWER_POOLS, DIFFICULTY_META, SPORT_POOLS,
-  buildPuzzle, matchAnswer, normalizeStr,
-} from "./data/questions.js";
+import { DIFFICULTY_META, normalizeStr } from "./data/questions.js";
 import {
   generateBoard, expandBoard, getCategoryDisplay,
   getIntersectionPlayers,
@@ -165,45 +162,24 @@ async function fetchAnswerStats(questionKey) {
 
 /**
  * Validate an answer against the player_facts database via RPC.
- * Accepts either a questionKey string (legacy) or a config { sport, rules }.
+ * Accepts a config { sport, rules } and checks ALL rules are satisfied.
  * Returns { name, valid, rarity } or null (invalid).
  */
-async function validateAnswer(guess, questionKeyOrConfig) {
-  let pool;
-  if (typeof questionKeyOrConfig === "string") {
-    pool = ANSWER_POOLS[questionKeyOrConfig];
-  } else {
-    pool = questionKeyOrConfig; // { sport, rules }
-  }
-  if (!pool) return null;
-
-  const g = normalizeStr(guess);
-
-  // 1. Check local answers array first (instant, no network) — legacy pools only
-  if (pool.answers?.length) {
-    const localIdx = pool.answers.findIndex(a => normalizeStr(a.name) === g);
-    if (localIdx !== -1) {
-      return { name: pool.answers[localIdx].name, valid: true, rarity: calculatePositionRarity(localIdx, pool.answers.length) };
+async function validateAnswer(guess, config) {
+  if (!config?.rules?.length) return null;
+  try {
+    const r = await sbFetch('/rest/v1/rpc/validate_answer', {
+      method: 'POST',
+      body: JSON.stringify({
+        p_player_name: guess.trim(),
+        p_sport: config.sport,
+        p_rules: config.rules,
+      }),
+    });
+    if (r.ok && r.data === true) {
+      return { name: guess.trim(), valid: true, rarity: 5 };
     }
-  }
-
-  // 2. Strict validation via player_facts RPC — checks ALL rules are satisfied
-  if (pool.rules?.length) {
-    try {
-      const r = await sbFetch('/rest/v1/rpc/validate_answer', {
-        method: 'POST',
-        body: JSON.stringify({
-          p_player_name: guess.trim(),
-          p_sport: pool.sport,
-          p_rules: pool.rules,
-        }),
-      });
-      if (r.ok && r.data === true) {
-        return { name: guess.trim(), valid: true, rarity: 5 };
-      }
-    } catch { /* network failure — reject */ }
-  }
-
+  } catch { /* network failure — reject */ }
   return null;
 }
 
@@ -249,21 +225,7 @@ function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
     }
     return { name: players[pickIndex], valid: true, rarity: calculatePositionRarity(pickIndex, players.length) };
   }
-  // Legacy fallback
-  const allPool = ANSWER_POOLS[cell.questionKey]?.answers ?? [];
-  const pool = normHuman ? allPool.filter(a => normalizeStr(a.name) !== normHuman) : allPool;
-  if (!pool.length) return { name: "No answer", valid: false, rarity: null };
-  let pickIndex;
-  if (cpuDiff === "easy") {
-    const end = Math.max(3, Math.ceil(pool.length / 3));
-    pickIndex = Math.floor(Math.random() * end);
-  } else if (cpuDiff === "hard") {
-    const start = Math.max(0, pool.length - Math.max(3, Math.ceil(pool.length / 3)));
-    pickIndex = start + Math.floor(Math.random() * (pool.length - start));
-  } else {
-    pickIndex = Math.floor(Math.random() * pool.length);
-  }
-  return { name: pool[pickIndex].name, valid: true, rarity: calculatePositionRarity(pickIndex, pool.length) };
+  return { name: "No answer", valid: false, rarity: null };
 }
 
 function cpuPickCell(board) {
@@ -576,19 +538,15 @@ function calculatePositionRarity(index, poolSize) {
   return Math.max(1, Math.min(99, Math.round(95 - (index / (poolSize - 1)) * 90)));
 }
 
-/** Derive a stable key for a cell — works with both old and new format. */
+/** Derive a stable key for a cell (row__col). */
 function cellKey(cell) {
-  return cell?.questionKey || `${cell.rowCat}__${cell.colCat}`;
+  return `${cell.rowCat}__${cell.colCat}`;
 }
 
 /** Get display text for a cell's clue — row label + col label. */
 function cellClue(cell) {
   if (!cell) return "";
-  if (cell.rowCat && cell.colCat) {
-    return `${getCategoryDisplay(cell.rowCat).label} + ${getCategoryDisplay(cell.colCat).label}`;
-  }
-  const pool = ANSWER_POOLS[cell.questionKey];
-  return pool?.clue ?? "";
+  return `${getCategoryDisplay(cell.rowCat).label} + ${getCategoryDisplay(cell.colCat).label}`;
 }
 
 const isTouchDevice = () =>
@@ -620,7 +578,6 @@ export default function App() {
   const [lobbyLoading,  setLobbyLoading]  = useState(false);
 
   // Create
-  const [qDiff,         setQDiff]         = useState("beginner");   // question difficulty
   const [cpuDiff,       setCpuDiff]       = useState("medium");     // cpu skill level
   const [gameMode,      setGameMode]      = useState("vs_friend");  // "vs_friend" | "vs_cpu"
   const [sport,         setSport]         = useState("all");        // sport filter
@@ -760,10 +717,10 @@ export default function App() {
       : (g.choosing_player === "p1" ? g.player2_name : g.player1_name);
     // Snapshot the question NOW — active_cell may be nulled when game state updates
     const activeCell = g.cells?.[g.active_cell ?? move.cell_index];
-    const revealQ = activeCell?.rowCat
+    const revealQ = activeCell
       ? { sport: activeCell.sport, clue: cellClue(activeCell) }
-      : (ANSWER_POOLS[move.question_key] ?? null);
-    const qKey = activeCell ? cellKey(activeCell) : move.question_key;
+      : null;
+    const qKey = activeCell ? cellKey(activeCell) : null;
     setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, liveStats: preStats || null });
     setRevealStep(0);
     // Stagger the answer cards in — no auto-close, user clicks Continue
@@ -787,23 +744,6 @@ export default function App() {
     } else {
       setCurrentMove(null);
     }
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // HELPERS
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  /** Pick a fresh question key not already used on the board (excluding the active cell). */
-  function getNewQuestionKey(cells, activeCellIdx, gameSport) {
-    const usedKeys = new Set(cells.filter((_, i) => i !== activeCellIdx).map(c => c.questionKey));
-    // Use the sport-specific pool if a sport filter is active, otherwise all keys
-    const pool = (gameSport && gameSport !== "all" && SPORT_POOLS[gameSport])
-      ? SPORT_POOLS[gameSport]
-      : Object.keys(ANSWER_POOLS);
-    const available = pool.filter(k => !usedKeys.has(k));
-    return available.length > 0
-      ? available[Math.floor(Math.random() * available.length)]
-      : pool[Math.floor(Math.random() * pool.length)];
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -902,7 +842,7 @@ export default function App() {
         id: `cpu-${Date.now()}`,
         isCpu: true,
         cpuDiff,
-        difficulty: qDiff,
+        difficulty: "beginner",
         sport: boardConfig.sport,
         cells,
         phase: "choosing",
@@ -943,7 +883,7 @@ export default function App() {
       const firstPick = Math.random() < 0.5 ? "p1" : "p2";
       const payload = {
         invite_code: genCode(),
-        difficulty: qDiff,
+        difficulty: "beginner",
         sport: boardConfig.sport,
         cells,
         player1_id: user.id,
@@ -1044,8 +984,7 @@ export default function App() {
     const myRole = game.player1_id === user.id ? "p1" : "p2";
     const cell   = game.cells[game.active_cell];
     const qKey   = cellKey(cell);
-    const valArg = cell.rowCat ? { sport: cell.sport, rules: cell.rules } : qKey;
-    const match  = await validateAnswer(myAnswer, valArg);
+    const match  = await validateAnswer(myAnswer, { sport: cell.sport, rules: cell.rules });
     const patch  = myRole === "p1"
       ? { p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null }
       : { p2_answer: myAnswer, p2_valid: !!match, p2_rarity: match?.rarity ?? null };
@@ -1067,8 +1006,7 @@ export default function App() {
     if (submitted || !myAnswer.trim() || !game || !currentMove) return;
     const cell  = game.cells[game.active_cell];
     const qKey  = cellKey(cell);
-    const valArg = cell.rowCat ? { sport: cell.sport, rules: cell.rules } : qKey;
-    const match = await validateAnswer(myAnswer, valArg);
+    const match = await validateAnswer(myAnswer, { sport: cell.sport, rules: cell.rules });
     const updatedMove = {
       ...currentMove,
       p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null,
@@ -1261,9 +1199,7 @@ export default function App() {
   const diffColor = diffMeta?.color ?? ACCENT;
   const activeCell = game?.active_cell != null ? game.cells?.[game.active_cell] : null;
   const activeQ   = activeCell
-    ? (activeCell.rowCat
-      ? { sport: activeCell.sport, clue: cellClue(activeCell) }
-      : ANSWER_POOLS[activeCell.questionKey])
+    ? { sport: activeCell.sport, clue: cellClue(activeCell) }
     : null;
   const isMyPick  = game?.phase === "choosing" && myRole === game.choosing_player;
   const board     = game?.board ?? Array(9).fill("null");
@@ -1583,28 +1519,6 @@ export default function App() {
                   {m.label}
                 </div>
                 <div style={{ color: LO, fontSize: "0.82rem", marginTop: "0.25rem" }}>{m.sub}</div>
-              </button>
-            ))}
-          </div>
-
-          {/* Question difficulty */}
-          <div className="section-label">Question Difficulty</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem", marginBottom: "2.5rem" }}>
-            {Object.entries(DIFFICULTY_META).map(([key, meta]) => (
-              <button key={key} className="diff-card"
-                onClick={() => setQDiff(key)}
-                style={{ borderColor: qDiff === key ? meta.color : BORDER }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px", color: meta.color }}>
-                      {meta.label}
-                    </div>
-                    <div style={{ color: LO, fontSize: "0.85rem", fontStyle: "italic" }}>{meta.sublabel}</div>
-                  </div>
-                  {qDiff === key && (
-                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
-                  )}
-                </div>
               </button>
             ))}
           </div>
