@@ -317,18 +317,18 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
   const wrapRef   = useRef(null);
   const debounceT = useRef(null);
 
-  // Query Supabase players table with debounce
+  // Query player_facts for autocomplete — only suggests players that can validate
   useEffect(() => {
     const q = value.trim();
     if (q.length < 1) { setSuggestions([]); return; }
     clearTimeout(debounceT.current);
     debounceT.current = setTimeout(async () => {
-      const validSports = ["nba", "nfl", "mlb", "nhl", "soccer"];
-      const sportFilter = sport && validSports.includes(sport) ? `&sport=eq.${encodeURIComponent(sport)}` : "";
-      const r = await dbSelect("players",
-        `?name=ilike.*${encodeURIComponent(q)}*${sportFilter}&select=name&limit=8`);
+      const sportFilter = sport ? `&sport=eq.${encodeURIComponent(sport)}` : "";
+      const r = await dbSelect("player_facts",
+        `?player_name=ilike.*${encodeURIComponent(q)}*${sportFilter}&select=player_name&order=player_name&limit=40`);
       if (r.ok && Array.isArray(r.data)) {
-        setSuggestions(r.data.map(row => row.name));
+        const unique = [...new Set(r.data.map(row => row.player_name))];
+        setSuggestions(unique.slice(0, 8));
       }
     }, 150);
     return () => clearTimeout(debounceT.current);
