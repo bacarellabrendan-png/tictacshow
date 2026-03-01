@@ -30,6 +30,7 @@ CREATE POLICY "player_facts_select" ON player_facts
 -- ─── VALIDATE_ANSWER RPC ────────────────────────────────────────────────────
 -- Loops through each rule, checks if a matching player_facts row exists.
 -- Returns true only if ALL rules are satisfied (AND logic).
+-- Uses case-insensitive matching on player_name so "lebron james" matches "LeBron James".
 --
 -- Rule format (JSONB array):
 --   { "fact_type": "nba_champion" }                            → existence check
@@ -46,13 +47,14 @@ AS $$
 DECLARE
   rule  JSONB;
   found BOOLEAN;
+  p_name_lower TEXT := LOWER(TRIM(p_player_name));
 BEGIN
   FOR rule IN SELECT * FROM jsonb_array_elements(p_rules)
   LOOP
     IF rule ? 'fact_value' THEN
       SELECT EXISTS(
         SELECT 1 FROM player_facts
-        WHERE player_name = p_player_name
+        WHERE LOWER(player_name) = p_name_lower
           AND sport       = p_sport
           AND fact_type   = rule->>'fact_type'
           AND fact_value  = rule->>'fact_value'
@@ -60,7 +62,7 @@ BEGIN
     ELSE
       SELECT EXISTS(
         SELECT 1 FROM player_facts
-        WHERE player_name = p_player_name
+        WHERE LOWER(player_name) = p_name_lower
           AND sport       = p_sport
           AND fact_type   = rule->>'fact_type'
       ) INTO found;
@@ -136,6 +138,10 @@ $$;
 -- Composite index for board generator queries (sport + fact_type + fact_value)
 CREATE INDEX IF NOT EXISTS idx_player_facts_sport_type_value
   ON player_facts (sport, fact_type, fact_value);
+
+-- Functional index for case-insensitive player name lookups (validate_answer RPC)
+CREATE INDEX IF NOT EXISTS idx_player_facts_lower_name_sport
+  ON player_facts (LOWER(player_name), sport, fact_type);
 
 -- ─── ANSWER_STATS TABLE ─────────────────────────────────────────────────────
 -- Tracks per-question answer submissions so live rarity can override position-based rarity.
