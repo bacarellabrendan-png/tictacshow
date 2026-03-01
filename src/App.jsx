@@ -3,6 +3,10 @@ import {
   ANSWER_POOLS, DIFFICULTY_META, SPORT_POOLS,
   buildPuzzle, matchAnswer, normalizeStr,
 } from "./data/questions.js";
+import {
+  generateBoard, expandBoard, getCategoryDisplay,
+  getIntersectionPlayers,
+} from "./data/boardGenerator.js";
 
 // ─── SUPABASE ──────────────────────────────────────────────────────────────────
 const SB_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -161,19 +165,26 @@ async function fetchAnswerStats(questionKey) {
 
 /**
  * Validate an answer against the player_facts database via RPC.
- * Falls back to legacy matchAnswer() if question has no rules or RPC fails.
+ * Accepts either a questionKey string (legacy) or a config { sport, rules }.
  * Returns { name, valid, rarity } or null (invalid).
  */
-async function validateAnswer(guess, questionKey) {
-  const pool = ANSWER_POOLS[questionKey];
+async function validateAnswer(guess, questionKeyOrConfig) {
+  let pool;
+  if (typeof questionKeyOrConfig === "string") {
+    pool = ANSWER_POOLS[questionKeyOrConfig];
+  } else {
+    pool = questionKeyOrConfig; // { sport, rules }
+  }
   if (!pool) return null;
 
   const g = normalizeStr(guess);
 
-  // 1. Check local answers array first (instant, no network)
-  const localIdx = pool.answers.findIndex(a => normalizeStr(a.name) === g);
-  if (localIdx !== -1) {
-    return { name: pool.answers[localIdx].name, valid: true, rarity: calculatePositionRarity(localIdx, pool.answers.length) };
+  // 1. Check local answers array first (instant, no network) — legacy pools only
+  if (pool.answers?.length) {
+    const localIdx = pool.answers.findIndex(a => normalizeStr(a.name) === g);
+    if (localIdx !== -1) {
+      return { name: pool.answers[localIdx].name, valid: true, rarity: calculatePositionRarity(localIdx, pool.answers.length) };
+    }
   }
 
   // 2. Strict validation via player_facts RPC — checks ALL rules are satisfied
@@ -214,26 +225,38 @@ function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase()
 const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
 /*
-  cpuDiff controls answer quality — picks from the answers array (CPU's "knowledge base").
-  easy   — picks from the first few names (popular / well-known)
-  medium — picks randomly from the full pool
-  hard   — picks from the last few names (obscure)
+  cpuDiff controls answer quality.
+  New grid cells: picks from intersection players via boardGenerator cache.
+  Legacy cells (questionKey): picks from ANSWER_POOLS.
 */
-function cpuPickAnswer(qKey, cpuDiff) {
-  const pool = ANSWER_POOLS[qKey]?.answers ?? [];
+function cpuPickAnswer(cell, cpuDiff) {
+  // New grid cell format
+  if (cell.rowCat && cell.colCat) {
+    const players = getIntersectionPlayers(cell.sport, cell.rowCat, cell.colCat);
+    if (!players.length) return { name: "No answer", valid: false, rarity: null };
+    let pickIndex;
+    if (cpuDiff === "easy") {
+      const end = Math.max(3, Math.ceil(players.length / 3));
+      pickIndex = Math.floor(Math.random() * end);
+    } else if (cpuDiff === "hard") {
+      const start = Math.max(0, players.length - Math.max(3, Math.ceil(players.length / 3)));
+      pickIndex = start + Math.floor(Math.random() * (players.length - start));
+    } else {
+      pickIndex = Math.floor(Math.random() * players.length);
+    }
+    return { name: players[pickIndex], valid: true, rarity: 5 };
+  }
+  // Legacy fallback
+  const pool = ANSWER_POOLS[cell.questionKey]?.answers ?? [];
   if (!pool.length) return { name: "No answer", valid: false, rarity: null };
-
   let pickIndex;
   if (cpuDiff === "easy") {
-    // Pick from first third (popular names listed first)
     const end = Math.max(3, Math.ceil(pool.length / 3));
     pickIndex = Math.floor(Math.random() * end);
   } else if (cpuDiff === "hard") {
-    // Pick from last third (obscure names listed last)
     const start = Math.max(0, pool.length - Math.max(3, Math.ceil(pool.length / 3)));
     pickIndex = start + Math.floor(Math.random() * (pool.length - start));
   } else {
-    // medium — pick randomly from full pool
     pickIndex = Math.floor(Math.random() * pool.length);
   }
   return { name: pool[pickIndex].name, valid: true, rarity: calculatePositionRarity(pickIndex, pool.length) };
@@ -439,40 +462,16 @@ const GLOBAL_CSS = `
 
   /* ─── Board cells ─── */
   .cell {
-    aspect-ratio: 1; border-radius: 14px; border: 1.5px solid ${BORDER};
+    aspect-ratio: 1; border-radius: 12px; border: 1.5px solid ${BORDER};
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 0.7rem; transition: all 0.2s; position: relative;
-    overflow: hidden; text-align: center; background: ${SURF}; cursor: default;
-    min-height: 90px;
+    padding: 0.5rem; transition: all 0.2s; position: relative;
+    text-align: center; background: ${SURF}; cursor: default;
   }
   .pickable { cursor: pointer; }
   .pickable:hover {
     background: ${SURF3} !important; transform: scale(1.04);
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    z-index: 5; overflow: visible;
-  }
-
-  /* ─── Cell tooltip (desktop hover) ─── */
-  .cell-tooltip {
-    display: none; position: absolute; z-index: 10;
-    bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-    background: ${BG}; border: 1px solid ${BORDER}; border-radius: 10px;
-    padding: 0.75rem; width: 220px; font-size: 0.75rem;
-    color: ${HI}; line-height: 1.5; text-align: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: none;
-    font-family: 'Roboto Mono', monospace; font-weight: 500;
-  }
-  .cell-tooltip::after {
-    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-    border: 6px solid transparent; border-top-color: ${BORDER};
-  }
-  .pickable:hover .cell-tooltip { display: block; }
-  @media (hover: none) { .pickable:hover .cell-tooltip { display: none; } }
-
-  /* ─── Clue text line clamp ─── */
-  .clue-text {
-    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
-    overflow: hidden; text-overflow: ellipsis;
+    z-index: 5;
   }
 
   /* ─── Cell preview modal (mobile) ─── */
@@ -484,11 +483,30 @@ const GLOBAL_CSS = `
   }
   .cell-preview-modal {
     background: ${SURF}; border: 1px solid ${BORDER}; border-radius: 14px;
-    padding: 1.5rem; max-width: 320px; width: 90%; text-align: center;
+    padding: 1.5rem; max-width: 360px; width: 90%; text-align: center;
     box-shadow: 0 12px 40px rgba(0,0,0,0.5);
   }
   .active-cell { box-shadow: 0 0 0 3px ${ACCENT}55 !important; }
   .win-cell { animation: pulse 1.2s infinite; }
+
+  /* ─── Board axis labels ─── */
+  .board-col-label {
+    display: flex; align-items: flex-end; justify-content: center;
+    text-align: center; padding: 0.4rem 0.25rem 0.6rem;
+    font-size: 0.7rem; color: ${HI}; font-weight: 600;
+    line-height: 1.35; font-family: 'Roboto Mono', monospace;
+    word-break: break-word;
+  }
+  .board-row-label {
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 0.25rem 0.5rem;
+    font-size: 0.7rem; color: ${HI}; font-weight: 600;
+    line-height: 1.35; font-family: 'Roboto Mono', monospace;
+    word-break: break-word;
+  }
+  .board-corner {
+    /* empty top-left corner of the grid */
+  }
 
   /* ─── Layout ─── */
   .game-wrap {
@@ -503,13 +521,15 @@ const GLOBAL_CSS = `
     position: sticky; top: 1rem;
   }
   .board-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem;
+    display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 0.4rem;
     width: 100%;
   }
 
   @media (max-width: 860px) {
     .game-wrap { flex-direction: column; padding: 1rem; gap: 1rem; }
     .sidebar { flex: none; position: static; }
+    .board-col-label { font-size: 0.6rem; padding: 0.3rem 0.15rem 0.4rem; }
+    .board-row-label { font-size: 0.6rem; padding: 0.15rem 0.3rem; }
   }
 
   /* ─── Lobby ─── */
@@ -552,10 +572,19 @@ function calculatePositionRarity(index, poolSize) {
   return Math.max(1, Math.min(99, Math.round(95 - (index / (poolSize - 1)) * 90)));
 }
 
-function truncateClue(text, maxLen = 70) {
-  if (text.length <= maxLen) return text;
-  const cut = text.lastIndexOf(" ", maxLen);
-  return text.slice(0, cut > 0 ? cut : maxLen) + "…";
+/** Derive a stable key for a cell — works with both old and new format. */
+function cellKey(cell) {
+  return cell?.questionKey || `${cell.rowCat}__${cell.colCat}`;
+}
+
+/** Get display text for a cell's clue — row label + col label. */
+function cellClue(cell) {
+  if (!cell) return "";
+  if (cell.rowCat && cell.colCat) {
+    return `${getCategoryDisplay(cell.rowCat).label} + ${getCategoryDisplay(cell.colCat).label}`;
+  }
+  const pool = ANSWER_POOLS[cell.questionKey];
+  return pool?.clue ?? "";
 }
 
 const isTouchDevice = () =>
@@ -563,13 +592,12 @@ const isTouchDevice = () =>
 
 // ─── SPORT META ────────────────────────────────────────────────────────────────
 const SPORT_META = [
-  { key: "all",     label: "All Sports",      emoji: "🏆", sub: "Questions from every sport" },
-  { key: "nba",     label: "NBA",             emoji: "🏀", sub: "Basketball questions only" },
-  { key: "nfl",     label: "NFL",             emoji: "🏈", sub: "Football questions only" },
-  { key: "mlb",     label: "MLB",             emoji: "⚾", sub: "Baseball questions only" },
-  { key: "nhl",     label: "NHL",             emoji: "🏒", sub: "Hockey questions only" },
-  { key: "college", label: "College Sports",  emoji: "🎓", sub: "NCAA football & basketball" },
-  { key: "soccer",  label: "European Soccer", emoji: "⚽", sub: "Premier League, La Liga, Bundesliga, Serie A, Ligue 1, UCL" },
+  { key: "all",     label: "All Sports",      emoji: "🏆", sub: "Random sport each game" },
+  { key: "nba",     label: "NBA",             emoji: "🏀", sub: "Basketball" },
+  { key: "nfl",     label: "NFL",             emoji: "🏈", sub: "Football" },
+  { key: "mlb",     label: "MLB",             emoji: "⚾", sub: "Baseball" },
+  { key: "nhl",     label: "NHL",             emoji: "🏒", sub: "Hockey" },
+  { key: "soccer",  label: "European Soccer", emoji: "⚽", sub: "Premier League, La Liga & more" },
 ];
 
 // ─── MAIN APP ──────────────────────────────────────────────────────────────────
@@ -727,7 +755,11 @@ export default function App() {
       ? (g.choosing_player === "p1" ? g.player1_name : g.player2_name)
       : (g.choosing_player === "p1" ? g.player2_name : g.player1_name);
     // Snapshot the question NOW — active_cell may be nulled when game state updates
-    const revealQ = ANSWER_POOLS[move.question_key] ?? null;
+    const activeCell = g.cells?.[g.active_cell ?? move.cell_index];
+    const revealQ = activeCell?.rowCat
+      ? { sport: activeCell.sport, clue: cellClue(activeCell) }
+      : (ANSWER_POOLS[move.question_key] ?? null);
+    const qKey = activeCell ? cellKey(activeCell) : move.question_key;
     setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, liveStats: null });
     setRevealStep(0);
     // Stagger the answer cards in — no auto-close, user clicks Continue
@@ -735,7 +767,7 @@ export default function App() {
     setTimeout(() => setRevealStep(2), 800);
     setTimeout(() => setRevealStep(3), 1400);
     // Fetch live rarity stats in background — updates revealData when available
-    fetchAnswerStats(move.question_key).then(stats => {
+    if (qKey) fetchAnswerStats(qKey).then(stats => {
       if (stats) setRevealData(prev => prev ? { ...prev, liveStats: stats } : prev);
     });
   }
@@ -851,29 +883,43 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // START CPU GAME
   // ─────────────────────────────────────────────────────────────────────────────
-  function startCpuGame() {
-    const firstPick = Math.random() < 0.5 ? "p1" : "p2";
-    const g = {
-      id: `cpu-${Date.now()}`,
-      isCpu: true,
-      cpuDiff,
-      difficulty: qDiff,
-      sport,
-      cells: buildPuzzle(qDiff, sport),
-      phase: "choosing",
-      board: Array(9).fill("null"),
-      scores: { p1: 0, p2: 0 },
-      win_line: [],
-      active_cell: null,
-      choosing_player: firstPick,
-      winner: null,
-      player1_id: user.id,
-      player1_name: user.username,
-      player2_id: "cpu",
-      player2_name: CPU_NAMES[cpuDiff] ?? "Bot",
-    };
-    resetGameState(g);
-    setScreen("game");
+  async function startCpuGame() {
+    setCreateLoading(true); setCreateError("");
+    try {
+      const boardConfig = await generateBoard(sport, sbFetch, { minAnswers: 3 });
+      if (!boardConfig) {
+        setCreateError("Could not generate a valid board. Try a different sport.");
+        setCreateLoading(false);
+        return;
+      }
+      const cells = expandBoard(boardConfig);
+      const firstPick = Math.random() < 0.5 ? "p1" : "p2";
+      const g = {
+        id: `cpu-${Date.now()}`,
+        isCpu: true,
+        cpuDiff,
+        difficulty: qDiff,
+        sport: boardConfig.sport,
+        cells,
+        phase: "choosing",
+        board: Array(9).fill("null"),
+        scores: { p1: 0, p2: 0 },
+        win_line: [],
+        active_cell: null,
+        choosing_player: firstPick,
+        winner: null,
+        player1_id: user.id,
+        player1_name: user.username,
+        player2_id: "cpu",
+        player2_name: CPU_NAMES[cpuDiff] ?? "Bot",
+      };
+      resetGameState(g);
+      setScreen("game");
+    } catch (err) {
+      console.error("startCpuGame error:", err);
+      setCreateError(`Failed to generate board: ${err.message}`);
+    }
+    setCreateLoading(false);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -882,12 +928,19 @@ export default function App() {
   async function createGame() {
     setCreateLoading(true); setCreateError("");
     try {
+      const boardConfig = await generateBoard(sport, sbFetch, { minAnswers: 3 });
+      if (!boardConfig) {
+        setCreateError("Could not generate a valid board. Try a different sport.");
+        setCreateLoading(false);
+        return;
+      }
+      const cells = expandBoard(boardConfig);
       const firstPick = Math.random() < 0.5 ? "p1" : "p2";
       const payload = {
         invite_code: genCode(),
         difficulty: qDiff,
-        sport,
-        cells: buildPuzzle(qDiff, sport),
+        sport: boardConfig.sport,
+        cells,
         player1_id: user.id,
         player1_name: user.username,
         phase: "waiting",
@@ -949,7 +1002,7 @@ export default function App() {
     if (game.choosing_player !== myRole) return;
     const owner = game.board[idx];
     if (owner !== "null" && owner != null) return;
-    const qKey = game.cells[idx].questionKey;
+    const qKey = cellKey(game.cells[idx]);
     const mv = await dbInsert("moves", { game_id: game.id, cell_index: idx, question_key: qKey });
     if (!mv.ok || !mv.data?.[0]) return;
     setCurrentMove(mv.data[0]);
@@ -965,7 +1018,7 @@ export default function App() {
     if (!g || g.phase !== "choosing") return;
     const owner = g.board[idx];
     if (owner !== "null" && owner != null) return;
-    const qKey = g.cells[idx].questionKey;
+    const qKey = cellKey(g.cells[idx]);
     const move = {
       id: `move-${Date.now()}`, game_id: g.id, cell_index: idx, question_key: qKey,
       p1_answer: null, p2_answer: null,
@@ -983,8 +1036,10 @@ export default function App() {
   async function submitAnswer() {
     if (submitted || !myAnswer.trim() || !game || !currentMove) return;
     const myRole = game.player1_id === user.id ? "p1" : "p2";
-    const qKey   = game.cells[game.active_cell].questionKey;
-    const match  = await validateAnswer(myAnswer, qKey);
+    const cell   = game.cells[game.active_cell];
+    const qKey   = cellKey(cell);
+    const valArg = cell.rowCat ? { sport: cell.sport, rules: cell.rules } : qKey;
+    const match  = await validateAnswer(myAnswer, valArg);
     const patch  = myRole === "p1"
       ? { p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null }
       : { p2_answer: myAnswer, p2_valid: !!match, p2_rarity: match?.rarity ?? null };
@@ -1004,8 +1059,10 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   async function submitAnswerCpu() {
     if (submitted || !myAnswer.trim() || !game || !currentMove) return;
-    const qKey  = game.cells[game.active_cell].questionKey;
-    const match = await validateAnswer(myAnswer, qKey);
+    const cell  = game.cells[game.active_cell];
+    const qKey  = cellKey(cell);
+    const valArg = cell.rowCat ? { sport: cell.sport, rules: cell.rules } : qKey;
+    const match = await validateAnswer(myAnswer, valArg);
     const updatedMove = {
       ...currentMove,
       p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null,
@@ -1019,7 +1076,7 @@ export default function App() {
     setTimeout(() => {
       const g = gameRef.current;
       if (!g) return;
-      const cpuAns = cpuPickAnswer(qKey, g.cpuDiff ?? "medium");
+      const cpuAns = cpuPickAnswer(cell, g.cpuDiff ?? "medium");
       const finalMove = {
         ...updatedMove,
         p2_answer: cpuAns.name,
@@ -1037,23 +1094,22 @@ export default function App() {
     const gRes = await dbSelect("games", `?id=eq.${game.id}`);
     const g    = gRes.data[0];
 
-    // ── Same answer: replace question on same square, same player retries ──
+    // ── Same answer: same cell stays, same player retries ──
     if (mv.p1_valid && mv.p2_valid &&
         normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "")) {
-      const newKey   = getNewQuestionKey(g.cells, g.active_cell, g.sport);
-      const newCells = g.cells.map((c, i) => i === g.active_cell ? { questionKey: newKey } : c);
-      // Clear answers on the move and update its question key
+      const qKey = cellKey(g.cells[g.active_cell]);
+      // Clear answers on the move
       await dbUpdate("moves", `?id=eq.${mv.id}`, {
-        question_key: newKey,
+        question_key: qKey,
         p1_answer: null, p2_answer: null,
         p1_valid: null,  p2_valid: null,
         p1_rarity: null, p2_rarity: null,
       });
       // Keep same active_cell and choosing_player; switch to "retry" phase
-      await dbUpdate("games", `?id=eq.${game.id}`, { cells: newCells, phase: "retry" });
+      await dbUpdate("games", `?id=eq.${game.id}`, { phase: "retry" });
       // Resolver gets the retry move restored after reveal is dismissed
       pendingRetryMove.current = {
-        ...mv, question_key: newKey,
+        ...mv, question_key: qKey,
         p1_answer: null, p2_answer: null,
         p1_valid: null, p2_valid: null,
         p1_rarity: null, p2_rarity: null, result: null,
@@ -1100,18 +1156,17 @@ export default function App() {
     const g = gameRef.current;
     if (!g) return;
 
-    // ── Same answer: replace question on same square, same player retries ──
+    // ── Same answer: same cell stays, same player retries ──
     if (mv.p1_valid && mv.p2_valid &&
         normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "")) {
-      const newKey   = getNewQuestionKey(g.cells, g.active_cell, g.sport);
-      const newCells = g.cells.map((c, i) => i === g.active_cell ? { questionKey: newKey } : c);
+      const qKey = cellKey(g.cells[g.active_cell]);
       const newMove  = {
         id: `move-${Date.now()}`, game_id: g.id, cell_index: g.active_cell,
-        question_key: newKey, p1_answer: null, p2_answer: null,
+        question_key: qKey, p1_answer: null, p2_answer: null,
         p1_valid: null, p2_valid: null, p1_rarity: null, p2_rarity: null, result: null,
       };
       pendingRetryMove.current = newMove;
-      const updated = { ...g, cells: newCells, phase: "retry" };
+      const updated = { ...g, phase: "retry" };
       setGame(updated); gameRef.current = updated;
       triggerReveal({ ...mv, result: "same_answer" }, g);
       return;
@@ -1156,8 +1211,11 @@ export default function App() {
   const myRole    = game ? (game.player1_id === user?.id ? "p1" : "p2") : null;
   const diffMeta  = game ? (DIFFICULTY_META[game.difficulty] ?? DIFFICULTY_META.beginner) : null;
   const diffColor = diffMeta?.color ?? ACCENT;
-  const activeQ   = game?.active_cell != null
-    ? ANSWER_POOLS[game.cells?.[game.active_cell]?.questionKey]
+  const activeCell = game?.active_cell != null ? game.cells?.[game.active_cell] : null;
+  const activeQ   = activeCell
+    ? (activeCell.rowCat
+      ? { sport: activeCell.sport, clue: cellClue(activeCell) }
+      : ANSWER_POOLS[activeCell.questionKey])
     : null;
   const isMyPick  = game?.phase === "choosing" && myRole === game.choosing_player;
   const board     = game?.board ?? Array(9).fill("null");
@@ -1728,52 +1786,59 @@ export default function App() {
               })}
             </div>
 
-            {/* Board */}
-            <div className="board-grid">
-              {(game.cells ?? []).map((cell, i) => {
-                const owner   = board[i];
-                const isOwned = owner === "p1" || owner === "p2";
-                const isReset = owner === "reset";
-                const isActive = game.active_cell === i;
-                const inWin   = (game.win_line ?? []).includes(i);
-                const canPick = game.phase === "choosing" && isMyPick && !isOwned && !isReset && (owner === "null" || owner == null);
-                const q       = ANSWER_POOLS[cell.questionKey];
-                let cls = "cell";
-                if (isActive) cls += " active-cell";
-                if (inWin)    cls += " win-cell";
-                if (canPick)  cls += " pickable";
-                return (
-                  <div key={i} className={cls}
-                    style={{
-                      borderColor: isOwned ? `${PC[owner]}55` : isActive ? diffColor : BORDER,
-                      background:  isOwned ? `${PC[owner]}18` : SURF,
-                    }}
-                    onClick={() => canPick && setPreviewCell(i)}>
-                    {isOwned ? (
-                      <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "3rem", color: PC[owner], lineHeight: 1 }}>
-                        {owner === "p1" ? "X" : "O"}
-                      </div>
-                    ) : isReset ? (
-                      <div style={{ fontSize: "2rem", opacity: 0.45 }}>↺</div>
-                    ) : (
-                      <>
-                        {q && (
-                          <div style={{ fontSize: "0.55rem", color: isActive ? diffColor : LO, marginBottom: "0.35rem", letterSpacing: "1.5px", fontWeight: 700, textTransform: "uppercase", fontFamily: "'Roboto Mono',monospace" }}>
-                            {q.sport}
-                          </div>
-                        )}
-                        <div className="clue-text" style={{ fontSize: "0.7rem", color: isActive ? HI : MID, lineHeight: 1.5, fontFamily: "'Roboto Mono',monospace", fontWeight: 500 }}>
-                          {q ? truncateClue(q.clue) : ""}
+            {/* Board — 4×4 grid: corner + col labels + row labels + cells */}
+            {(() => {
+              const cells = game.cells ?? [];
+              const colIds = cells.length >= 3 ? [cells[0].colCat, cells[1].colCat, cells[2].colCat] : [];
+              const rowIds = cells.length >= 9 ? [cells[0].rowCat, cells[3].rowCat, cells[6].rowCat] : [];
+              return (
+                <div className="board-grid">
+                  {/* Corner */}
+                  <div className="board-corner" />
+                  {/* Column labels */}
+                  {colIds.map((colId, ci) => (
+                    <div key={`col-${ci}`} className="board-col-label">
+                      {getCategoryDisplay(colId).label}
+                    </div>
+                  ))}
+                  {/* Rows */}
+                  {rowIds.flatMap((rowId, r) => [
+                    <div key={`rl-${r}`} className="board-row-label">
+                      {getCategoryDisplay(rowId).label}
+                    </div>,
+                    ...[0, 1, 2].map(c => {
+                      const i = r * 3 + c;
+                      const owner   = board[i];
+                      const isOwned = owner === "p1" || owner === "p2";
+                      const isReset = owner === "reset";
+                      const isActive = game.active_cell === i;
+                      const inWin   = (game.win_line ?? []).includes(i);
+                      const canPick = game.phase === "choosing" && isMyPick && !isOwned && !isReset && (owner === "null" || owner == null);
+                      let cls = "cell";
+                      if (isActive) cls += " active-cell";
+                      if (inWin)    cls += " win-cell";
+                      if (canPick)  cls += " pickable";
+                      return (
+                        <div key={i} className={cls}
+                          style={{
+                            borderColor: isOwned ? `${PC[owner]}55` : isActive ? diffColor : BORDER,
+                            background:  isOwned ? `${PC[owner]}18` : SURF,
+                          }}
+                          onClick={() => canPick && setPreviewCell(i)}>
+                          {isOwned ? (
+                            <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "3rem", color: PC[owner], lineHeight: 1 }}>
+                              {owner === "p1" ? "X" : "O"}
+                            </div>
+                          ) : isReset ? (
+                            <div style={{ fontSize: "2rem", opacity: 0.45 }}>↺</div>
+                          ) : null}
                         </div>
-                        {q && canPick && (
-                          <span className="cell-tooltip">{q.clue}</span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                      );
+                    }),
+                  ])}
+                </div>
+              );
+            })()}
 
             {/* Status under board */}
             <div style={{ marginTop: "1rem", textAlign: "center", color: LO, fontSize: "0.82rem", fontStyle: "italic", minHeight: "1.4rem" }}>
@@ -1788,8 +1853,11 @@ export default function App() {
 
             {/* Cell preview modal — confirm before picking */}
             {previewCell != null && (() => {
-              const pq = ANSWER_POOLS[game.cells[previewCell]?.questionKey];
-              const sportMeta = SPORT_META.find(s => s.key === (pq?.sport?.toLowerCase() ?? ""));
+              const pc = game.cells[previewCell];
+              const pcSport = pc?.sport ?? "";
+              const sportMeta = SPORT_META.find(s => s.key === pcSport.toLowerCase());
+              const rowLabel = getCategoryDisplay(pc?.rowCat).label;
+              const colLabel = getCategoryDisplay(pc?.colCat).label;
               return (
                 <div className="cell-preview-overlay" onClick={() => setPreviewCell(null)}>
                   <div className="cell-preview-modal" onClick={e => e.stopPropagation()}>
@@ -1797,10 +1865,15 @@ export default function App() {
                       <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{sportMeta.emoji}</div>
                     )}
                     <div style={{ fontSize: "0.6rem", color: LO, letterSpacing: "2px", textTransform: "uppercase", fontFamily: "'Roboto Mono',monospace", fontWeight: 700, marginBottom: "0.6rem" }}>
-                      {pq?.sport ?? ""}
+                      {pcSport}
                     </div>
-                    <div style={{ fontSize: "0.95rem", color: HI, lineHeight: 1.7, marginBottom: "1.4rem" }}>
-                      {pq?.clue ?? ""}
+                    <div style={{ fontSize: "0.95rem", color: HI, lineHeight: 1.7, marginBottom: "0.6rem" }}>
+                      <span style={{ color: ACCENT }}>{rowLabel}</span>
+                      {" "}+{" "}
+                      <span style={{ color: ACCENT2 }}>{colLabel}</span>
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: MID, fontStyle: "italic", marginBottom: "1.4rem" }}>
+                      Name a player who fits both categories
                     </div>
                     <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center" }}>
                       <button className="sb" style={{ background: ACCENT, fontSize: "0.85rem", padding: "0.65rem 1.4rem" }}
@@ -1832,9 +1905,9 @@ export default function App() {
                 borderRadius: 18, padding: "1.5rem", animation: "fadeIn 0.3s ease",
               }}>
                 <div style={{ fontSize: "0.65rem", color: diffColor, letterSpacing: "2px", marginBottom: "0.6rem", fontFamily: "'Roboto Mono',monospace", fontWeight: 600 }}>
-                  {activeQ.sport} · CLUE
+                  {activeQ.sport} · NAME A PLAYER
                 </div>
-                <div style={{ fontSize: "1.15rem", color: HI, lineHeight: 1.7, marginBottom: "1.4rem" }}>
+                <div style={{ fontSize: "1.05rem", color: HI, lineHeight: 1.7, marginBottom: "1.4rem" }}>
                   {activeQ.clue}
                 </div>
                 {!submitted ? (
@@ -1965,11 +2038,11 @@ export default function App() {
             maxWidth: 620, width: "100%",
             boxShadow: "0 32px 96px rgba(0,0,0,0.85)",
           }}>
-            {/* Clue reminder — use snapshotted revealData.q, not activeQ (active_cell is null by now) */}
+            {/* Category reminder — use snapshotted revealData.q, not activeQ (active_cell is null by now) */}
             {revealData.q && (
               <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
                 <div style={{ fontSize: "0.62rem", color: diffColor, letterSpacing: "2px", fontFamily: "'Roboto Mono',monospace", marginBottom: "0.4rem" }}>
-                  {revealData.q.sport} · CLUE
+                  {revealData.q.sport}
                 </div>
                 <div style={{ color: MID, fontStyle: "italic", fontSize: "0.95rem", lineHeight: 1.5 }}>
                   {revealData.q.clue}
@@ -2054,7 +2127,7 @@ export default function App() {
                   <>
                     <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "3px", color: LO }}>SAME ANSWER</div>
                     <div style={{ color: LO, fontStyle: "italic", fontSize: "0.88rem", marginTop: "0.25rem" }}>
-                      New question incoming — {revealData.nextPickerName} tries again!
+                      Pick a different player — {revealData.nextPickerName} tries again!
                     </div>
                   </>
                 ) : revealData.isBothInvalid ? (

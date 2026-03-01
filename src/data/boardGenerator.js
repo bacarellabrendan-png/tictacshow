@@ -76,10 +76,13 @@ async function preloadSport(sport, sbFetch, minAnswers) {
 
   // Build index: "fact_type|fact_value" → Set<lowercase player name>
   const playersByFact = new Map();
+  // Map lowercase → original case (for CPU answer picking)
+  const originalNames = new Map();
   for (const r of allRows) {
     const key = `${r.fact_type}|${r.fact_value}`;
     if (!playersByFact.has(key)) playersByFact.set(key, new Set());
     playersByFact.get(key).add(r.player_name.toLowerCase());
+    originalNames.set(r.player_name.toLowerCase(), r.player_name);
   }
 
   const factKey = (c) => `${c.fact.type}|${c.fact.value}`;
@@ -112,7 +115,7 @@ async function preloadSport(sport, sbFetch, minAnswers) {
     compat.set(row.id, rowMap);
   }
 
-  const result = { playersByFact, teams, nonTeam, compat };
+  const result = { playersByFact, teams, nonTeam, compat, originalNames };
   _cache.set(cacheKey, result);
   return result;
 }
@@ -250,4 +253,32 @@ export function getCategoryDisplay(catId) {
   const cat = CATEGORY_MAP[catId];
   if (!cat) return { label: catId, shortLabel: catId };
   return { label: cat.label, shortLabel: cat.shortLabel };
+}
+
+/**
+ * Get players satisfying both a row and column category (for CPU answers).
+ * Uses cached data from generateBoard — returns original-case names.
+ */
+export function getIntersectionPlayers(sport, rowCatId, colCatId) {
+  const row = CATEGORY_MAP[rowCatId];
+  const col = CATEGORY_MAP[colCatId];
+  if (!row || !col) return [];
+
+  let cached = null;
+  for (const [key, val] of _cache) {
+    if (key.startsWith(sport + "|")) { cached = val; break; }
+  }
+  if (!cached) return [];
+
+  const { playersByFact, originalNames } = cached;
+  const rowKey = `${row.fact.type}|${row.fact.value}`;
+  const colKey = `${col.fact.type}|${col.fact.value}`;
+  const rowPlayers = playersByFact.get(rowKey) || new Set();
+  const colPlayers = playersByFact.get(colKey) || new Set();
+
+  const result = [];
+  for (const p of rowPlayers) {
+    if (colPlayers.has(p)) result.push(originalNames.get(p) || p);
+  }
+  return result;
 }

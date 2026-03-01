@@ -81,7 +81,7 @@ function sparqlQuery(query) {
       path: url.pathname + url.search,
       headers: {
         'Accept': 'application/sparql-results+json',
-        'User-Agent': 'TicTacShowSeeder/1.0 (https://tictacshow.com)',
+        'User-Agent': 'TicTacShowSeeder/1.0 (https://playtictacshow.com)',
       },
     };
     const req = https.request(opts, res => {
