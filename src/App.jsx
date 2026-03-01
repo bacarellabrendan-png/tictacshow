@@ -915,6 +915,7 @@ export default function App() {
       };
       resetGameState(g);
       setScreen("game");
+      window.gtag?.("event", "game_started", { game_type: "cpu" });
     } catch (err) {
       console.error("startCpuGame error:", err);
       setCreateError(`Failed to generate board: ${err.message}`);
@@ -953,6 +954,7 @@ export default function App() {
       if (r.ok && r.data?.[0]) {
         resetGameState(r.data[0]);
         setScreen("game");
+        window.gtag?.("event", "game_started", { game_type: "multiplayer" });
       } else {
         const msg = typeof r.data === "string" ? r.data : JSON.stringify(r.data);
         console.error("createGame failed →", r.status, msg);
@@ -1140,6 +1142,7 @@ export default function App() {
       phase: check ? "gameover" : "choosing", choosing_player: nextPick,
       winner: check ? check.winner : null, win_line: check ? check.line : [],
     });
+    if (check) window.gtag?.("event", "game_completed");
     if (result === "reset") {
       setTimeout(async () => {
         const nb = [...newBoard]; nb[g.active_cell] = "null";
@@ -1193,6 +1196,7 @@ export default function App() {
       winner: check ? check.winner : null, win_line: check ? check.line : [],
     };
     setGame(updated); gameRef.current = updated;
+    if (check) window.gtag?.("event", "game_completed");
 
     if (result === "reset") {
       setTimeout(() => {
