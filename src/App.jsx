@@ -225,14 +225,17 @@ function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase()
 const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
 /*
-  cpuDiff controls answer quality.
-  New grid cells: picks from intersection players via boardGenerator cache.
-  Legacy cells (questionKey): picks from ANSWER_POOLS.
+  cpuDiff controls answer quality.  humanAnswer is excluded to prevent same-answer retries.
+  Players are sorted by fame (most well-known first), so:
+    easy = picks from top third (common names), hard = bottom third (obscure).
 */
-function cpuPickAnswer(cell, cpuDiff) {
-  // New grid cell format
+function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
+  const normHuman = humanAnswer ? normalizeStr(humanAnswer) : "";
+
+  // New grid cell format — players sorted by fame from boardGenerator
   if (cell.rowCat && cell.colCat) {
-    const players = getIntersectionPlayers(cell.sport, cell.rowCat, cell.colCat);
+    const all = getIntersectionPlayers(cell.sport, cell.rowCat, cell.colCat);
+    const players = normHuman ? all.filter(p => normalizeStr(p) !== normHuman) : all;
     if (!players.length) return { name: "No answer", valid: false, rarity: null };
     let pickIndex;
     if (cpuDiff === "easy") {
@@ -244,10 +247,11 @@ function cpuPickAnswer(cell, cpuDiff) {
     } else {
       pickIndex = Math.floor(Math.random() * players.length);
     }
-    return { name: players[pickIndex], valid: true, rarity: 5 };
+    return { name: players[pickIndex], valid: true, rarity: calculatePositionRarity(pickIndex, players.length) };
   }
   // Legacy fallback
-  const pool = ANSWER_POOLS[cell.questionKey]?.answers ?? [];
+  const allPool = ANSWER_POOLS[cell.questionKey]?.answers ?? [];
+  const pool = normHuman ? allPool.filter(a => normalizeStr(a.name) !== normHuman) : allPool;
   if (!pool.length) return { name: "No answer", valid: false, rarity: null };
   let pickIndex;
   if (cpuDiff === "easy") {
@@ -1078,7 +1082,7 @@ export default function App() {
     setTimeout(async () => {
       const g = gameRef.current;
       if (!g) return;
-      const cpuAns = cpuPickAnswer(cell, g.cpuDiff ?? "medium");
+      const cpuAns = cpuPickAnswer(cell, g.cpuDiff ?? "medium", myAnswer);
       const finalMove = {
         ...updatedMove,
         p2_answer: cpuAns.name,

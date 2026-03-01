@@ -78,11 +78,15 @@ async function preloadSport(sport, sbFetch, minAnswers) {
   const playersByFact = new Map();
   // Map lowercase → original case (for CPU answer picking)
   const originalNames = new Map();
+  // Count total fact entries per player — proxy for "fame" (more facts = more well-known)
+  const factCounts = new Map();
   for (const r of allRows) {
     const key = `${r.fact_type}|${r.fact_value}`;
     if (!playersByFact.has(key)) playersByFact.set(key, new Set());
-    playersByFact.get(key).add(r.player_name.toLowerCase());
-    originalNames.set(r.player_name.toLowerCase(), r.player_name);
+    const lower = r.player_name.toLowerCase();
+    playersByFact.get(key).add(lower);
+    originalNames.set(lower, r.player_name);
+    factCounts.set(lower, (factCounts.get(lower) || 0) + 1);
   }
 
   const factKey = (c) => `${c.fact.type}|${c.fact.value}`;
@@ -115,7 +119,7 @@ async function preloadSport(sport, sbFetch, minAnswers) {
     compat.set(row.id, rowMap);
   }
 
-  const result = { playersByFact, teams, nonTeam, compat, originalNames };
+  const result = { playersByFact, teams, nonTeam, compat, originalNames, factCounts };
   _cache.set(cacheKey, result);
   return result;
 }
@@ -257,7 +261,8 @@ export function getCategoryDisplay(catId) {
 
 /**
  * Get players satisfying both a row and column category (for CPU answers).
- * Uses cached data from generateBoard — returns original-case names.
+ * Uses cached data from generateBoard — returns original-case names
+ * sorted by fact count descending (most well-known players first).
  */
 export function getIntersectionPlayers(sport, rowCatId, colCatId) {
   const row = CATEGORY_MAP[rowCatId];
@@ -270,7 +275,7 @@ export function getIntersectionPlayers(sport, rowCatId, colCatId) {
   }
   if (!cached) return [];
 
-  const { playersByFact, originalNames } = cached;
+  const { playersByFact, originalNames, factCounts } = cached;
   const rowKey = `${row.fact.type}|${row.fact.value}`;
   const colKey = `${col.fact.type}|${col.fact.value}`;
   const rowPlayers = playersByFact.get(rowKey) || new Set();
@@ -278,7 +283,9 @@ export function getIntersectionPlayers(sport, rowCatId, colCatId) {
 
   const result = [];
   for (const p of rowPlayers) {
-    if (colPlayers.has(p)) result.push(originalNames.get(p) || p);
+    if (colPlayers.has(p)) result.push(p);
   }
-  return result;
+  // Sort by fact count descending — players with more facts are more well-known
+  result.sort((a, b) => (factCounts.get(b) || 0) - (factCounts.get(a) || 0));
+  return result.map(p => originalNames.get(p) || p);
 }
