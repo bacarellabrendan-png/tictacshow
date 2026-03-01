@@ -1,6 +1,7 @@
 // ─── CATEGORY MASTER LIST ─────────────────────────────────────────────────────
 // Each category maps to a player_facts condition for board intersection validation.
-// Only categories with confirmed data in player_facts are included.
+// All teams from NBA, NFL, MLB, NHL + top 5 European soccer leagues included.
+// Awards/stats/attributes only included where player_facts data exists.
 //
 // Category shape:
 //   id         — unique identifier
@@ -125,6 +126,7 @@ const NFL_TEAMS = [
   team("nfl_jaguars",     "Jacksonville Jaguars",    "Jaguars",     "Jaguars",     "NFL"),
   team("nfl_jets",        "New York Jets",           "Jets",        "Jets",        "NFL"),
   team("nfl_titans",      "Tennessee Titans",        "Titans",      "Titans",      "NFL"),
+  team("nfl_commanders",  "Washington Commanders",   "Commanders",  "Commanders",  "NFL"),
 ];
 
 const NFL_AWARDS = [
@@ -186,6 +188,7 @@ const MLB_TEAMS = [
   team("mlb_rockies",      "Colorado Rockies",          "Rockies",      "Rockies",      "MLB"),
   team("mlb_nationals",    "Washington Nationals",      "Nationals",    "Nationals",    "MLB"),
   team("mlb_diamondbacks", "Arizona Diamondbacks",      "D-backs",      "Diamondbacks", "MLB"),
+  team("mlb_blue_jays",    "Toronto Blue Jays",         "Blue Jays",    "Blue Jays",    "MLB"),
 ];
 
 const MLB_AWARDS = [
@@ -247,6 +250,13 @@ const NHL_TEAMS = [
   team("nhl_ducks",        "Anaheim Ducks",             "Ducks",        "Ducks",        "NHL"),
   team("nhl_hurricanes",   "Carolina Hurricanes",       "Hurricanes",   "Hurricanes",   "NHL"),
   team("nhl_jets",         "Winnipeg Jets",             "Jets",         "Jets",         "NHL"),
+  team("nhl_wild",         "Minnesota Wild",            "Wild",         "Wild",         "NHL"),
+  team("nhl_predators",    "Nashville Predators",       "Predators",    "Predators",    "NHL"),
+  team("nhl_blue_jackets", "Columbus Blue Jackets",     "Blue Jackets", "Blue Jackets", "NHL"),
+  team("nhl_panthers",     "Florida Panthers",          "Panthers",     "Panthers",     "NHL"),
+  team("nhl_golden_knights","Vegas Golden Knights",     "Golden Knights","Golden Knights","NHL"),
+  team("nhl_kraken",       "Seattle Kraken",            "Kraken",       "Kraken",       "NHL"),
+  team("nhl_coyotes",      "Arizona Coyotes",           "Coyotes",      "Coyotes",      "NHL"),
 ];
 
 const NHL_AWARDS = [
@@ -280,23 +290,107 @@ const NHL_ATTRS = [
 // ═════════════════════════════════════════════════════════════════════════════
 
 const SOCCER_TEAMS = [
-  team("soc_real_madrid",   "Real Madrid",               "Real Madrid",    "Real Madrid",         "Soccer"),
-  team("soc_chelsea",       "Chelsea",                   "Chelsea",        "Chelsea",             "Soccer"),
-  team("soc_barcelona",     "FC Barcelona",              "Barcelona",      "Barcelona",           "Soccer"),
-  team("soc_juventus",      "Juventus",                  "Juventus",       "Juventus",            "Soccer"),
-  team("soc_ac_milan",      "AC Milan",                  "AC Milan",       "AC Milan",            "Soccer"),
-  team("soc_liverpool",     "Liverpool FC",              "Liverpool",      "Liverpool",           "Soccer"),
-  team("soc_man_utd",       "Manchester United",         "Man United",     "Manchester United",   "Soccer"),
-  team("soc_psg",           "Paris Saint-Germain",       "PSG",            "Paris Saint-Germain", "Soccer"),
-  team("soc_inter",         "Inter Milan",               "Inter Milan",    "Inter Milan",         "Soccer"),
-  team("soc_bayern",        "Bayern Munich",             "Bayern",         "Bayern Munich",       "Soccer"),
-  team("soc_man_city",      "Manchester City",           "Man City",       "Manchester City",     "Soccer"),
-  team("soc_arsenal",       "Arsenal",                   "Arsenal",        "Arsenal",             "Soccer"),
-  team("soc_atletico",      "Atletico Madrid",           "Atletico",       "Atletico Madrid",     "Soccer"),
-  team("soc_tottenham",     "Tottenham Hotspur",         "Tottenham",      "Tottenham",           "Soccer"),
-  team("soc_dortmund",      "Borussia Dortmund",         "Dortmund",       "Borussia Dortmund",   "Soccer"),
-  team("soc_roma",          "AS Roma",                   "Roma",           "Roma",                "Soccer"),
-  team("soc_napoli",        "SSC Napoli",                "Napoli",         "Napoli",              "Soccer"),
+  // ── Premier League (20) ──
+  team("soc_arsenal",        "Arsenal",                    "Arsenal",        "Arsenal",              "Soccer"),
+  team("soc_aston_villa",    "Aston Villa",                "Aston Villa",    "Aston Villa",          "Soccer"),
+  team("soc_bournemouth",    "AFC Bournemouth",            "Bournemouth",    "Bournemouth",          "Soccer"),
+  team("soc_brentford",      "Brentford",                  "Brentford",      "Brentford",            "Soccer"),
+  team("soc_brighton",       "Brighton & Hove Albion",     "Brighton",       "Brighton",             "Soccer"),
+  team("soc_chelsea",        "Chelsea",                    "Chelsea",        "Chelsea",              "Soccer"),
+  team("soc_crystal_palace", "Crystal Palace",             "Crystal Palace", "Crystal Palace",       "Soccer"),
+  team("soc_everton",        "Everton",                    "Everton",        "Everton",              "Soccer"),
+  team("soc_fulham",         "Fulham",                     "Fulham",         "Fulham",               "Soccer"),
+  team("soc_ipswich",        "Ipswich Town",               "Ipswich",        "Ipswich Town",         "Soccer"),
+  team("soc_leicester",      "Leicester City",             "Leicester",      "Leicester City",       "Soccer"),
+  team("soc_liverpool",      "Liverpool FC",               "Liverpool",      "Liverpool",            "Soccer"),
+  team("soc_man_city",       "Manchester City",            "Man City",       "Manchester City",      "Soccer"),
+  team("soc_man_utd",        "Manchester United",          "Man United",     "Manchester United",    "Soccer"),
+  team("soc_newcastle",      "Newcastle United",           "Newcastle",      "Newcastle United",     "Soccer"),
+  team("soc_nott_forest",    "Nottingham Forest",          "Nott. Forest",   "Nottingham Forest",    "Soccer"),
+  team("soc_southampton",    "Southampton",                "Southampton",    "Southampton",          "Soccer"),
+  team("soc_tottenham",      "Tottenham Hotspur",          "Tottenham",      "Tottenham",            "Soccer"),
+  team("soc_west_ham",       "West Ham United",            "West Ham",       "West Ham United",      "Soccer"),
+  team("soc_wolves",         "Wolverhampton Wanderers",    "Wolves",         "Wolverhampton Wanderers", "Soccer"),
+  // ── La Liga (20) ──
+  team("soc_alaves",         "Deportivo Alavés",           "Alavés",         "Alavés",               "Soccer"),
+  team("soc_athletic",       "Athletic Bilbao",            "Athletic",       "Athletic Bilbao",      "Soccer"),
+  team("soc_atletico",       "Atletico Madrid",            "Atletico",       "Atletico Madrid",      "Soccer"),
+  team("soc_barcelona",      "FC Barcelona",               "Barcelona",      "Barcelona",            "Soccer"),
+  team("soc_celta",          "Celta Vigo",                 "Celta",          "Celta Vigo",           "Soccer"),
+  team("soc_espanyol",       "RCD Espanyol",               "Espanyol",       "Espanyol",             "Soccer"),
+  team("soc_getafe",         "Getafe CF",                  "Getafe",         "Getafe",               "Soccer"),
+  team("soc_girona",         "Girona FC",                  "Girona",         "Girona",               "Soccer"),
+  team("soc_las_palmas",     "UD Las Palmas",              "Las Palmas",     "Las Palmas",           "Soccer"),
+  team("soc_leganes",        "CD Leganés",                 "Leganés",        "Leganés",              "Soccer"),
+  team("soc_mallorca",       "RCD Mallorca",               "Mallorca",       "Mallorca",             "Soccer"),
+  team("soc_osasuna",        "CA Osasuna",                 "Osasuna",        "Osasuna",              "Soccer"),
+  team("soc_rayo",           "Rayo Vallecano",             "Rayo",           "Rayo Vallecano",       "Soccer"),
+  team("soc_real_betis",     "Real Betis",                 "Betis",          "Real Betis",           "Soccer"),
+  team("soc_real_madrid",    "Real Madrid",                "Real Madrid",    "Real Madrid",          "Soccer"),
+  team("soc_real_sociedad",  "Real Sociedad",              "R. Sociedad",    "Real Sociedad",        "Soccer"),
+  team("soc_sevilla",        "Sevilla FC",                 "Sevilla",        "Sevilla",              "Soccer"),
+  team("soc_valencia",       "Valencia CF",                "Valencia",       "Valencia",             "Soccer"),
+  team("soc_valladolid",     "Real Valladolid",            "Valladolid",     "Real Valladolid",      "Soccer"),
+  team("soc_villarreal",     "Villarreal CF",              "Villarreal",     "Villarreal",           "Soccer"),
+  // ── Bundesliga (18) ──
+  team("soc_augsburg",       "FC Augsburg",                "Augsburg",       "Augsburg",             "Soccer"),
+  team("soc_bayern",         "Bayern Munich",              "Bayern",         "Bayern Munich",        "Soccer"),
+  team("soc_leverkusen",     "Bayer Leverkusen",           "Leverkusen",     "Bayer Leverkusen",     "Soccer"),
+  team("soc_bochum",         "VfL Bochum",                 "Bochum",         "Bochum",               "Soccer"),
+  team("soc_dortmund",       "Borussia Dortmund",          "Dortmund",       "Borussia Dortmund",    "Soccer"),
+  team("soc_gladbach",       "Borussia Mönchengladbach",   "Gladbach",       "Borussia Mönchengladbach", "Soccer"),
+  team("soc_frankfurt",      "Eintracht Frankfurt",        "Frankfurt",      "Eintracht Frankfurt",  "Soccer"),
+  team("soc_freiburg",       "SC Freiburg",                "Freiburg",       "Freiburg",             "Soccer"),
+  team("soc_heidenheim",     "1. FC Heidenheim",           "Heidenheim",     "Heidenheim",           "Soccer"),
+  team("soc_hoffenheim",     "TSG Hoffenheim",             "Hoffenheim",     "Hoffenheim",           "Soccer"),
+  team("soc_holstein_kiel",  "Holstein Kiel",              "Holstein Kiel",  "Holstein Kiel",        "Soccer"),
+  team("soc_mainz",          "1. FSV Mainz 05",            "Mainz",          "Mainz",                "Soccer"),
+  team("soc_rb_leipzig",     "RB Leipzig",                 "RB Leipzig",     "RB Leipzig",           "Soccer"),
+  team("soc_st_pauli",       "FC St. Pauli",               "St. Pauli",      "St. Pauli",            "Soccer"),
+  team("soc_stuttgart",      "VfB Stuttgart",              "Stuttgart",      "Stuttgart",            "Soccer"),
+  team("soc_union_berlin",   "1. FC Union Berlin",         "Union Berlin",   "Union Berlin",         "Soccer"),
+  team("soc_werder",         "Werder Bremen",              "Werder Bremen",  "Werder Bremen",        "Soccer"),
+  team("soc_wolfsburg",      "VfL Wolfsburg",              "Wolfsburg",      "Wolfsburg",            "Soccer"),
+  // ── Serie A (20) ──
+  team("soc_ac_milan",       "AC Milan",                   "AC Milan",       "AC Milan",             "Soccer"),
+  team("soc_atalanta",       "Atalanta",                   "Atalanta",       "Atalanta",             "Soccer"),
+  team("soc_bologna",        "Bologna FC",                 "Bologna",        "Bologna",              "Soccer"),
+  team("soc_cagliari",       "Cagliari",                   "Cagliari",       "Cagliari",             "Soccer"),
+  team("soc_como",           "Como 1907",                  "Como",           "Como",                 "Soccer"),
+  team("soc_empoli",         "Empoli FC",                  "Empoli",         "Empoli",               "Soccer"),
+  team("soc_fiorentina",     "ACF Fiorentina",             "Fiorentina",     "Fiorentina",           "Soccer"),
+  team("soc_genoa",          "Genoa CFC",                  "Genoa",          "Genoa",                "Soccer"),
+  team("soc_verona",         "Hellas Verona",              "Verona",         "Hellas Verona",        "Soccer"),
+  team("soc_inter",          "Inter Milan",                "Inter Milan",    "Inter Milan",          "Soccer"),
+  team("soc_juventus",       "Juventus",                   "Juventus",       "Juventus",             "Soccer"),
+  team("soc_lazio",          "SS Lazio",                   "Lazio",          "Lazio",                "Soccer"),
+  team("soc_lecce",          "US Lecce",                   "Lecce",          "Lecce",                "Soccer"),
+  team("soc_monza",          "AC Monza",                   "Monza",          "Monza",                "Soccer"),
+  team("soc_napoli",         "SSC Napoli",                 "Napoli",         "Napoli",               "Soccer"),
+  team("soc_parma",          "Parma Calcio",               "Parma",          "Parma",                "Soccer"),
+  team("soc_roma",           "AS Roma",                    "Roma",           "Roma",                 "Soccer"),
+  team("soc_torino",         "Torino FC",                  "Torino",         "Torino",               "Soccer"),
+  team("soc_udinese",        "Udinese Calcio",             "Udinese",        "Udinese",              "Soccer"),
+  team("soc_venezia",        "Venezia FC",                 "Venezia",        "Venezia",              "Soccer"),
+  // ── Ligue 1 (18) ──
+  team("soc_angers",         "Angers SCO",                 "Angers",         "Angers",               "Soccer"),
+  team("soc_auxerre",        "AJ Auxerre",                 "Auxerre",        "Auxerre",              "Soccer"),
+  team("soc_brest",          "Stade Brestois",             "Brest",          "Brest",                "Soccer"),
+  team("soc_le_havre",       "Le Havre AC",                "Le Havre",       "Le Havre",             "Soccer"),
+  team("soc_lens",           "RC Lens",                    "Lens",           "Lens",                 "Soccer"),
+  team("soc_lille",          "Lille OSC",                   "Lille",          "Lille",                "Soccer"),
+  team("soc_lyon",           "Olympique Lyonnais",          "Lyon",           "Lyon",                 "Soccer"),
+  team("soc_marseille",      "Olympique de Marseille",      "Marseille",      "Marseille",            "Soccer"),
+  team("soc_monaco",         "AS Monaco",                  "Monaco",         "Monaco",               "Soccer"),
+  team("soc_montpellier",    "Montpellier HSC",            "Montpellier",    "Montpellier",          "Soccer"),
+  team("soc_nantes",         "FC Nantes",                  "Nantes",         "Nantes",               "Soccer"),
+  team("soc_nice",           "OGC Nice",                   "Nice",           "Nice",                 "Soccer"),
+  team("soc_psg",            "Paris Saint-Germain",        "PSG",            "Paris Saint-Germain",  "Soccer"),
+  team("soc_reims",          "Stade de Reims",             "Reims",          "Reims",                "Soccer"),
+  team("soc_rennes",         "Stade Rennais",              "Rennes",         "Rennes",               "Soccer"),
+  team("soc_saint_etienne",  "AS Saint-Étienne",           "Saint-Étienne",  "Saint-Étienne",        "Soccer"),
+  team("soc_strasbourg",     "RC Strasbourg",              "Strasbourg",     "Strasbourg",           "Soccer"),
+  team("soc_toulouse",       "Toulouse FC",                "Toulouse",       "Toulouse",             "Soccer"),
 ];
 
 const SOCCER_AWARDS = [
@@ -365,9 +459,10 @@ for (const c of CATEGORIES) {
 
 // ─── SUMMARY ──────────────────────────────────────────────────────────────────
 // NBA:    30 teams + 18 awards/stats/attrs = 48 categories
-// NFL:    31 teams + 16 awards/stats/attrs = 47 categories
-// MLB:    29 teams + 20 awards/stats/attrs = 49 categories
-// NHL:    25 teams + 17 awards/stats/attrs = 42 categories
-// Soccer: 17 teams + 17 awards/stats/attrs = 34 categories
+// NFL:    32 teams + 16 awards/stats/attrs = 48 categories
+// MLB:    30 teams + 20 awards/stats/attrs = 50 categories
+// NHL:    32 teams + 17 awards/stats/attrs = 49 categories
+// Soccer: 96 teams (PL 20 + La Liga 20 + Bundesliga 18 + Serie A 20 + Ligue 1 18)
+//         + 17 awards/stats/attrs = 113 categories
 // ──────────────────────────────────────────────────────────────────────────────
-// TOTAL: 220 categories
+// TOTAL: 308 categories
