@@ -27,6 +27,11 @@ ALTER TABLE player_facts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "player_facts_select" ON player_facts
   FOR SELECT USING (true);
 
+-- ─── ACCENT NORMALIZATION ──────────────────────────────────────────────────
+-- Player names are stored with accents stripped (é→e, ñ→n) at insertion time.
+-- As a belt-and-suspenders defense, validate_answer also normalizes input.
+-- Run migration 005 to enable unaccent extension for full SQL-side support.
+
 -- ─── VALIDATE_ANSWER RPC ────────────────────────────────────────────────────
 -- Loops through each rule, checks if a matching player_facts row exists.
 -- Returns true only if ALL rules are satisfied (AND logic).

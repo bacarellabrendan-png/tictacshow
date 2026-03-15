@@ -29,3 +29,8 @@ scripts/data/*.csv.gz
 scripts/data/*.txt
 scripts/data/*.html
 scripts/data/*.zip
+
+# Audit output
+scripts/audit_report.json
+scripts/audit_progress.json
+scripts/scrape_nba_progress.json

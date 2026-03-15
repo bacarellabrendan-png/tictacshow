@@ -73,21 +73,15 @@ const NBA_AWARDS = [
   award("nba_dpoy",           "NBA Defensive Player of the Year", "NBA DPOY",    "nba_dpoy",              "NBA"),  // 30
   award("nba_all_defense",    "NBA All-Defensive Team",      "All-Defense",      "nba_all_defensive_team","NBA"),  // 17
   award("nba_sixth_man",      "NBA Sixth Man of the Year",   "Sixth Man",        "nba_sixth_man_award",   "NBA"),  // 17
+  award("nba_roy",            "NBA Rookie of the Year",      "NBA ROY",          "nba_roy",               "NBA"),  // 73
 ];
 
 const NBA_STATS = [
-  stat("nba_50pt_game",       "Scored 50+ Points in a Game", "50+ Pt Game",      "nba_50_point_game",     "NBA"),  // 33
-  stat("nba_20ppg",           "20+ PPG Career Average",      "20+ PPG",          "nba_20ppg_career",      "NBA"),  // 29
-  stat("nba_20k_pts",         "20,000+ Career Points",       "20K+ Points",      "nba_20000_career_points","NBA"), // 15
-  stat("nba_triple_dbl",      "Triple-Double Season Average","Triple-Dbl Avg",   "nba_triple_double_season","NBA"),// 18
-  stat("nba_10apg_season",    "10+ APG in a Season",         "10+ APG Season",   "nba_10_assists_season", "NBA"),  // 15
-  stat("nba_2bpg",            "2+ BPG Career Average",       "2+ BPG",           "nba_2bpg_career",       "NBA"),  // 15
+  stat("nba_50pt_game",       "Scored 50+ Points in a Game", "50+ Pt Game",      "nba_50_point_game",     "NBA"),
 ];
 
 const NBA_ATTRS = [
-  attr("nba_born_outside_us", "Born Outside the United States","Born Outside US", "born_outside_us",       "NBA"),  // 25
-  attr("nba_outside_top_10",  "Drafted Outside the Top 10",  "Outside Top 10",   "nba_drafted_outside_top_10","NBA"),// 21
-  attr("nba_top_5_pick",      "Top 5 Draft Pick",            "Top 5 Pick",       "nba_top_5_pick",        "NBA"),  // 15
+  attr("nba_born_outside_us", "Born Outside the United States","Born Outside US", "born_outside_us",       "NBA"),
 ];
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -199,12 +193,12 @@ const MLB_AWARDS = [
   award("mlb_batting_title",  "Batting Title",               "Batting Title",    "mlb_batting_title",     "MLB"),  // 32
   award("mlb_allstar",        "MLB All-Star",                "All-Star",         "mlb_all_star",          "MLB"),  // 24
   award("mlb_ws_mvp",         "World Series MVP",            "WS MVP",           "mlb_ws_mvp",            "MLB"),  // 15
+  award("mlb_roy",            "MLB Rookie of the Year",      "MLB ROY",          "mlb_roy",               "MLB"),  // 164
 ];
 
 const MLB_STATS = [
   stat("mlb_300sb",           "300+ Career Stolen Bases",    "300+ SB",          "mlb_300_stolen_bases",  "MLB"),  // 26
   stat("mlb_2500hits",        "2,500+ Career Hits",          "2,500+ Hits",      "mlb_2500_career_hits",  "MLB"),  // 24
-  stat("mlb_300avg",          ".300+ Career Batting Average", ".300+ AVG",        "mlb_300_career_avg",    "MLB"),  // 24
   stat("mlb_200hr",           "200+ Career Home Runs",       "200+ HR",          "mlb_200_home_runs",     "MLB"),  // 20
   stat("mlb_no_hitter",       "Threw a No-Hitter",           "No-Hitter",        "mlb_no_hitter",         "MLB"),  // 20
   stat("mlb_500hr",           "500+ Career Home Runs",       "500+ HR",          "mlb_500_home_runs",     "MLB"),  // 18

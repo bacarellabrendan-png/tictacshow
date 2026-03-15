@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { DIFFICULTY_META, normalizeStr } from "./data/questions.js";
 import {
   generateBoard, expandBoard, getCategoryDisplay,
-  getIntersectionPlayers,
+  getIntersectionPlayers, getIntersectionRarities, getPlayerRarity,
 } from "./data/boardGenerator.js";
 
 // ─── SUPABASE ──────────────────────────────────────────────────────────────────
@@ -136,8 +136,13 @@ async function dbUpdate(table, qs, body) {
 /** Track an answer submission for live rarity. Select → increment or insert. */
 async function trackAnswer(questionKey, answerText) {
   const norm = normalizeStr(answerText);
-  const sel = await dbSelect("answer_stats",
+  // Try exact match first (normalized), then case-insensitive (seeded data uses original case)
+  let sel = await dbSelect("answer_stats",
     `?question_key=eq.${encodeURIComponent(questionKey)}&answer_text=eq.${encodeURIComponent(norm)}`);
+  if (!sel.ok || !sel.data?.[0]) {
+    sel = await dbSelect("answer_stats",
+      `?question_key=eq.${encodeURIComponent(questionKey)}&answer_text=ilike.${encodeURIComponent(answerText.trim())}`);
+  }
   if (sel.ok && sel.data?.[0]) {
     await dbUpdate("answer_stats", `?id=eq.${sel.data[0].id}`,
       { submission_count: sel.data[0].submission_count + 1 });
@@ -154,7 +159,9 @@ async function fetchAnswerStats(questionKey) {
   const answerCounts = {};
   let total = 0;
   for (const row of r.data) {
-    answerCounts[row.answer_text] = row.submission_count;
+    // Normalize key so seeded "Jerry West" and user-submitted "jerry west" merge
+    const key = normalizeStr(row.answer_text);
+    answerCounts[key] = (answerCounts[key] || 0) + row.submission_count;
     total += row.submission_count;
   }
   return { totalSubmissions: total, answerCounts };
@@ -201,29 +208,53 @@ function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase()
 const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
 /*
-  cpuDiff controls answer quality.  humanAnswer is excluded to prevent same-answer retries.
-  Players are sorted by fame (most well-known first), so:
-    easy = picks from top third (common names), hard = bottom third (obscure).
+  cpuDiff controls answer quality using per-intersection rarity.
+  Rarity % = "what percentage of people would say this answer for THIS square."
+  Higher % = more obvious. Lower % = rarer = better answer.
+
+  Easy:   picks answers in the 40%+ range (obvious picks)
+  Medium: picks answers in the 10-40% range (solid but not obvious)
+  Hard:   picks answers under 10% (obscure, tough to beat)
+  If no answers exist in the target range, pick the closest available.
 */
 function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
   const normHuman = humanAnswer ? normalizeStr(humanAnswer) : "";
 
-  // New grid cell format — players sorted by fame from boardGenerator
   if (cell.rowCat && cell.colCat) {
+    const rarities = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
     const all = getIntersectionPlayers(cell.sport, cell.rowCat, cell.colCat);
     const players = normHuman ? all.filter(p => normalizeStr(p) !== normHuman) : all;
     if (!players.length) return { name: "No answer", valid: false, rarity: null };
-    let pickIndex;
+
+    // Build array with rarity % for each player
+    const withRarity = players.map(p => ({
+      name: p,
+      rarity: rarities.get(p.toLowerCase()) ?? 0.1,
+    }));
+
+    // Sort by rarity descending (most obvious first)
+    withRarity.sort((a, b) => b.rarity - a.rarity);
+
+    let candidates;
     if (cpuDiff === "easy") {
-      const end = Math.max(3, Math.ceil(players.length / 3));
-      pickIndex = Math.floor(Math.random() * end);
+      candidates = withRarity.filter(p => p.rarity >= 40);
+      if (!candidates.length) candidates = withRarity.slice(0, Math.min(3, withRarity.length)); // pick most obvious available
     } else if (cpuDiff === "hard") {
-      const start = Math.max(0, players.length - Math.max(3, Math.ceil(players.length / 3)));
-      pickIndex = start + Math.floor(Math.random() * (players.length - start));
+      candidates = withRarity.filter(p => p.rarity < 10);
+      if (!candidates.length) candidates = withRarity.slice(-Math.min(3, withRarity.length)); // pick least obvious available
     } else {
-      pickIndex = Math.floor(Math.random() * players.length);
+      // Medium: 10-40%
+      candidates = withRarity.filter(p => p.rarity >= 10 && p.rarity < 40);
+      if (!candidates.length) {
+        // No answers in range — pick from middle third
+        const third = Math.max(1, Math.floor(withRarity.length / 3));
+        candidates = withRarity.slice(third, third * 2);
+        if (!candidates.length) candidates = withRarity.slice(1, Math.min(4, withRarity.length));
+      }
     }
-    return { name: players[pickIndex], valid: true, rarity: calculatePositionRarity(pickIndex, players.length) };
+
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    return { name: pick.name, valid: true, rarity: pick.rarity };
   }
   return { name: "No answer", valid: false, rarity: null };
 }
@@ -262,11 +293,13 @@ function RarityBar({ score }) {
   const pct  = Math.max(2, Math.min(100, score));
   const col  = score < 10 ? "#FC5C65" : score < 30 ? "#F7B731" : ACCENT2;
   const tier = score < 10 ? "RARE" : score < 30 ? "UNCOMMON" : "COMMON";
+  // Show 2 decimals for small values, 1 decimal for mid, 0 for large
+  const display = score < 1 ? score.toFixed(2) : score < 10 ? score.toFixed(1) : Math.round(score);
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
         <span style={{ fontSize: "0.65rem", color: LO, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>POPULARITY</span>
-        <span style={{ fontSize: "0.65rem", color: col, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>{tier} · {Math.round(score)}%</span>
+        <span style={{ fontSize: "0.65rem", color: col, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>{tier} · {display}%</span>
       </div>
       <div style={{ height: 5, background: BORDER, borderRadius: 3, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: col, borderRadius: 3, transition: "width 0.9s ease" }} />
@@ -289,9 +322,11 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
     if (q.length < 1) { setSuggestions([]); return; }
     clearTimeout(debounceT.current);
     debounceT.current = setTimeout(async () => {
+      // Strip accents from query so "Iván" matches "Ivan" in the DB
+      const qNorm = q.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const sportFilter = sport ? `&sport=eq.${encodeURIComponent(sport)}` : "";
       const r = await dbSelect("player_facts",
-        `?player_name=ilike.*${encodeURIComponent(q)}*${sportFilter}&select=player_name&order=player_name&limit=40`);
+        `?player_name=ilike.*${encodeURIComponent(qNorm)}*${sportFilter}&select=player_name&order=player_name&limit=40`);
       if (r.ok && Array.isArray(r.data)) {
         const unique = [...new Set(r.data.map(row => row.player_name))];
         setSuggestions(unique.slice(0, 8));
@@ -533,10 +568,6 @@ const GLOBAL_CSS = `
 `;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
-function calculatePositionRarity(index, poolSize) {
-  if (poolSize <= 1) return 50;
-  return Math.max(1, Math.min(99, Math.round(95 - (index / (poolSize - 1)) * 90)));
-}
 
 /** Derive a stable key for a cell (row__col). */
 function cellKey(cell) {
@@ -597,6 +628,7 @@ export default function App() {
   const [revealData,    setRevealData]    = useState(null);
   const [revealStep,    setRevealStep]    = useState(0);
   const [previewCell,   setPreviewCell]   = useState(null);
+  const [reportStatus,  setReportStatus]  = useState(null); // null | "sending" | "sent" | "error"
 
   // Refs for stale-closure-safe async ops
   const gameRef          = useRef(null);
@@ -703,7 +735,7 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // REVEAL
   // ─────────────────────────────────────────────────────────────────────────────
-  function triggerReveal(move, g, preStats) {
+  function triggerReveal(move, g, cellRarities) {
     showingReveal.current = true;
     const winnerName =
       move.result === "p1" ? g.player1_name :
@@ -720,21 +752,37 @@ export default function App() {
     const revealQ = activeCell
       ? { sport: activeCell.sport, clue: cellClue(activeCell) }
       : null;
-    const qKey = activeCell ? cellKey(activeCell) : null;
-    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, liveStats: preStats || null });
+    // Compute per-intersection rarities for this cell if not already provided
+    let rarities = cellRarities;
+    if (!rarities && activeCell?.rowCat && activeCell?.colCat) {
+      rarities = getIntersectionRarities(activeCell.sport, activeCell.rowCat, activeCell.colCat);
+    }
+    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, cellRarities: rarities || null });
     setRevealStep(0);
     // Stagger the answer cards in — no auto-close, user clicks Continue
     setTimeout(() => setRevealStep(1), 350);
     setTimeout(() => setRevealStep(2), 800);
     setTimeout(() => setRevealStep(3), 1400);
-    // Fetch live rarity stats in background (skip if pre-fetched)
-    if (!preStats && qKey) fetchAnswerStats(qKey).then(stats => {
-      if (stats) setRevealData(prev => prev ? { ...prev, liveStats: stats } : prev);
-    });
+  }
+
+  async function reportWrongAnswer(player, answer, valid) {
+    if (reportStatus === "sending" || reportStatus === "sent") return;
+    setReportStatus("sending");
+    const q = revealData?.q;
+    const report = {
+      game_id: game?.id || null,
+      player_name: answer,
+      question_clue: q ? `${q.sport}: ${q.clue}` : "unknown",
+      reported_valid: valid,
+      reporter_id: user?.id || null,
+      reporter_name: user?.username || "anonymous",
+    };
+    const r = await dbInsert("wrong_answer_reports", report);
+    setReportStatus(r.ok ? "sent" : "error");
   }
 
   function dismissReveal() {
-    setRevealData(null); setRevealStep(0);
+    setRevealData(null); setRevealStep(0); setReportStatus(null);
     setSubmitted(false); setMyAnswer("");
     resolving.current = false; showingReveal.current = false;
     // On same-answer retry, restore the new move so the player can answer again
@@ -761,7 +809,7 @@ export default function App() {
   function resetGameState(g) {
     setGame(g); gameRef.current = g;
     setCurrentMove(null); setMyAnswer(""); setSubmitted(false);
-    setRevealData(null); setRevealStep(0); setPreviewCell(null);
+    setRevealData(null); setRevealStep(0); setPreviewCell(null); setReportStatus(null);
     resolving.current = false; showingReveal.current = false; cpuThinking.current = false;
   }
 
@@ -1063,9 +1111,9 @@ export default function App() {
       return;
     }
 
-    // ── Determine winner — use live rarity when both answers are valid ──
+    // ── Determine winner — use per-intersection rarity (lower % = rarer = wins) ──
     let result;
-    let liveStats = null;
+    let cellRarities = null;
     if (!mv.p1_valid && !mv.p2_valid) {
       result = "reset";
     } else if (!mv.p1_valid) {
@@ -1073,21 +1121,17 @@ export default function App() {
     } else if (!mv.p2_valid) {
       result = "p1";
     } else {
-      // Both valid — fetch live answer_stats for rarity-based tiebreak
+      // Both valid — compute per-intersection rarity, lower wins
       const cell = g.cells[g.active_cell];
+      cellRarities = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
+      const p1Rarity = cellRarities.get(normalizeStr(mv.p1_answer)) ?? 0.1;
+      const p2Rarity = cellRarities.get(normalizeStr(mv.p2_answer)) ?? 0.1;
+      if (Math.abs(p1Rarity - p2Rarity) < 0.001) result = Math.random() < 0.5 ? "p1" : "p2";
+      else result = p1Rarity < p2Rarity ? "p1" : "p2";
+      // Track answer for future live data
       const qKey = cellKey(cell);
-      liveStats = await fetchAnswerStats(qKey);
-      if (liveStats && liveStats.totalSubmissions >= 2) {
-        const p1Count = liveStats.answerCounts[normalizeStr(mv.p1_answer)] ?? 0;
-        const p2Count = liveStats.answerCounts[normalizeStr(mv.p2_answer)] ?? 0;
-        // Lower count = rarer = wins
-        if (p1Count === p2Count) result = Math.random() < 0.5 ? "p1" : "p2";
-        else result = p1Count <= p2Count ? "p1" : "p2";
-      } else {
-        // Not enough data — fall back to stored position-based rarity
-        if (mv.p1_rarity === mv.p2_rarity) result = Math.random() < 0.5 ? "p1" : "p2";
-        else result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
-      }
+      trackAnswer(qKey, mv.p1_answer);
+      trackAnswer(qKey, mv.p2_answer);
     }
 
     await dbUpdate("moves", `?id=eq.${mv.id}`, { result });
@@ -1098,7 +1142,7 @@ export default function App() {
     const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
     // Simple alternation — the other player always picks next
     const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
-    triggerReveal({ ...mv, result }, g, liveStats);
+    triggerReveal({ ...mv, result }, g, cellRarities);
     await dbUpdate("games", `?id=eq.${game.id}`, {
       board: newBoard, scores: newScores, active_cell: null,
       phase: check ? "gameover" : "choosing", choosing_player: nextPick,
@@ -1137,9 +1181,9 @@ export default function App() {
       return;
     }
 
-    // ── Determine winner — use live rarity when both answers are valid ──
+    // ── Determine winner — use per-intersection rarity (lower % = rarer = wins) ──
     let result;
-    let liveStats = null;
+    let cellRarities = null;
     if (!mv.p1_valid && !mv.p2_valid) {
       result = "reset";
     } else if (!mv.p1_valid) {
@@ -1147,21 +1191,13 @@ export default function App() {
     } else if (!mv.p2_valid) {
       result = "p1";
     } else {
-      // Both valid — fetch live answer_stats for rarity-based tiebreak
+      // Both valid — compute per-intersection rarity, lower wins
       const cell = g.cells[g.active_cell];
-      const qKey = cellKey(cell);
-      liveStats = await fetchAnswerStats(qKey);
-      if (liveStats && liveStats.totalSubmissions >= 2) {
-        const p1Count = liveStats.answerCounts[normalizeStr(mv.p1_answer)] ?? 0;
-        const p2Count = liveStats.answerCounts[normalizeStr(mv.p2_answer)] ?? 0;
-        // Lower count = rarer = wins
-        if (p1Count === p2Count) result = Math.random() < 0.5 ? "p1" : "p2";
-        else result = p1Count <= p2Count ? "p1" : "p2";
-      } else {
-        // Not enough data — fall back to stored position-based rarity
-        if (mv.p1_rarity === mv.p2_rarity) result = Math.random() < 0.5 ? "p1" : "p2";
-        else result = mv.p1_rarity <= mv.p2_rarity ? "p1" : "p2";
-      }
+      cellRarities = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
+      const p1Rarity = cellRarities.get(normalizeStr(mv.p1_answer)) ?? 0.1;
+      const p2Rarity = cellRarities.get(normalizeStr(mv.p2_answer)) ?? 0.1;
+      if (Math.abs(p1Rarity - p2Rarity) < 0.001) result = Math.random() < 0.5 ? "p1" : "p2";
+      else result = p1Rarity < p2Rarity ? "p1" : "p2";
     }
 
     const newBoard  = [...g.board];
@@ -1171,7 +1207,7 @@ export default function App() {
     const check    = checkWinner(newBoard.map(v => (v === "null" || v == null || v === "reset") ? null : v));
     // Simple alternation — the other player always picks next
     const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
-    triggerReveal({ ...mv, result }, g, liveStats);
+    triggerReveal({ ...mv, result }, g, cellRarities);
     const updated = {
       ...g, board: newBoard, scores: newScores, active_cell: null,
       phase: check ? "gameover" : "choosing", choosing_player: nextPick,
@@ -1549,9 +1585,9 @@ export default function App() {
               <div className="section-label">CPU Difficulty</div>
               <div style={{ display: "flex", gap: "0.65rem", marginBottom: "2.5rem", flexWrap: "wrap" }}>
                 {[
-                  { key: "easy",   label: "EASY",   sub: "Picks obvious answers (rarity 50–99)",   color: ACCENT2 },
-                  { key: "medium", label: "MEDIUM", sub: "Picks mid-tier answers (rarity 20–60)",    color: "#F7B731" },
-                  { key: "hard",   label: "HARD",   sub: "Picks rare answers (rarity 1–30)",         color: "#FC5C65" },
+                  { key: "easy",   label: "EASY",   sub: "Picks obvious answers (40%+)",   color: ACCENT2 },
+                  { key: "medium", label: "MEDIUM", sub: "Picks solid answers (10–40%)",    color: "#F7B731" },
+                  { key: "hard",   label: "HARD",   sub: "Picks obscure answers (<10%)",         color: "#FC5C65" },
                 ].map(d => (
                   <button key={d.key} className="diff-card"
                     onClick={() => setCpuDiff(d.key)}
@@ -2020,11 +2056,9 @@ export default function App() {
                 const isMe   = myRole === p;
                 const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
                 const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
-                // Live rarity from answer_stats — show when 10+ submissions exist
-                const ls = revealData.liveStats;
-                const liveCount = ls && answer ? (ls.answerCounts[normalizeStr(answer)] ?? 0) : 0;
-                const hasEnoughData = ls && ls.totalSubmissions >= 10;
-                const rarity = hasEnoughData ? Math.round((liveCount / ls.totalSubmissions) * 100) : null;
+                // Per-intersection rarity — computed from fame relative to this square's player pool
+                const cr = revealData.cellRarities;
+                const rarity = (cr && answer && valid) ? (cr.get(normalizeStr(answer)) ?? 0.1) : null;
                 const won    = revealData.result === p;
                 return (
                   <div key={p} style={{
@@ -2064,13 +2098,9 @@ export default function App() {
                           }}>
                             ✗ INVALID
                           </div>
-                        ) : hasEnoughData && rarity != null ? (
+                        ) : rarity != null ? (
                           <RarityBar score={rarity} />
-                        ) : (
-                          <div style={{ fontSize: "0.7rem", color: LO, fontFamily: "'Roboto Mono',monospace", letterSpacing: "0.5px", marginTop: "0.3rem" }}>
-                            Not enough data yet
-                          </div>
-                        )}
+                        ) : null}
                       </>
                     ) : (
                       <div style={{ fontSize: "2.8rem", color: SURF3, textAlign: "center", padding: "0.6rem 0", fontFamily: "'Bebas Neue',cursive", letterSpacing: "4px" }}>
@@ -2107,17 +2137,17 @@ export default function App() {
                       {revealData.winnerName} WINS THE SQUARE!
                     </div>
                     {(() => {
-                      const ls = revealData.liveStats;
-                      if (!ls || ls.totalSubmissions < 10) return null;
+                      const cr = revealData.cellRarities;
+                      if (!cr) return null;
                       const wKey = revealData.result;
                       const lKey = wKey === "p1" ? "p2" : "p1";
                       const wAnswer = revealData.move[`${wKey}_answer`];
                       const lAnswer = revealData.move[`${lKey}_answer`];
-                      const wRarity = Math.round(((ls.answerCounts[normalizeStr(wAnswer)] ?? 0) / ls.totalSubmissions) * 100);
-                      const lRarity = Math.round(((ls.answerCounts[normalizeStr(lAnswer)] ?? 0) / ls.totalSubmissions) * 100);
+                      const wRarity = cr.get(normalizeStr(wAnswer)) ?? 0.1;
+                      const lRarity = cr.get(normalizeStr(lAnswer)) ?? 0.1;
                       return (
                         <div style={{ color: MID, fontSize: "0.85rem", marginTop: "0.35rem", fontStyle: "italic" }}>
-                          Rarity: {wRarity}% vs {lRarity}%
+                          Rarity: {wRarity < 1 ? wRarity.toFixed(2) : wRarity < 10 ? wRarity.toFixed(1) : Math.round(wRarity)}% vs {lRarity < 1 ? lRarity.toFixed(2) : lRarity < 10 ? lRarity.toFixed(1) : Math.round(lRarity)}%
                         </div>
                       );
                     })()}
@@ -2127,9 +2157,35 @@ export default function App() {
             )}
 
             {revealStep >= 3 && (
-              <button className="big-btn" onClick={dismissReveal} style={{ animation: "fadeIn 0.4s ease" }}>
-                CONTINUE
-              </button>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", animation: "fadeIn 0.4s ease" }}>
+                <button className="big-btn" onClick={dismissReveal}>
+                  CONTINUE
+                </button>
+                <button
+                  onClick={() => {
+                    const myP = myRole || "p1";
+                    const myAns = revealData.move[`${myP}_answer`];
+                    const myValid = revealData.move[`${myP}_valid`];
+                    const oppP = myP === "p1" ? "p2" : "p1";
+                    const oppAns = revealData.move[`${oppP}_answer`];
+                    const oppValid = revealData.move[`${oppP}_valid`];
+                    // Report whichever answer seems wrong: if mine was marked invalid, report mine; otherwise report opponent's
+                    const ans = !myValid ? myAns : oppAns;
+                    const v = !myValid ? myValid : oppValid;
+                    reportWrongAnswer(myP, ans, v);
+                  }}
+                  disabled={reportStatus === "sending" || reportStatus === "sent"}
+                  style={{
+                    background: "none", border: "none", cursor: reportStatus === "sent" ? "default" : "pointer",
+                    color: reportStatus === "sent" ? "#45B17B" : reportStatus === "error" ? "#FC5C65" : MID,
+                    fontSize: "0.72rem", fontFamily: "'Roboto Mono',monospace",
+                    letterSpacing: "0.5px", opacity: 0.8,
+                    textDecoration: reportStatus === "sent" ? "none" : "underline",
+                  }}
+                >
+                  {reportStatus === "sent" ? "✓ Reported — thanks!" : reportStatus === "sending" ? "Sending..." : reportStatus === "error" ? "Error — try again" : "⚑ Report wrong answer"}
+                </button>
+              </div>
             )}
           </div>
         </div>

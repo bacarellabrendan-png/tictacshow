@@ -118,9 +118,11 @@ export function buildPuzzle(difficulty, sport = "all") {
   return pool.slice(0, 9).map(k => ({ questionKey: k }));
 }
 
-/** Normalize a string for fuzzy answer matching. */
+/** Normalize a string for fuzzy answer matching.
+ *  Strips accents (é→e), punctuation, and collapses whitespace. */
 export function normalizeStr(s) {
-  return s.toLowerCase()
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
     .replace(/-/g, " ").replace(/\./g, "")
     .replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
 }
