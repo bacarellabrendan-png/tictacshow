@@ -208,14 +208,12 @@ function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase()
 const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
 /*
-  cpuDiff controls answer quality using per-intersection rarity.
-  Rarity % = "what percentage of people would say this answer for THIS square."
-  Higher % = more obvious. Lower % = rarer = better answer.
+  cpuDiff controls answer quality using rank-based tiers within each intersection.
+  Players are sorted by fame (Wikipedia pageviews). The CPU picks from:
 
-  Easy:   picks answers in the 40%+ range (obvious picks)
-  Medium: picks answers in the 10-40% range (solid but not obvious)
-  Hard:   picks answers under 10% (obscure, tough to beat)
-  If no answers exist in the target range, pick the closest available.
+  Easy:   top 20% of players (the names everyone knows)
+  Medium: middle tier, ranks 20%-50% (solid but not obvious)
+  Hard:   bottom 50% (obscure, tough to beat)
 */
 function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
   const normHuman = humanAnswer ? normalizeStr(humanAnswer) : "";
@@ -235,22 +233,25 @@ function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
     // Sort by rarity descending (most obvious first)
     withRarity.sort((a, b) => b.rarity - a.rarity);
 
+    // Use rank-based tiers so difficulty works regardless of pool size.
+    // withRarity is sorted descending (most obvious first).
+    const n = withRarity.length;
     let candidates;
     if (cpuDiff === "easy") {
-      candidates = withRarity.filter(p => p.rarity >= 40);
-      if (!candidates.length) candidates = withRarity.slice(0, Math.min(3, withRarity.length)); // pick most obvious available
+      // Top 20% of players (the obvious names everyone knows)
+      const cutoff = Math.max(1, Math.ceil(n * 0.2));
+      candidates = withRarity.slice(0, cutoff);
     } else if (cpuDiff === "hard") {
-      candidates = withRarity.filter(p => p.rarity < 10);
-      if (!candidates.length) candidates = withRarity.slice(-Math.min(3, withRarity.length)); // pick least obvious available
+      // Bottom 50% (obscure picks)
+      const start = Math.max(1, Math.ceil(n * 0.5));
+      candidates = withRarity.slice(start);
+      if (!candidates.length) candidates = withRarity.slice(-Math.min(3, n));
     } else {
-      // Medium: 10-40%
-      candidates = withRarity.filter(p => p.rarity >= 10 && p.rarity < 40);
-      if (!candidates.length) {
-        // No answers in range — pick from middle third
-        const third = Math.max(1, Math.floor(withRarity.length / 3));
-        candidates = withRarity.slice(third, third * 2);
-        if (!candidates.length) candidates = withRarity.slice(1, Math.min(4, withRarity.length));
-      }
+      // Medium: middle tier (rank 20%-50%)
+      const from = Math.max(1, Math.ceil(n * 0.2));
+      const to = Math.max(from + 1, Math.ceil(n * 0.5));
+      candidates = withRarity.slice(from, to);
+      if (!candidates.length) candidates = withRarity.slice(1, Math.min(4, n));
     }
 
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
