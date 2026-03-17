@@ -208,12 +208,14 @@ function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase()
 const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
 /*
-  cpuDiff controls answer quality using rank-based tiers within each intersection.
-  Players are sorted by fame (Wikipedia pageviews). The CPU picks from:
+  cpuDiff controls answer quality using rarity %.
+  Rarity % = how likely a typical player would give this answer for this square.
 
-  Easy:   top 20% of players (the names everyone knows)
-  Medium: middle tier, ranks 20%-50% (solid but not obvious)
-  Hard:   bottom 50% (obscure, tough to beat)
+  Easy:   40%+  (obvious picks)
+  Medium: 10-40% (solid but not obvious)
+  Hard:   under 10% (obscure, tough to beat)
+
+  If no players fall in the target range, pick the closest available.
 */
 function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
   const normHuman = humanAnswer ? normalizeStr(humanAnswer) : "";
@@ -233,28 +235,26 @@ function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
     // Sort by rarity descending (most obvious first)
     withRarity.sort((a, b) => b.rarity - a.rarity);
 
-    // Use rank-based tiers so difficulty works regardless of pool size.
-    // withRarity is sorted descending (most obvious first).
-    const n = withRarity.length;
-    let candidates;
-    if (cpuDiff === "easy") {
-      // Top 20% of players (the obvious names everyone knows)
-      const cutoff = Math.max(1, Math.ceil(n * 0.2));
-      candidates = withRarity.slice(0, cutoff);
-    } else if (cpuDiff === "hard") {
-      // Bottom 50% (obscure picks)
-      const start = Math.max(1, Math.ceil(n * 0.5));
-      candidates = withRarity.slice(start);
-      if (!candidates.length) candidates = withRarity.slice(-Math.min(3, n));
-    } else {
-      // Medium: middle tier (rank 20%-50%)
-      const from = Math.max(1, Math.ceil(n * 0.2));
-      const to = Math.max(from + 1, Math.ceil(n * 0.5));
-      candidates = withRarity.slice(from, to);
-      if (!candidates.length) candidates = withRarity.slice(1, Math.min(4, n));
+    // Define target range for this difficulty
+    let lo, hi;
+    if (cpuDiff === "easy")      { lo = 40; hi = Infinity; }
+    else if (cpuDiff === "hard") { lo = 0;  hi = 10; }
+    else                         { lo = 10; hi = 40; } // medium
+
+    // Filter to players within the target rarity range
+    let candidates = withRarity.filter(p => p.rarity >= lo && p.rarity < hi);
+
+    if (!candidates.length) {
+      // No exact matches — pick the single closest player to the target range
+      const mid = (lo + Math.min(hi, 100)) / 2;
+      const sorted = [...withRarity].sort((a, b) =>
+        Math.abs(a.rarity - mid) - Math.abs(b.rarity - mid)
+      );
+      candidates = [sorted[0]];
     }
 
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    console.log(`[CPU ${cpuDiff}] picked "${pick.name}" rarity=${pick.rarity.toFixed(1)}% (target ${lo}-${hi === Infinity ? "∞" : hi}%) from ${withRarity.length} players`);
     return { name: pick.name, valid: true, rarity: pick.rarity };
   }
   return { name: "No answer", valid: false, rarity: null };

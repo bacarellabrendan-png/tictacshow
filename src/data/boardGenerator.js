@@ -395,12 +395,12 @@ export function getIntersectionRarities(sport, rowCatId, colCatId) {
     return (factCounts.get(b.toLowerCase()) || 0) - (factCounts.get(a.toLowerCase()) || 0);
   });
 
-  // Zipf distribution: weight(rank) = 1 / rank^α
-  // α=0.8 gives a smooth curve where rarity spreads across tiers
-  const ALPHA = 0.8;
+  // Exponential decay: weight(rank) = e^(-k * rank)
+  // k=0.55 gives stable tiers: #1 ≈ 42%, #2 ≈ 24%, #3 ≈ 14%, rest < 10%
+  const K = 0.55;
   let totalWeight = 0;
   const weights = sorted.map((_, i) => {
-    const w = 1 / Math.pow(i + 1, ALPHA);
+    const w = Math.exp(-K * i);
     totalWeight += w;
     return w;
   });
