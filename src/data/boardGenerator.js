@@ -97,13 +97,9 @@ async function preloadSport(sport, sbFetch, minAnswers) {
   const factKey = (c) => `${c.fact.type}|${c.fact.value}`;
   const getP = (c) => playersByFact.get(factKey(c)) || new Set();
 
-  // For team-linked championships, get players by looking up team-specific key
-  const getPForPair = (cat, teamCat) => {
-    if (TEAM_LINKED_CHAMPS.has(cat.fact.type) && teamCat && teamCat.type === 'team') {
-      return playersByFact.get(`${cat.fact.type}|${teamCat.fact.value}`) || new Set();
-    }
-    return getP(cat);
-  };
+  // Championship categories now use generic fact_value="true",
+  // so no special team-linked lookup is needed.
+  const getPForPair = (cat, _teamCat) => getP(cat);
 
   // Count total players for a category (aggregates all team-linked keys for championships)
   const getCatSize = (c) => {
@@ -283,13 +279,10 @@ export function getCellRules(rowCatId, colCatId) {
   const rowRule = { fact_type: row.fact.type, fact_value: row.fact.value };
   const colRule = { fact_type: col.fact.type, fact_value: col.fact.value };
 
-  // When a championship intersects a team, use the team name as the championship fact_value
-  if (TEAM_LINKED_CHAMPS.has(row.fact.type) && col.type === 'team') {
-    rowRule.fact_value = col.fact.value;
-  }
-  if (TEAM_LINKED_CHAMPS.has(col.fact.type) && row.type === 'team') {
-    colRule.fact_value = row.fact.value;
-  }
+  // Championship × Team: keep championship as generic (=true).
+  // The team axis provides played_for_team=<team>, so the intersection finds
+  // players who played for that team AND won a championship with ANY team.
+  // (Matches Immaculate Grid rules.)
 
   return [rowRule, colRule];
 }
@@ -335,19 +328,8 @@ export function getIntersectionPlayers(sport, rowCatId, colCatId) {
   if (!cached) return [];
 
   const { playersByFact, originalNames, factCounts } = cached;
-  let rowFactValue = row.fact.value;
-  let colFactValue = col.fact.value;
-
-  // For team-linked championships, look up by team name instead of "true"
-  if (TEAM_LINKED_CHAMPS.has(row.fact.type) && col.type === 'team') {
-    rowFactValue = col.fact.value;
-  }
-  if (TEAM_LINKED_CHAMPS.has(col.fact.type) && row.type === 'team') {
-    colFactValue = row.fact.value;
-  }
-
-  const rowKey = `${row.fact.type}|${rowFactValue}`;
-  const colKey = `${col.fact.type}|${colFactValue}`;
+  const rowKey = `${row.fact.type}|${row.fact.value}`;
+  const colKey = `${col.fact.type}|${col.fact.value}`;
   const rowPlayers = playersByFact.get(rowKey) || new Set();
   const colPlayers = playersByFact.get(colKey) || new Set();
 
