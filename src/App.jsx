@@ -769,16 +769,28 @@ export default function App() {
   async function reportWrongAnswer(player, answer, valid) {
     if (reportStatus === "sending" || reportStatus === "sent") return;
     setReportStatus("sending");
-    const q = revealData?.q;
-    const report = {
-      game_id: game?.id || null,
+    const cell = revealData?.cell;
+    const clue = cell
+      ? `${cell.sport}: ${cell.rowCat?.id ?? "?"} × ${cell.colCat?.id ?? "?"}`
+      : "unknown";
+    // Try direct insert first; fall back to RPC if RLS blocks it
+    let r = await dbInsert("wrong_answer_reports", {
       player_name: answer,
-      question_clue: q ? `${q.sport}: ${q.clue}` : "unknown",
+      question_clue: clue,
       reported_valid: valid,
-      reporter_id: user?.id || null,
       reporter_name: user?.username || "anonymous",
-    };
-    const r = await dbInsert("wrong_answer_reports", report);
+    });
+    if (!r.ok) {
+      r = await sbFetch("/rest/v1/rpc/submit_wrong_answer_report", {
+        method: "POST",
+        body: JSON.stringify({
+          p_player_name: answer,
+          p_question_clue: clue,
+          p_reported_valid: valid,
+          p_reporter_name: user?.username || "anonymous",
+        }),
+      });
+    }
     setReportStatus(r.ok ? "sent" : "error");
   }
 
