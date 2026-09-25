@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { DIFFICULTY_META, normalizeStr } from "./data/questions.js";
 import {
   generateBoard, expandBoard, getCategoryDisplay,
-  getIntersectionPlayers, getIntersectionRarities, getPlayerRarity,
+  getIntersectionPlayers, getIntersectionRarities, getPlayerRarity, ensureSportData,
 } from "./data/boardGenerator.js";
+import { blendRarities } from "./data/rarity.js";
 
 // ─── SUPABASE ──────────────────────────────────────────────────────────────────
 const SB_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -133,47 +134,9 @@ async function dbUpdate(table, qs, body) {
   });
 }
 
-/** Track an answer submission for live rarity. Select → increment or insert. */
-async function trackAnswer(questionKey, answerText) {
-  const norm = normalizeStr(answerText);
-  // Try exact match first (normalized), then case-insensitive (seeded data uses original case)
-  let sel = await dbSelect("answer_stats",
-    `?question_key=eq.${encodeURIComponent(questionKey)}&answer_text=eq.${encodeURIComponent(norm)}`);
-  if (!sel.ok || !sel.data?.[0]) {
-    sel = await dbSelect("answer_stats",
-      `?question_key=eq.${encodeURIComponent(questionKey)}&answer_text=ilike.${encodeURIComponent(answerText.trim())}`);
-  }
-  if (sel.ok && sel.data?.[0]) {
-    await dbUpdate("answer_stats", `?id=eq.${sel.data[0].id}`,
-      { submission_count: sel.data[0].submission_count + 1 });
-  } else {
-    await dbInsert("answer_stats",
-      { question_key: questionKey, answer_text: norm, submission_count: 1 });
-  }
-}
-
-/** Fetch live rarity stats for a question. Returns { totalSubmissions, answerCounts: Map<normalizedAnswer, count> } */
-async function fetchAnswerStats(questionKey) {
-  const r = await dbSelect("answer_stats", `?question_key=eq.${encodeURIComponent(questionKey)}`);
-  if (!r.ok || !Array.isArray(r.data)) return null;
-  const answerCounts = {};
-  let total = 0;
-  for (const row of r.data) {
-    // Normalize key so seeded "Jerry West" and user-submitted "jerry west" merge
-    const key = normalizeStr(row.answer_text);
-    answerCounts[key] = (answerCounts[key] || 0) + row.submission_count;
-    total += row.submission_count;
-  }
-  return { totalSubmissions: total, answerCounts };
-}
-
-/**
- * Validate an answer against the player_facts database via RPC.
- * Accepts a config { sport, rules } and checks ALL rules are satisfied.
- * Returns { name, valid, rarity } or null (invalid).
- */
+/** Validate an answer against player_facts. Returns true only if ALL rules match. */
 async function validateAnswer(guess, config) {
-  if (!config?.rules?.length) return null;
+  if (!config?.rules?.length) return false;
   try {
     const r = await sbFetch('/rest/v1/rpc/validate_answer', {
       method: 'POST',
@@ -183,11 +146,58 @@ async function validateAnswer(guess, config) {
         p_rules: config.rules,
       }),
     });
-    if (r.ok && r.data === true) {
-      return { name: guess.trim(), valid: true, rarity: 5 };
-    }
-  } catch { /* network failure — reject */ }
-  return null;
+    return r.ok && r.data === true;
+  } catch { return false; /* network failure — reject */ }
+}
+
+/**
+ * Record one human answer (valid or rejected) and return the game's ruling.
+ * The record_answer RPC runs the same validate_answer check, logs the answer to
+ * answer_submissions once per "<game>:<move>:<role>" key, and returns its id.
+ * If the RPC refuses or fails, fall back to validating directly (not recorded).
+ * Returns { valid, submissionId }.
+ */
+async function submitAndRule({ gameId, moveId, role, gameMode, questionKey, cell, answer }) {
+  try {
+    const r = await sbFetch("/rest/v1/rpc/record_answer", {
+      method: "POST",
+      body: JSON.stringify({
+        p_submission_key: `${gameId}:${moveId}:${role}`,
+        p_game_mode: gameMode,
+        p_question_key: questionKey,
+        p_sport: cell.sport,
+        p_rules: cell.rules,
+        p_answer: answer.trim(),
+      }),
+    });
+    if (r.ok && r.data && typeof r.data === "object") return { valid: !!r.data.valid, submissionId: r.data.id };
+  } catch { /* fall through to direct validation */ }
+  return { valid: await validateAnswer(answer, cell), submissionId: null };
+}
+
+/** Real valid-submission counts for a square: { total, counts: Map<normalizedName, n> }, or null. */
+async function fetchSquareCounts(questionKey) {
+  const r = await sbFetch("/rest/v1/rpc/get_square_counts", {
+    method: "POST",
+    body: JSON.stringify({ p_question_key: questionKey }),
+  });
+  if (!r.ok || !Array.isArray(r.data)) return null;
+  const counts = new Map();
+  let total = 0;
+  for (const row of r.data) {
+    const key = normalizeStr(row.player_name);
+    counts.set(key, (counts.get(key) || 0) + Number(row.submissions));
+    total += Number(row.submissions);
+  }
+  return { total, counts };
+}
+
+/** Rarity % for every player on a cell: prior estimate blended with real submissions. */
+async function liveCellRarities(cell) {
+  // The prior needs this sport's data even in a browser that didn't build the board
+  await ensureSportData(cell.sport, sbFetch);
+  const prior = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
+  return blendRarities(prior, await fetchSquareCounts(cellKey(cell)));
 }
 
 // ─── GAME LOGIC ────────────────────────────────────────────────────────────────
@@ -217,11 +227,12 @@ const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
   If no players fall in the target range, pick the closest available.
 */
-function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
+function cpuPickAnswer(cell, cpuDiff, humanAnswer, liveRarities) {
   const normHuman = humanAnswer ? normalizeStr(humanAnswer) : "";
 
   if (cell.rowCat && cell.colCat) {
-    const rarities = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
+    // Same blended numbers that decide the square, when available
+    const rarities = liveRarities ?? getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
     const all = getIntersectionPlayers(cell.sport, cell.rowCat, cell.colCat);
     const players = normHuman ? all.filter(p => normalizeStr(p) !== normHuman) : all;
     if (!players.length) return { name: "No answer", valid: false, rarity: null };
@@ -630,6 +641,7 @@ export default function App() {
   const [revealStep,    setRevealStep]    = useState(0);
   const [previewCell,   setPreviewCell]   = useState(null);
   const [reportStatus,  setReportStatus]  = useState(null); // null | "sending" | "sent" | "error"
+  const [reportForm,    setReportForm]    = useState(null); // null | { role, shouldBeValid, note }
 
   // Refs for stale-closure-safe async ops
   const gameRef          = useRef(null);
@@ -637,6 +649,7 @@ export default function App() {
   const showingReveal    = useRef(false);
   const cpuThinking      = useRef(false);
   const pendingRetryMove = useRef(null); // holds next move after same-answer retry
+  const mySubmission     = useRef(null); // { moveId, role, id } — my latest answer_submissions row
 
   useEffect(() => { gameRef.current = game; }, [game]);
 
@@ -648,6 +661,13 @@ export default function App() {
     const code = new URLSearchParams(window.location.search).get("join");
     if (code) { setJoinCode(code); setScreen("join"); }
   }, [user]);
+
+  // ── Load rarity data for the board's sport in the background (the player who
+  //    joined didn't generate the board, so their cache starts empty) ──────────
+  const gameSport = game?.sport ?? game?.cells?.[0]?.sport;
+  useEffect(() => {
+    if (screen === "game" && gameSport) ensureSportData(gameSport, sbFetch);
+  }, [screen, gameSport]);
 
   // ── Multiplayer polling ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -716,7 +736,10 @@ export default function App() {
     if (!r.ok || !r.data?.[0]) return;
     const fresh = r.data[0];
 
-    if (fresh.phase === "choosing" && cur.phase === "answering" && !showingReveal.current) {
+    // "retry" too: after a same-answer retry the non-resolving player is still in retry phase.
+    // "gameover" too: the square that ends the game resolves straight to gameover.
+    if ((fresh.phase === "choosing" || fresh.phase === "gameover") &&
+        (cur.phase === "answering" || cur.phase === "retry") && !showingReveal.current) {
       const prevCell = cur.active_cell;
       if (prevCell != null) {
         const mr = await dbSelect("moves",
@@ -758,7 +781,14 @@ export default function App() {
     if (!rarities && activeCell?.rowCat && activeCell?.colCat) {
       rarities = getIntersectionRarities(activeCell.sport, activeCell.rowCat, activeCell.colCat);
     }
-    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, cellRarities: rarities || null });
+    // Everything a wrong-answer report needs, captured before game state moves on
+    const report = activeCell ? {
+      gameId: g.id, gameMode: g.isCpu ? "cpu" : "multiplayer", moveId: move.id,
+      cellIndex: g.active_cell ?? move.cell_index, sport: activeCell.sport,
+      rowCatId: activeCell.rowCat, rowLabel: getCategoryDisplay(activeCell.rowCat).label,
+      colCatId: activeCell.colCat, colLabel: getCategoryDisplay(activeCell.colCat).label,
+    } : null;
+    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, cellRarities: rarities || null, report });
     setRevealStep(0);
     // Stagger the answer cards in — no auto-close, user clicks Continue
     setTimeout(() => setRevealStep(1), 350);
@@ -766,36 +796,51 @@ export default function App() {
     setTimeout(() => setRevealStep(3), 1400);
   }
 
-  async function reportWrongAnswer(player, answer, valid) {
+  /**
+   * Report one answer's ruling as wrong. `role` is whose answer ("p1" | "p2");
+   * `shouldBeValid` is what the reporter says the ruling should have been.
+   * Human answers link to their answer_submissions row (the server takes the
+   * answer text and ruling from it); the CPU's answer has no submission.
+   */
+  async function reportWrongAnswer({ role, shouldBeValid, note }) {
     if (reportStatus === "sending" || reportStatus === "sent") return;
+    const rep = revealData?.report;
+    const mv  = revealData?.move;
+    if (!rep || !mv) { setReportStatus("error"); return; }
     setReportStatus("sending");
-    const cell = revealData?.cell;
-    const clue = cell
-      ? `${cell.sport}: ${cell.rowCat?.id ?? "?"} × ${cell.colCat?.id ?? "?"}`
-      : "unknown";
-    // Try direct insert first; fall back to RPC if RLS blocks it
-    let r = await dbInsert("wrong_answer_reports", {
-      player_name: answer,
-      question_clue: clue,
-      reported_valid: valid,
-      reporter_name: user?.username || "anonymous",
+    const isCpuAnswer = rep.gameMode === "cpu" && role === "p2";
+    const mine = mySubmission.current;
+    const submissionId = isCpuAnswer ? null
+      : mv[`${role}_submission_id`] ?? (mine?.moveId === mv.id && mine?.role === role ? mine.id : null);
+    const r = await sbFetch("/rest/v1/rpc/submit_wrong_answer_report_v2", {
+      method: "POST",
+      body: JSON.stringify({
+        p_submission_id: submissionId,
+        p_game_mode: rep.gameMode,
+        p_game_id: rep.gameId,
+        p_move_id: mv.id,
+        p_cell_index: rep.cellIndex,
+        p_sport: rep.sport,
+        p_row_category_id: rep.rowCatId,
+        p_row_category_label: rep.rowLabel,
+        p_col_category_id: rep.colCatId,
+        p_col_category_label: rep.colLabel,
+        p_typed_answer: mv[`${role}_answer`],
+        p_game_ruling: !!mv[`${role}_valid`],
+        p_reported_player: isCpuAnswer ? "cpu" : role,
+        p_reporter_is_answerer: role === (game?.player1_id === user?.id ? "p1" : "p2"),
+        p_reporter_says_correct: shouldBeValid,
+        p_note: note?.trim() || null,
+        p_reporter_name: user?.username || "anonymous",
+      }),
     });
-    if (!r.ok) {
-      r = await sbFetch("/rest/v1/rpc/submit_wrong_answer_report", {
-        method: "POST",
-        body: JSON.stringify({
-          p_player_name: answer,
-          p_question_clue: clue,
-          p_reported_valid: valid,
-          p_reporter_name: user?.username || "anonymous",
-        }),
-      });
-    }
-    setReportStatus(r.ok ? "sent" : "error");
+    const ok = r.ok && typeof r.data === "number";
+    setReportStatus(ok ? "sent" : "error");
+    if (ok) setReportForm(null);
   }
 
   function dismissReveal() {
-    setRevealData(null); setRevealStep(0); setReportStatus(null);
+    setRevealData(null); setRevealStep(0); setReportStatus(null); setReportForm(null);
     setSubmitted(false); setMyAnswer("");
     resolving.current = false; showingReveal.current = false;
     // On same-answer retry, restore the new move so the player can answer again
@@ -822,7 +867,7 @@ export default function App() {
   function resetGameState(g) {
     setGame(g); gameRef.current = g;
     setCurrentMove(null); setMyAnswer(""); setSubmitted(false);
-    setRevealData(null); setRevealStep(0); setPreviewCell(null); setReportStatus(null);
+    setRevealData(null); setRevealStep(0); setPreviewCell(null); setReportStatus(null); setReportForm(null);
     resolving.current = false; showingReveal.current = false; cpuThinking.current = false;
   }
 
@@ -1045,12 +1090,16 @@ export default function App() {
     const myRole = game.player1_id === user.id ? "p1" : "p2";
     const cell   = game.cells[game.active_cell];
     const qKey   = cellKey(cell);
-    const match  = await validateAnswer(myAnswer, { sport: cell.sport, rules: cell.rules });
+    const { valid, submissionId } = await submitAndRule({
+      gameId: game.id, moveId: currentMove.id, role: myRole, gameMode: "multiplayer",
+      questionKey: qKey, cell, answer: myAnswer,
+    });
+    mySubmission.current = { moveId: currentMove.id, role: myRole, id: submissionId };
+    // Rarity is written by the resolver once both answers are in
     const patch  = myRole === "p1"
-      ? { p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null }
-      : { p2_answer: myAnswer, p2_valid: !!match, p2_rarity: match?.rarity ?? null };
+      ? { p1_answer: myAnswer, p1_valid: valid, p1_rarity: null, p1_submission_id: submissionId }
+      : { p2_answer: myAnswer, p2_valid: valid, p2_rarity: null, p2_submission_id: submissionId };
     await dbUpdate("moves", `?id=eq.${currentMove.id}`, patch);
-    trackAnswer(qKey, myAnswer); // fire-and-forget — don't block the UI
     setSubmitted(true);
     const freshMv = await dbSelect("moves", `?id=eq.${currentMove.id}`);
     if (freshMv.ok && freshMv.data?.[0]) {
@@ -1067,28 +1116,34 @@ export default function App() {
     if (submitted || !myAnswer.trim() || !game || !currentMove) return;
     const cell  = game.cells[game.active_cell];
     const qKey  = cellKey(cell);
-    const match = await validateAnswer(myAnswer, { sport: cell.sport, rules: cell.rules });
+    // Snapshot rarity BEFORE recording: the CPU's answer is never recorded, so
+    // counting the human's own submission would be a one-sided penalty.
+    const liveRarities = await liveCellRarities(cell);
+    const { valid, submissionId } = await submitAndRule({
+      gameId: game.id, moveId: currentMove.id, role: "p1", gameMode: "cpu",
+      questionKey: qKey, cell, answer: myAnswer,
+    });
+    mySubmission.current = { moveId: currentMove.id, role: "p1", id: submissionId };
     const updatedMove = {
       ...currentMove,
-      p1_answer: myAnswer, p1_valid: !!match, p1_rarity: match?.rarity ?? null,
+      p1_answer: myAnswer, p1_valid: valid, p1_rarity: null, p1_submission_id: submissionId,
     };
     setCurrentMove(updatedMove);
     setSubmitted(true);
-    trackAnswer(qKey, myAnswer); // fire-and-forget
 
     // CPU "thinks" for 2-3 seconds
     const delay = 2000 + Math.random() * 1000;
     setTimeout(async () => {
       const g = gameRef.current;
       if (!g) return;
-      const cpuAns = cpuPickAnswer(cell, g.cpuDiff ?? "medium", myAnswer);
+      const cpuAns = cpuPickAnswer(cell, g.cpuDiff ?? "medium", myAnswer, liveRarities);
       const finalMove = {
         ...updatedMove,
         p2_answer: cpuAns.name,
         p2_valid:  cpuAns.valid,
-        p2_rarity: cpuAns.rarity,
+        p2_rarity: null,
       };
-      await resolveCpuMove(finalMove);
+      await resolveCpuMove(finalMove, liveRarities);
     }, delay);
   }
 
@@ -1109,6 +1164,7 @@ export default function App() {
         p1_answer: null, p2_answer: null,
         p1_valid: null,  p2_valid: null,
         p1_rarity: null, p2_rarity: null,
+        p1_submission_id: null, p2_submission_id: null,
       });
       // Keep same active_cell and choosing_player; switch to "retry" phase
       await dbUpdate("games", `?id=eq.${game.id}`, { phase: "retry" });
@@ -1118,6 +1174,7 @@ export default function App() {
         p1_answer: null, p2_answer: null,
         p1_valid: null, p2_valid: null,
         p1_rarity: null, p2_rarity: null, result: null,
+        p1_submission_id: null, p2_submission_id: null,
       };
       triggerReveal({ ...mv, result: "same_answer" }, g);
       await refreshGame();
@@ -1127,27 +1184,28 @@ export default function App() {
     // ── Determine winner — use per-intersection rarity (lower % = rarer = wins) ──
     let result;
     let cellRarities = null;
+    // Blended rarity (prior + real submissions) for each valid answer. Computed once
+    // here and stored on the move so both players' reveals show the numbers that decided it.
+    let p1Rarity = null, p2Rarity = null;
+    if (mv.p1_valid || mv.p2_valid) {
+      cellRarities = await liveCellRarities(g.cells[g.active_cell]);
+      if (mv.p1_valid) p1Rarity = cellRarities.get(normalizeStr(mv.p1_answer)) ?? 0.1;
+      if (mv.p2_valid) p2Rarity = cellRarities.get(normalizeStr(mv.p2_answer)) ?? 0.1;
+    }
     if (!mv.p1_valid && !mv.p2_valid) {
       result = "reset";
     } else if (!mv.p1_valid) {
       result = "p2";
     } else if (!mv.p2_valid) {
       result = "p1";
+    } else if (Math.abs(p1Rarity - p2Rarity) < 0.001) {
+      result = Math.random() < 0.5 ? "p1" : "p2";
     } else {
-      // Both valid — compute per-intersection rarity, lower wins
-      const cell = g.cells[g.active_cell];
-      cellRarities = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
-      const p1Rarity = cellRarities.get(normalizeStr(mv.p1_answer)) ?? 0.1;
-      const p2Rarity = cellRarities.get(normalizeStr(mv.p2_answer)) ?? 0.1;
-      if (Math.abs(p1Rarity - p2Rarity) < 0.001) result = Math.random() < 0.5 ? "p1" : "p2";
-      else result = p1Rarity < p2Rarity ? "p1" : "p2";
-      // Track answer for future live data
-      const qKey = cellKey(cell);
-      trackAnswer(qKey, mv.p1_answer);
-      trackAnswer(qKey, mv.p2_answer);
+      result = p1Rarity < p2Rarity ? "p1" : "p2";   // lower % = rarer = wins
     }
 
-    await dbUpdate("moves", `?id=eq.${mv.id}`, { result });
+    await dbUpdate("moves", `?id=eq.${mv.id}`, { result, p1_rarity: p1Rarity, p2_rarity: p2Rarity });
+    mv = { ...mv, p1_rarity: p1Rarity, p2_rarity: p2Rarity };
     const newBoard  = [...g.board];
     newBoard[g.active_cell] = result === "reset" ? "reset" : result;
     const newScores = { ...g.scores };
@@ -1174,7 +1232,7 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // RESOLVE MOVE — CPU
   // ─────────────────────────────────────────────────────────────────────────────
-  async function resolveCpuMove(mv) {
+  async function resolveCpuMove(mv, liveRarities) {
     const g = gameRef.current;
     if (!g) return;
 
@@ -1196,21 +1254,21 @@ export default function App() {
 
     // ── Determine winner — use per-intersection rarity (lower % = rarer = wins) ──
     let result;
-    let cellRarities = null;
+    // Same blended numbers the CPU picked with (snapshotted before the human's answer was recorded)
+    const cellRarities = liveRarities ?? await liveCellRarities(g.cells[g.active_cell]);
+    const p1Rarity = mv.p1_valid ? (cellRarities.get(normalizeStr(mv.p1_answer)) ?? 0.1) : null;
+    const p2Rarity = mv.p2_valid ? (cellRarities.get(normalizeStr(mv.p2_answer)) ?? 0.1) : null;
+    mv = { ...mv, p1_rarity: p1Rarity, p2_rarity: p2Rarity };
     if (!mv.p1_valid && !mv.p2_valid) {
       result = "reset";
     } else if (!mv.p1_valid) {
       result = "p2";
     } else if (!mv.p2_valid) {
       result = "p1";
+    } else if (Math.abs(p1Rarity - p2Rarity) < 0.001) {
+      result = Math.random() < 0.5 ? "p1" : "p2";
     } else {
-      // Both valid — compute per-intersection rarity, lower wins
-      const cell = g.cells[g.active_cell];
-      cellRarities = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
-      const p1Rarity = cellRarities.get(normalizeStr(mv.p1_answer)) ?? 0.1;
-      const p2Rarity = cellRarities.get(normalizeStr(mv.p2_answer)) ?? 0.1;
-      if (Math.abs(p1Rarity - p2Rarity) < 0.001) result = Math.random() < 0.5 ? "p1" : "p2";
-      else result = p1Rarity < p2Rarity ? "p1" : "p2";
+      result = p1Rarity < p2Rarity ? "p1" : "p2";   // lower % = rarer = wins
     }
 
     const newBoard  = [...g.board];
@@ -2069,9 +2127,13 @@ export default function App() {
                 const isMe   = myRole === p;
                 const answer = p === "p1" ? revealData.move.p1_answer : revealData.move.p2_answer;
                 const valid  = p === "p1" ? revealData.move.p1_valid  : revealData.move.p2_valid;
-                // Per-intersection rarity — computed from fame relative to this square's player pool
+                // The rarity stored on the move is what decided the square; fall back to a
+                // local lookup only for moves resolved before rarities were stored.
+                const stored = revealData.move[`${p}_rarity`];
                 const cr = revealData.cellRarities;
-                const rarity = (cr && answer && valid) ? (cr.get(normalizeStr(answer)) ?? 0.1) : null;
+                const rarity = !(answer && valid) ? null
+                  : stored != null ? Number(stored)
+                  : cr ? (cr.get(normalizeStr(answer)) ?? 0.1) : null;
                 const won    = revealData.result === p;
                 return (
                   <div key={p} style={{
@@ -2151,13 +2213,16 @@ export default function App() {
                     </div>
                     {(() => {
                       const cr = revealData.cellRarities;
-                      if (!cr) return null;
                       const wKey = revealData.result;
                       const lKey = wKey === "p1" ? "p2" : "p1";
-                      const wAnswer = revealData.move[`${wKey}_answer`];
-                      const lAnswer = revealData.move[`${lKey}_answer`];
-                      const wRarity = cr.get(normalizeStr(wAnswer)) ?? 0.1;
-                      const lRarity = cr.get(normalizeStr(lAnswer)) ?? 0.1;
+                      // Only both-valid squares are decided by rarity
+                      if (!revealData.move[`${wKey}_valid`] || !revealData.move[`${lKey}_valid`]) return null;
+                      const rarityOf = k => revealData.move[`${k}_rarity`] != null
+                        ? Number(revealData.move[`${k}_rarity`])
+                        : cr ? (cr.get(normalizeStr(revealData.move[`${k}_answer`])) ?? 0.1) : null;
+                      const wRarity = rarityOf(wKey);
+                      const lRarity = rarityOf(lKey);
+                      if (wRarity == null || lRarity == null) return null;
                       return (
                         <div style={{ color: MID, fontSize: "0.85rem", marginTop: "0.35rem", fontStyle: "italic" }}>
                           Rarity: {wRarity < 1 ? wRarity.toFixed(2) : wRarity < 10 ? wRarity.toFixed(1) : Math.round(wRarity)}% vs {lRarity < 1 ? lRarity.toFixed(2) : lRarity < 10 ? lRarity.toFixed(1) : Math.round(lRarity)}%
@@ -2174,30 +2239,87 @@ export default function App() {
                 <button className="big-btn" onClick={dismissReveal}>
                   CONTINUE
                 </button>
-                <button
-                  onClick={() => {
-                    const myP = myRole || "p1";
-                    const myAns = revealData.move[`${myP}_answer`];
-                    const myValid = revealData.move[`${myP}_valid`];
-                    const oppP = myP === "p1" ? "p2" : "p1";
-                    const oppAns = revealData.move[`${oppP}_answer`];
-                    const oppValid = revealData.move[`${oppP}_valid`];
-                    // Report whichever answer seems wrong: if mine was marked invalid, report mine; otherwise report opponent's
-                    const ans = !myValid ? myAns : oppAns;
-                    const v = !myValid ? myValid : oppValid;
-                    reportWrongAnswer(myP, ans, v);
-                  }}
-                  disabled={reportStatus === "sending" || reportStatus === "sent"}
-                  style={{
-                    background: "none", border: "none", cursor: reportStatus === "sent" ? "default" : "pointer",
-                    color: reportStatus === "sent" ? "#45B17B" : reportStatus === "error" ? "#FC5C65" : MID,
-                    fontSize: "0.72rem", fontFamily: "'Roboto Mono',monospace",
-                    letterSpacing: "0.5px", opacity: 0.8,
-                    textDecoration: reportStatus === "sent" ? "none" : "underline",
-                  }}
-                >
-                  {reportStatus === "sent" ? "✓ Reported — thanks!" : reportStatus === "sending" ? "Sending..." : reportStatus === "error" ? "Error — try again" : "⚑ Report wrong answer"}
-                </button>
+                {reportStatus === "sent" ? (
+                  <div style={{ color: "#45B17B", fontSize: "0.72rem", fontFamily: "'Roboto Mono',monospace", letterSpacing: "0.5px" }}>
+                    ✓ Reported — thanks!
+                  </div>
+                ) : !reportForm ? (
+                  <button
+                    data-testid="report-open"
+                    onClick={() => {
+                      // Pre-select the answer most likely to be disputed: mine if it was rejected, else the other one
+                      const me = myRole || "p1", other = me === "p1" ? "p2" : "p1";
+                      const role = !revealData.move[`${me}_valid`] || !revealData.move[`${other}_answer`] ? me : other;
+                      setReportStatus(null);
+                      setReportForm({ role, shouldBeValid: !revealData.move[`${role}_valid`], note: "" });
+                    }}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", color: MID,
+                      fontSize: "0.72rem", fontFamily: "'Roboto Mono',monospace",
+                      letterSpacing: "0.5px", opacity: 0.8, textDecoration: "underline",
+                    }}
+                  >
+                    ⚑ Report a wrong ruling
+                  </button>
+                ) : (
+                  <div data-testid="report-form" style={{
+                    background: SURF2, border: `1px solid ${BORDER}`, borderRadius: 12,
+                    padding: "1rem", width: "100%", maxWidth: 420,
+                    display: "flex", flexDirection: "column", gap: "0.6rem",
+                    fontSize: "0.8rem", color: HI,
+                  }}>
+                    <div style={{ color: MID, fontFamily: "'Roboto Mono',monospace", fontSize: "0.68rem", letterSpacing: "1px" }}>WHICH ANSWER WAS RULED WRONG?</div>
+                    {["p1", "p2"].filter(p => revealData.move[`${p}_answer`]).map(p => {
+                      const isMe = p === (myRole || "p1");
+                      const who = isMe ? "Your answer" : game.isCpu ? "CPU's answer" : "Opponent's answer";
+                      const valid = !!revealData.move[`${p}_valid`];
+                      const selected = reportForm.role === p;
+                      return (
+                        <button key={p} data-testid={`report-pick-${p}`}
+                          onClick={() => setReportForm(f => ({ ...f, role: p, shouldBeValid: !valid }))}
+                          style={{
+                            textAlign: "left", cursor: "pointer", borderRadius: 8, padding: "0.55rem 0.75rem",
+                            background: selected ? `${PC[p]}22` : "transparent",
+                            border: `1.5px solid ${selected ? PC[p] : BORDER}`, color: HI, fontSize: "0.8rem",
+                          }}>
+                          {who}: <strong>{revealData.move[`${p}_answer`]}</strong>{" "}
+                          <span style={{ color: valid ? "#45B17B" : "#FC5C65" }}>({valid ? "accepted" : "rejected"})</span>
+                        </button>
+                      );
+                    })}
+                    <div style={{ color: MID, fontFamily: "'Roboto Mono',monospace", fontSize: "0.68rem", letterSpacing: "1px" }}>IT SHOULD HAVE BEEN</div>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      {[[true, "Accepted"], [false, "Rejected"]].map(([v, label]) => (
+                        <button key={label} data-testid={`report-claim-${v ? "accepted" : "rejected"}`}
+                          onClick={() => setReportForm(f => ({ ...f, shouldBeValid: v }))}
+                          style={{
+                            flex: 1, cursor: "pointer", borderRadius: 8, padding: "0.45rem",
+                            background: reportForm.shouldBeValid === v ? `${ACCENT}33` : "transparent",
+                            border: `1.5px solid ${reportForm.shouldBeValid === v ? ACCENT : BORDER}`,
+                            color: HI, fontSize: "0.8rem",
+                          }}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <input className="ni" data-testid="report-note" maxLength={280}
+                      placeholder="Optional note (e.g. played for them in 2004)"
+                      value={reportForm.note}
+                      onChange={e => setReportForm(f => ({ ...f, note: e.target.value }))} />
+                    <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center" }}>
+                      {reportStatus === "error" && <span style={{ color: "#FC5C65", marginRight: "auto" }}>Couldn't send — try again</span>}
+                      <button className="sb" style={{ background: SURF3, color: MID, fontSize: "0.75rem", padding: "0.45rem 0.9rem" }}
+                        onClick={() => { setReportForm(null); setReportStatus(null); }}>
+                        CANCEL
+                      </button>
+                      <button className="sb" data-testid="report-send" style={{ background: ACCENT, fontSize: "0.75rem", padding: "0.45rem 0.9rem" }}
+                        disabled={reportStatus === "sending"}
+                        onClick={() => reportWrongAnswer(reportForm)}>
+                        {reportStatus === "sending" ? "SENDING…" : "SEND REPORT"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

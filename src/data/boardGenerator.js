@@ -166,6 +166,21 @@ async function preloadSport(sport, sbFetch, minAnswers) {
   return result;
 }
 
+/**
+ * Make sure a sport's data (facts + page views) is loaded, so rarity lookups
+ * work in a browser that didn't generate the board (e.g. the player who joined).
+ * Concurrent callers share one download.
+ */
+const _loading = new Map();
+export function ensureSportData(sport, sbFetch, minAnswers = 3) {
+  const key = `${sport}|${minAnswers}`;
+  if (_cache.has(key)) return Promise.resolve();
+  if (!_loading.has(key)) {
+    _loading.set(key, preloadSport(sport, sbFetch, minAnswers).finally(() => _loading.delete(key)));
+  }
+  return _loading.get(key);
+}
+
 // ─── BOARD SELECTION ────────────────────────────────────────────────────────────
 
 /**
