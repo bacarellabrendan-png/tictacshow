@@ -425,7 +425,47 @@ export const CATEGORIES = [
   ...SOCCER_TEAMS, ...SOCCER_AWARDS, ...SOCCER_STATS, ...SOCCER_ATTRS,
 ];
 
-// Quick lookup: id → category
+// ─── DISABLED CATEGORIES ──────────────────────────────────────────────────────
+// Excluded from board generation until rebuilt from real data. They stay in
+// CATEGORY_MAP so in-progress games that already use them still display.
+export const DISABLED_CATEGORIES = {
+  // Hand-picked ~20-player lists; the real sets are far larger
+  soc_played_pl:        "24 players; thousands have played in the PL",
+  soc_played_la_liga:   "24 players; thousands have played in La Liga",
+  mlb_born_outside_us:  "16 players; thousands of MLB players were born abroad",
+  nba_born_outside_us:  "25 players; hundreds of NBA players were born abroad",
+  nfl_first_round:      "29 players; thousands of first-round picks",
+  nfl_undrafted:        "18 players; thousands of undrafted players",
+  nfl_5_pro_bowls:      "15 players; hundreds have 5+ Pro Bowls",
+  nhl_captain:          "18 players; hundreds of NHL captains",
+  nhl_born_europe:      "19 players; well over a thousand European-born NHL players",
+  nhl_3_cups:           "20 players; hundreds have won 3+ Cups",
+  nhl_cup_multi_teams:  "20 players; well over 100 have won with 2+ teams",
+  nhl_15_seasons:       "23 players; hundreds have played 15+ seasons",
+  nhl_played_canadian:  "23 players; thousands have played for Canadian teams",
+  nfl_heisman:          "18 players; ~90 Heisman winners, most played in the NFL",
+  // Soccer: incomplete AND contains players who don't qualify
+  soc_ucl_multi_clubs:  "20 players; dozens more exist",
+  soc_ucl_final_goal:   "19 players incl. Cafu, Roberto Carlos, Kroos; real list is 150+",
+  soc_wc_final_goal:    "19 players incl. Cruyff, Van Basten, Cafu; misses most real scorers",
+  soc_50_intl_goals:    "17 players incl. Iniesta, Xavi, Cafu, Kroos; real list is 90+",
+  soc_golden_boot:      "17 players; hundreds of domestic top scorers",
+  soc_wc_hat_trick:     "14 players incl. Klinsmann, Lewandowski, Luca Toni; real list ~50",
+  soc_50_ucl_goals:     "18 players incl. Lamine Yamal, Neymar, Aguero, Drogba (all <50)",
+  soc_pl_golden_boot:   "20 players incl. Fowler, Ferdinand, Dzeko; missing Haaland, Tevez, Berbatov",
+  soc_ballon_dor:       "146 entries incl. nominees and clubs ('Real Madrid'); ~46 real winners",
+  // Soccer championships: game reads fact_value='true' rows, which are a small
+  // subset of the team-linked rows. Re-enable once 'true' is derived from them.
+  soc_ucl:              "198 'true' players vs 322 team-linked; 1,000+ real winners",
+  soc_pl_champ:         "102 'true' players; team-linked rows missing Man United",
+  soc_serie_a:          "19 'true' players vs 341 team-linked",
+  soc_bundesliga:       "19 'true' players vs 255 team-linked",
+  soc_ligue_1:          "20 'true' players vs 224 team-linked",
+  soc_wc_winner:        "41 'true' players vs 443 team-linked",
+};
+for (const c of CATEGORIES) if (DISABLED_CATEGORIES[c.id]) c.disabled = true;
+
+// Quick lookup: id → category (includes disabled categories)
 export const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
 
 // Grouped by sport
@@ -438,7 +478,7 @@ for (const c of CATEGORIES) {
 // Non-team categories by sport (awards, stats, attributes)
 export const NON_TEAM_BY_SPORT = {};
 for (const c of CATEGORIES) {
-  if (c.type === "team") continue;
+  if (c.type === "team" || c.disabled) continue;
   if (!NON_TEAM_BY_SPORT[c.sport]) NON_TEAM_BY_SPORT[c.sport] = [];
   NON_TEAM_BY_SPORT[c.sport].push(c);
 }
@@ -446,7 +486,7 @@ for (const c of CATEGORIES) {
 // Team categories by sport
 export const TEAMS_BY_SPORT = {};
 for (const c of CATEGORIES) {
-  if (c.type !== "team") continue;
+  if (c.type !== "team" || c.disabled) continue;
   if (!TEAMS_BY_SPORT[c.sport]) TEAMS_BY_SPORT[c.sport] = [];
   TEAMS_BY_SPORT[c.sport].push(c);
 }

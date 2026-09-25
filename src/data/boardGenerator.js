@@ -17,6 +17,7 @@ import {
   NON_TEAM_BY_SPORT,
   CATEGORY_MAP,
 } from "./categories.js";
+import { normalizeStr } from "./questions.js";
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────────
 
@@ -392,7 +393,9 @@ export function getIntersectionRarities(sport, rowCatId, colCatId) {
   const result = new Map();
   for (let i = 0; i < sorted.length; i++) {
     const pct = (weights[i] / totalWeight) * 100;
-    result.set(sorted[i].toLowerCase(), Math.max(MIN_PCT, pct));
+    // Keyed by normalizeStr so lookups with a typed answer ("Shaquille ONeal",
+    // "shaquille o'neal") hit the same entry as the stored spelling.
+    result.set(normalizeStr(sorted[i]), Math.max(MIN_PCT, pct));
   }
   return result;
 }
@@ -404,7 +407,7 @@ export function getIntersectionRarities(sport, rowCatId, colCatId) {
  */
 export function getPlayerRarity(sport, rowCatId, colCatId, playerName) {
   const rarities = getIntersectionRarities(sport, rowCatId, colCatId);
-  const lower = playerName.toLowerCase();
-  if (rarities.has(lower)) return rarities.get(lower);
+  const key = normalizeStr(playerName);
+  if (rarities.has(key)) return rarities.get(key);
   return 0.1; // Validated but not in cache = truly obscure
 }

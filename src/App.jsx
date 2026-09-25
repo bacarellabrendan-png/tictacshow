@@ -229,7 +229,7 @@ function cpuPickAnswer(cell, cpuDiff, humanAnswer) {
     // Build array with rarity % for each player
     const withRarity = players.map(p => ({
       name: p,
-      rarity: rarities.get(p.toLowerCase()) ?? 0.1,
+      rarity: rarities.get(normalizeStr(p)) ?? 0.1,
     }));
 
     // Sort by rarity descending (most obvious first)
