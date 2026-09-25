@@ -34,3 +34,10 @@ scripts/data/*.zip
 scripts/audit_report.json
 scripts/audit_progress.json
 scripts/scrape_nba_progress.json
+
+# Local-only: never commit (scripts/ contains hardcoded keys; tool config; CLI cache; notes)
+scripts/
+.claude/
+.vercel/
+supabase/.temp/
+morning_*.txt
