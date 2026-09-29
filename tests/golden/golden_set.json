@@ -1,0 +1,8823 @@
+{
+ "built": "2026-09-28",
+ "note": "Golden answer-checking test set (Phase 3). Expected rulings for correct/incorrect are where the old and new checkers agree; tricky cases are known hard names and typed variants. Players are identified by English Wikipedia page id (stable), not the database id.",
+ "cases": [
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_cavaliers__nba_nuggets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cavaliers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nuggets"
+    }
+   ],
+   "text": "Andre Miller",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1285810,
+    "player": "Andre Miller"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_kings__nba_wizards",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Kings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wizards"
+    }
+   ],
+   "text": "Don Kojis",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3493159,
+    "player": "Don Kojis"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_trail_blazers__nba_pistons",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Trail Blazers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    }
+   ],
+   "text": "Marcus Brown",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 7628382,
+    "player": "Marcus Brown"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_hawks__nba_mavericks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hawks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mavericks"
+    }
+   ],
+   "text": "John Jenkins",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 24348159,
+    "player": "John Jenkins"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_rockets__nba_thunder",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rockets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    }
+   ],
+   "text": "Emanual Davis",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 6016245,
+    "player": "Emanual Davis"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_pistons__nba_knicks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Knicks"
+    }
+   ],
+   "text": "Hubert Davis",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3035950,
+    "player": "Hubert Davis"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_cavaliers__nba_nets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cavaliers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nets"
+    }
+   ],
+   "text": "John Bagley",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3016724,
+    "player": "John Bagley"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_wizards__nba_knicks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wizards"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Knicks"
+    }
+   ],
+   "text": "Tommy Byrnes",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 13401821,
+    "player": "Tommy Byrnes"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_celtics__nba_kings",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Celtics"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Kings"
+    }
+   ],
+   "text": "Marquis Daniels",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1745924,
+    "player": "Marquis Daniels"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_grizzlies__nba_spurs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Grizzlies"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Spurs"
+    }
+   ],
+   "text": "Tyler Zeller",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 18496779,
+    "player": "Tyler Zeller"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_pistons__nba_trail_blazers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Trail Blazers"
+    }
+   ],
+   "text": "Kelvin Cato",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1277306,
+    "player": "Kelvin Cato"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_rockets__nba_pacers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rockets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pacers"
+    }
+   ],
+   "text": "Carlos Rogers",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 6017953,
+    "player": "Carlos Rogers"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_suns__nba_magic",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Suns"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Magic"
+    }
+   ],
+   "text": "Trevor Ariza",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2468316,
+    "player": "Trevor Ariza"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_wizards__nba_pacers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wizards"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pacers"
+    }
+   ],
+   "text": "Samaki Walker",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3612374,
+    "player": "Samaki Walker"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_hawks__nba_50pt_game",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hawks"
+    },
+    {
+     "fact_type": "nba_50_point_game",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Dominique Wilkins",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 613063,
+    "player": "Dominique Wilkins"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_celtics__nba_wizards",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Celtics"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wizards"
+    }
+   ],
+   "text": "Jeff Green",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3914646,
+    "player": "Jeff Green"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_nuggets__nba_timberwolves",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nuggets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Timberwolves"
+    }
+   ],
+   "text": "Tyus Jones",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 40397428,
+    "player": "Tyus Jones"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_magic__nba_rockets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Magic"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rockets"
+    }
+   ],
+   "text": "Anthony Bowie",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2337633,
+    "player": "Anthony Bowie"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_lakers__nba_pistons",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lakers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    }
+   ],
+   "text": "Lindsey Hunter",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1594076,
+    "player": "Lindsey Hunter"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_76ers__nba_hornets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "76ers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hornets"
+    }
+   ],
+   "text": "Montrezl Harrell",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 40413707,
+    "player": "Montrezl Harrell"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_warriors__nba_76ers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Warriors"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "76ers"
+    }
+   ],
+   "text": "Joe Graboski",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3923673,
+    "player": "Joe Graboski"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_kings__nba_heat",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Kings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Heat"
+    }
+   ],
+   "text": "Delon Wright",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 44806795,
+    "player": "Delon Wright"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_timberwolves__nba_wizards",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Timberwolves"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wizards"
+    }
+   ],
+   "text": "Anthony Goldwire",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2886421,
+    "player": "Anthony Goldwire"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_rockets__nba_nuggets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rockets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nuggets"
+    }
+   ],
+   "text": "Melvin Booker",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 13223526,
+    "player": "Melvin Booker"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_clippers__nba_rockets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Clippers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rockets"
+    }
+   ],
+   "text": "Vin Baker",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2445545,
+    "player": "Vin Baker"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_cavaliers__nba_pistons",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cavaliers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    }
+   ],
+   "text": "Dennis Schroder",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 39197287,
+    "player": "Dennis Schröder"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_knicks__nba_scoring_title",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Knicks"
+    },
+    {
+     "fact_type": "nba_scoring_title",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Bob McAdoo",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1467205,
+    "player": "Bob McAdoo"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_hornets__nba_all_defense",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hornets"
+    },
+    {
+     "fact_type": "nba_all_defensive_team",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Dwight Howard",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 479273,
+    "player": "Dwight Howard"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_suns__nba_hornets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Suns"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hornets"
+    }
+   ],
+   "text": "Tony Smith",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 8816002,
+    "player": "Tony Smith"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NBA",
+   "question_key": "nba_trail_blazers__nba_nets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Trail Blazers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nets"
+    }
+   ],
+   "text": "Bob Verga",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 10865370,
+    "player": "Bob Verga"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_eagles__nfl_packers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Eagles"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Packers"
+    }
+   ],
+   "text": "Darian Kinnard",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 66106676,
+    "player": "Darian Kinnard"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_giants__nfl_buccaneers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    }
+   ],
+   "text": "Jim Obradovich",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12683897,
+    "player": "Jim Obradovich"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_buccaneers__nfl_cardinals",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    }
+   ],
+   "text": "Elijah Simmons",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 79255898,
+    "player": "Elijah Simmons"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_chargers__nfl_broncos",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chargers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Broncos"
+    }
+   ],
+   "text": "Darrius Shepherd",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 60683024,
+    "player": "Darrius Shepherd"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_browns__nfl_buccaneers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Browns"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    }
+   ],
+   "text": "Caylin Hauptmann",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 41391172,
+    "player": "Caylin Hauptmann"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_texans__nfl_cowboys",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Texans"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cowboys"
+    }
+   ],
+   "text": "Daleroy Stewart",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 13502986,
+    "player": "Daleroy Stewart"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_browns__nfl_buccaneers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Browns"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    }
+   ],
+   "text": "Carlton Powell",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 17145588,
+    "player": "Carlton Powell"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_broncos__nfl_pro_bowl",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Broncos"
+    },
+    {
+     "fact_type": "nfl_pro_bowl",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Tyson Clabo",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 8592168,
+    "player": "Tyson Clabo"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_colts__nfl_seahawks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Colts"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Seahawks"
+    }
+   ],
+   "text": "Raheem Brock",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 4709574,
+    "player": "Raheem Brock"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_patriots__nfl_seahawks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Patriots"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Seahawks"
+    }
+   ],
+   "text": "Bob Cryder",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12120425,
+    "player": "Bob Cryder"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_saints__nfl_giants",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Saints"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    }
+   ],
+   "text": "Lou Cordileone",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12680607,
+    "player": "Lou Cordileone"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_steelers__nfl_cowboys",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Steelers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cowboys"
+    }
+   ],
+   "text": "Reggie Collier",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 10020046,
+    "player": "Reggie Collier"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_jaguars__nfl_commanders",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jaguars"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Commanders"
+    }
+   ],
+   "text": "Matt Veldman",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 37025567,
+    "player": "Matt Veldman"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_chiefs__nfl_jaguars",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chiefs"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jaguars"
+    }
+   ],
+   "text": "Daniel Ross",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 55780518,
+    "player": "Daniel Ross"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_falcons__nfl_giants",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Falcons"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    }
+   ],
+   "text": "Ben Talley",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 46717446,
+    "player": "Ben Talley"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_giants__nfl_patriots",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Patriots"
+    }
+   ],
+   "text": "Da'Ron Brown",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 46612202,
+    "player": "Da'Ron Brown"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_commanders__nfl_giants",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Commanders"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    }
+   ],
+   "text": "Dick Lynch",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 10131386,
+    "player": "Dick Lynch"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_jets__nfl_panthers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Panthers"
+    }
+   ],
+   "text": "Rob Holmberg",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 13434090,
+    "player": "Rob Holmberg"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_patriots__nfl_colts",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Patriots"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Colts"
+    }
+   ],
+   "text": "Griff Whalen",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 35675405,
+    "player": "Griff Whalen"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_cowboys__nfl_dolphins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cowboys"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dolphins"
+    }
+   ],
+   "text": "Jermey Parnell",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 28617962,
+    "player": "Jermey Parnell"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_saints__nfl_rams",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Saints"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rams"
+    }
+   ],
+   "text": "Anthony Hargrove",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 7654127,
+    "player": "Anthony Hargrove"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_jaguars__nfl_chargers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jaguars"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chargers"
+    }
+   ],
+   "text": "Shadwick Criss",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 63464540,
+    "player": "Shadwick Criss"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_jets__nfl_chiefs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chiefs"
+    }
+   ],
+   "text": "Reggie McElroy",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 9777827,
+    "player": "Reggie McElroy"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_patriots__nfl_jaguars",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Patriots"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jaguars"
+    }
+   ],
+   "text": "Eric Kettani",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 35844568,
+    "player": "Eric Kettani"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_seahawks__nfl_broncos",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Seahawks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Broncos"
+    }
+   ],
+   "text": "Marquand Manuel",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 6372917,
+    "player": "Marquand Manuel"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_eagles__nfl_titans",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Eagles"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Titans"
+    }
+   ],
+   "text": "Florian Kempf",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 43542843,
+    "player": "Florian Kempf"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_steelers__nfl_giants",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Steelers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    }
+   ],
+   "text": "Ben Agajanian",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 4045691,
+    "player": "Ben Agajanian"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_dolphins__nfl_jets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dolphins"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    }
+   ],
+   "text": "Charlie Baumann",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 25465890,
+    "player": "Charlie Baumann"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_saints__nfl_chiefs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Saints"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chiefs"
+    }
+   ],
+   "text": "Daniel Sorensen",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 43731120,
+    "player": "Daniel Sorensen"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NFL",
+   "question_key": "nfl_titans__nfl_broncos",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Titans"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Broncos"
+    }
+   ],
+   "text": "Theo Viltz",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 60091379,
+    "player": "Theo Viltz"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_twins__mlb_braves",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Twins"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Braves"
+    }
+   ],
+   "text": "Roberto Kelly",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2406232,
+    "player": "Roberto Kelly"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_orioles__mlb_500hr",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Orioles"
+    },
+    {
+     "fact_type": "mlb_500_home_runs",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Rafael Palmeiro",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 230185,
+    "player": "Rafael Palmeiro"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_tigers__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tigers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "Charles Hudson",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12358992,
+    "player": "Charles Hudson"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_cardinals__mlb_mets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mets"
+    }
+   ],
+   "text": "Pete Falcone",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 6186223,
+    "player": "Pete Falcone"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_yankees__mlb_pirates",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Yankees"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pirates"
+    }
+   ],
+   "text": "Andrew Heaney",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 36443038,
+    "player": "Andrew Heaney"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_pirates__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pirates"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "Ken Heintzelman",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 13719299,
+    "player": "Ken Heintzelman"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_pirates__mlb_diamondbacks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pirates"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Diamondbacks"
+    }
+   ],
+   "text": "Juan Cruz",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1361851,
+    "player": "Juan Cruz"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_guardians__mlb_angels",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Indians"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Angels"
+    }
+   ],
+   "text": "Hank Foiles",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 11546905,
+    "player": "Hank Foiles"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_astros__mlb_giants",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Astros"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    }
+   ],
+   "text": "Kenny Lofton",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1264752,
+    "player": "Kenny Lofton"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_white_sox__mlb_ws_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    },
+    {
+     "fact_type": "mlb_ws_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Roberto Alomar",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 384099,
+    "player": "Roberto Alomar"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_blue_jays__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blue Jays"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "David Phelps",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 27923642,
+    "player": "David Phelps"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_braves__mlb_royals",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Braves"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Royals"
+    }
+   ],
+   "text": "Scott Blewett",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 54379870,
+    "player": "Scott Blewett"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_tigers__mlb_reds",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tigers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Reds"
+    }
+   ],
+   "text": "Charlie Gelbert",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 9121506,
+    "player": "Charlie Gelbert"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_tigers__mlb_white_sox",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tigers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    }
+   ],
+   "text": "Ivan Nova",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 21034082,
+    "player": "Iván Nova"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_dodgers__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "Leo Callahan",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 16151131,
+    "player": "Leo Callahan"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_white_sox__mlb_cubs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cubs"
+    }
+   ],
+   "text": "Larry Casian",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 10388321,
+    "player": "Larry Casian"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_braves__mlb_white_sox",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Braves"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    }
+   ],
+   "text": "Eddie Carnett",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12852804,
+    "player": "Eddie Carnett"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_tigers__mlb_dodgers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tigers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    }
+   ],
+   "text": "Jason Johnson",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 926916,
+    "player": "Jason Johnson"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_phillies__mlb_angels",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Angels"
+    }
+   ],
+   "text": "Connor Brogdon",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 61644696,
+    "player": "Connor Brogdon"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_dodgers__mlb_ws_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    },
+    {
+     "fact_type": "mlb_ws_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Roger Craig",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 19228322,
+    "player": "Roger Craig"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_royals__mlb_cardinals",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Royals"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    }
+   ],
+   "text": "Bob Heise",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 11189622,
+    "player": "Bob Heise"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_giants__mlb_white_sox",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    }
+   ],
+   "text": "Wallace Johnson",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 8814795,
+    "player": "Wallace Johnson"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_tigers__mlb_marlins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tigers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Marlins"
+    }
+   ],
+   "text": "Ivan Rodriguez",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 552153,
+    "player": "Iván Rodríguez"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_pirates__mlb_giants",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pirates"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    }
+   ],
+   "text": "Glenn Spencer",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 29504123,
+    "player": "Glenn Spencer"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_rays__mlb_pirates",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rays"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pirates"
+    }
+   ],
+   "text": "Jordan Luplow",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 54593101,
+    "player": "Jordan Luplow"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_tigers__mlb_hof",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tigers"
+    },
+    {
+     "fact_type": "mlb_hall_of_fame",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Heinie Manush",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 516965,
+    "player": "Heinie Manush"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_reds__mlb_cubs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Reds"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cubs"
+    }
+   ],
+   "text": "Russ Meyer",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5338154,
+    "player": "Russ Meyer"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_braves__mlb_blue_jays",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Braves"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blue Jays"
+    }
+   ],
+   "text": "Mark DeRosa",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1085405,
+    "player": "Mark DeRosa"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_yankees__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Yankees"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "Marty Bystrom",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 11494603,
+    "player": "Marty Bystrom"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "MLB",
+   "question_key": "mlb_pirates__mlb_braves",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pirates"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Braves"
+    }
+   ],
+   "text": "Marv Rickert",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 23652564,
+    "player": "Marv Rickert"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_penguins__nhl_blues",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Penguins"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blues"
+    }
+   ],
+   "text": "Marc Bergevin",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 711264,
+    "player": "Marc Bergevin"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_devils__nhl_canadiens",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Devils"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    }
+   ],
+   "text": "Michael Cammalleri",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2675528,
+    "player": "Michael Cammalleri"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_flyers__nhl_predators",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Flyers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Predators"
+    }
+   ],
+   "text": "J. J. Daigneault",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1478001,
+    "player": "J. J. Daigneault"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_canadiens__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Craig Darby",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 10361370,
+    "player": "Craig Darby"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_blackhawks__nhl_senators",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blackhawks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Senators"
+    }
+   ],
+   "text": "Michael Blunden",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 7634376,
+    "player": "Mike Blunden"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_blue_jackets__nhl_maple_leafs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blue Jackets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Maple Leafs"
+    }
+   ],
+   "text": "Anton Stralman",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 9231320,
+    "player": "Anton Strålman"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_coyotes__nhl_maple_leafs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Coyotes"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Maple Leafs"
+    }
+   ],
+   "text": "Alex Galchenyuk",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 31810690,
+    "player": "Alex Galchenyuk"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_red_wings__nhl_maple_leafs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Wings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Maple Leafs"
+    }
+   ],
+   "text": "Justin Holl",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 56464188,
+    "player": "Justin Holl"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_senators__nhl_bruins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Senators"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bruins"
+    }
+   ],
+   "text": "Chris Kelly",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3992325,
+    "player": "Chris Kelly"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_hurricanes__nhl_coyotes",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hurricanes"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Coyotes"
+    }
+   ],
+   "text": "Taylor Hall",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 18739938,
+    "player": "Taylor Hall"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_blue_jackets__nhl_sabres",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blue Jackets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sabres"
+    }
+   ],
+   "text": "Ty Conklin",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2009698,
+    "player": "Ty Conklin"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_blackhawks__nhl_avalanche",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blackhawks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Avalanche"
+    }
+   ],
+   "text": "Sami Helenius",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2640790,
+    "player": "Sami Helenius"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_canucks__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canucks"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Tanner Pearson",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 34012878,
+    "player": "Tanner Pearson"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_rangers__nhl_canadiens",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    }
+   ],
+   "text": "Ivan Irwin",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 15929997,
+    "player": "Ivan Irwin"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_avalanche__nhl_capitals",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Avalanche"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Capitals"
+    }
+   ],
+   "text": "Matt Hendricks",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 19632555,
+    "player": "Matt Hendricks"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_coyotes__nhl_sabres",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Coyotes"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sabres"
+    }
+   ],
+   "text": "Randy Cunneyworth",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1458994,
+    "player": "Randy Cunneyworth"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_blackhawks__nhl_islanders",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blackhawks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Islanders"
+    }
+   ],
+   "text": "Mark Fitzpatrick",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5372772,
+    "player": "Mark Fitzpatrick"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_ducks__nhl_penguins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Ducks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Penguins"
+    }
+   ],
+   "text": "Harry Zolnierczyk",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 33319587,
+    "player": "Harry Zolnierczyk"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_penguins__nhl_flames",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Penguins"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Flames"
+    }
+   ],
+   "text": "John Stewart",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 10898154,
+    "player": "John Stewart"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_blackhawks__nhl_canucks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blackhawks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canucks"
+    }
+   ],
+   "text": "Bryan Smolinski",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2864915,
+    "player": "Bryan Smolinski"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_red_wings__nhl_kings",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Wings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Kings"
+    }
+   ],
+   "text": "Al Jensen",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5906624,
+    "player": "Al Jensen"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_red_wings__nhl_lightning",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Wings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lightning"
+    }
+   ],
+   "text": "Bob Halkidis",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 4722928,
+    "player": "Bob Halkidis"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_islanders__nhl_rangers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Islanders"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    }
+   ],
+   "text": "Kevin Weekes",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2866673,
+    "player": "Kevin Weekes"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_canadiens__nhl_senators",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Senators"
+    }
+   ],
+   "text": "Sean Hill",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3664112,
+    "player": "Sean Hill"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_maple_leafs__nhl_100_playoff_pts",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Maple Leafs"
+    },
+    {
+     "fact_type": "nhl_100_playoff_points",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Joe Nieuwendyk",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 629998,
+    "player": "Joe Nieuwendyk"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_sabres__nhl_senators",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sabres"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Senators"
+    }
+   ],
+   "text": "Tom Barrasso",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 956692,
+    "player": "Tom Barrasso"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_rangers__nhl_bruins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bruins"
+    }
+   ],
+   "text": "Barry Richter",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 10645594,
+    "player": "Barry Richter"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_rangers__nhl_islanders",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Islanders"
+    }
+   ],
+   "text": "Roman Hamrlik",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 568902,
+    "player": "Roman Hamrlík"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_coyotes__nhl_stars",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Coyotes"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Stars"
+    }
+   ],
+   "text": "Don Barber",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12561304,
+    "player": "Don Barber"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "NHL",
+   "question_key": "nhl_senators__nhl_norris",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Senators"
+    },
+    {
+     "fact_type": "nhl_norris_trophy",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Erik Karlsson",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 16251126,
+    "player": "Erik Karlsson"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_monaco__soc_arsenal",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Monaco"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Arsenal"
+    }
+   ],
+   "text": "Emmanuel Adebayor",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2604793,
+    "player": "Emmanuel Adebayor"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_torino__soc_sevilla",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Torino"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sevilla"
+    }
+   ],
+   "text": "Ciro Immobile",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 21986231,
+    "player": "Ciro Immobile"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_st_pauli__soc_hoffenheim",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "St. Pauli"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hoffenheim"
+    }
+   ],
+   "text": "Finn Ole Becker",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 60493666,
+    "player": "Finn Ole Becker"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_ac_milan__soc_verona",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "AC Milan"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hellas Verona"
+    }
+   ],
+   "text": "Simone Verdi",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 25795232,
+    "player": "Simone Verdi"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_brentford__soc_ipswich",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Brentford"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Ipswich Town"
+    }
+   ],
+   "text": "Hermann Hreiðarsson",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1959099,
+    "player": "Hermann Hreiðarsson"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_tottenham__soc_fiorentina",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tottenham"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fiorentina"
+    }
+   ],
+   "text": "Nicola Berti",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 6779947,
+    "player": "Nicola Berti"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_real_sociedad__soc_barcelona",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Real Sociedad"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Barcelona"
+    }
+   ],
+   "text": "Pedro Maria Artola",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 15180894,
+    "player": "Pedro Artola"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_nott_forest__soc_fulham",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nottingham Forest"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fulham"
+    }
+   ],
+   "text": "Andy Melville",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3638336,
+    "player": "Andy Melville"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_bologna__soc_roma",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bologna"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Roma"
+    }
+   ],
+   "text": "Pierre Wome",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2398399,
+    "player": "Pierre Womé"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_ac_milan__soc_napoli",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "AC Milan"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Napoli"
+    }
+   ],
+   "text": "Angelo Sormani",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 7391618,
+    "player": "Angelo Sormani"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_genoa__soc_lazio",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Genoa"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lazio"
+    }
+   ],
+   "text": "Federico Marchetti",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 19618098,
+    "player": "Federico Marchetti"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_fiorentina__soc_torino",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fiorentina"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Torino"
+    }
+   ],
+   "text": "Rolando Mandragora",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 44271597,
+    "player": "Rolando Mandragora"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_sevilla__soc_nantes",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sevilla"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nantes"
+    }
+   ],
+   "text": "Diego Carlos Santos Silva",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 41966638,
+    "player": "Diego Carlos"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_fiorentina__soc_torino",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fiorentina"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Torino"
+    }
+   ],
+   "text": "Marco Di Loreto",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5965118,
+    "player": "Marco Di Loreto"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_roma__soc_fulham",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Roma"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fulham"
+    }
+   ],
+   "text": "Urby Emanuelson",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5434427,
+    "player": "Urby Emanuelson"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_espanyol__soc_lille",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Espanyol"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lille"
+    }
+   ],
+   "text": "Sebastien Corchia",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 21538614,
+    "player": "Sébastien Corchia"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_fulham__soc_wolfsburg",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fulham"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wolfsburg"
+    }
+   ],
+   "text": "Ashkan Dejagah",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 4657900,
+    "player": "Ashkan Dejagah"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_genoa__soc_venezia",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Genoa"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Venezia"
+    }
+   ],
+   "text": "Andrea Beghetto",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 53112664,
+    "player": "Andrea Beghetto"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_newcastle__soc_tottenham",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Newcastle United"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tottenham"
+    }
+   ],
+   "text": "Moussa Sissoko",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12784247,
+    "player": "Moussa Sissoko"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_inter__soc_atletico",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Inter Milan"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Atletico Madrid"
+    }
+   ],
+   "text": "Santiago Hernan Solari",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1116062,
+    "player": "Santiago Solari"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_venezia__soc_juventus",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Venezia"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Juventus"
+    }
+   ],
+   "text": "Alex Pederzoli",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 28476449,
+    "player": "Alex Pederzoli"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_rb_leipzig__soc_man_city",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "RB Leipzig"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Manchester City"
+    }
+   ],
+   "text": "Josko Gvardiol",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 62235661,
+    "player": "Joško Gvardiol"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_mainz__soc_lecce",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mainz"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lecce"
+    }
+   ],
+   "text": "Giulio Donati",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 25465145,
+    "player": "Giulio Donati"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_everton__soc_wolves",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Everton"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wolverhampton Wanderers"
+    }
+   ],
+   "text": "Marcus Hahnemann",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 416892,
+    "player": "Marcus Hahnemann"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_athletic__soc_atletico",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Athletic Bilbao"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Atletico Madrid"
+    }
+   ],
+   "text": "Edu Alonso",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 36270657,
+    "player": "Edu Alonso"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_tottenham__soc_aston_villa",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tottenham"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Aston Villa"
+    }
+   ],
+   "text": "Øyvind Leonhardsen",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1336743,
+    "player": "Øyvind Leonhardsen"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_marseille__soc_fulham",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Marseille"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fulham"
+    }
+   ],
+   "text": "Matt O'Riley",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 54601937,
+    "player": "Matt O'Riley"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_juventus__soc_inter",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Juventus"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Inter Milan"
+    }
+   ],
+   "text": "Sergio Gori",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5406919,
+    "player": "Sergio Gori"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_ac_milan__soc_torino",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "AC Milan"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Torino"
+    }
+   ],
+   "text": "M'Baye Niang",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 31585317,
+    "player": "M'Baye Niang"
+   }
+  },
+  {
+   "group": "correct",
+   "sport": "Soccer",
+   "question_key": "soc_mallorca__soc_sevilla",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mallorca"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sevilla"
+    }
+   ],
+   "text": "Alejandro Maranon",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12309916,
+    "player": "Alejandro Marañón"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_76ers__nba_magic",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "76ers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Magic"
+    }
+   ],
+   "text": "Chauncey Billups",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 644551,
+    "player": "Chauncey Billups"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_grizzlies__nba_timberwolves",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Grizzlies"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Timberwolves"
+    }
+   ],
+   "text": "Chauncey Billups",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 644551,
+    "player": "Chauncey Billups"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_bucks__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bucks"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Chauncey Billups",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 644551,
+    "player": "Chauncey Billups"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_mavericks__nba_sixth_man",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mavericks"
+    },
+    {
+     "fact_type": "nba_sixth_man_award",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Corey Brewer",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 4629573,
+    "player": "Corey Brewer"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_heat__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Heat"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Goran Dragic",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 6753567,
+    "player": "Goran Dragić"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_trail_blazers__nba_clippers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Trail Blazers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Clippers"
+    }
+   ],
+   "text": "Drew Eubanks",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 57009342,
+    "player": "Drew Eubanks"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_hawks__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hawks"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Thabo Sefolosha",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 5753059,
+    "player": "Thabo Sefolosha"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_rockets__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rockets"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Chris Paul",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 4987149,
+    "player": "Chris Paul"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_cavaliers__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cavaliers"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Luol Deng",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1335730,
+    "player": "Luol Deng"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_knicks__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Knicks"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Toney Douglas",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 23393465,
+    "player": "Toney Douglas"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_wizards__nba_mavericks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wizards"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mavericks"
+    }
+   ],
+   "text": "Tyus Jones",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 40397428,
+    "player": "Tyus Jones"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_mavericks__nba_grizzlies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mavericks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Grizzlies"
+    }
+   ],
+   "text": "Tyus Jones",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 40397428,
+    "player": "Tyus Jones"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_trail_blazers__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Trail Blazers"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "LaMarcus Aldridge",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 3304339,
+    "player": "LaMarcus Aldridge"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_spurs__nba_bucks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Spurs"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bucks"
+    }
+   ],
+   "text": "Doc Rivers",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1642868,
+    "player": "Doc Rivers"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_grizzlies__nba_all_nba",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Grizzlies"
+    },
+    {
+     "fact_type": "nba_all_nba_team",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Chauncey Billups",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 644551,
+    "player": "Chauncey Billups"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_jazz__nba_pistons",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jazz"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    }
+   ],
+   "text": "Chauncey Billups",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 644551,
+    "player": "Chauncey Billups"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_bulls__nba_allstar",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bulls"
+    },
+    {
+     "fact_type": "nba_all_star",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Chauncey Billups",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 644551,
+    "player": "Chauncey Billups"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_knicks__nba_jazz",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Knicks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jazz"
+    }
+   ],
+   "text": "Chauncey Billups",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 644551,
+    "player": "Chauncey Billups"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_thunder__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Sviatoslav Mykhailiuk",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 40382687,
+    "player": "Sviatoslav Mykhailiuk"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_lakers__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lakers"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Luol Deng",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1335730,
+    "player": "Luol Deng"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_bengals__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bengals"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Ken Bungarda",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 68702595,
+    "player": "Ken Bungarda"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_chiefs__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chiefs"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Nick Lowery",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 4446458,
+    "player": "Nick Lowery"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_jets__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Daniel Pope",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 21568466,
+    "player": "Daniel Pope"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_giants__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Tracy Gravely",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 8899646,
+    "player": "Tracy Gravely"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_broncos__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Broncos"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Brandon Lloyd",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1181653,
+    "player": "Brandon Lloyd"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_steelers__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Steelers"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Jonathan Dekker",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 12938382,
+    "player": "Jonathan Dekker"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_dolphins__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dolphins"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Todd Lowber",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 10966207,
+    "player": "Todd Lowber"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_patriots__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Patriots"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Kato Serwanga",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 5282533,
+    "player": "Kato Serwanga"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_giants__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Dan DePalma",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 34627870,
+    "player": "Dan DePalma"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_giants__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Ryan Mundy",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 12980570,
+    "player": "Ryan Mundy"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_panthers__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Panthers"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Christian Morton",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 2513561,
+    "player": "Christian Morton"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_colts__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Colts"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "T. J. Rushing",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 4960853,
+    "player": "T. J. Rushing"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_raiders__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Raiders"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Zeron Flemister",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 4853175,
+    "player": "Zeron Flemister"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_packers__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Packers"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Bill Schroeder",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 4088560,
+    "player": "Bill Schroeder"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_buccaneers__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Daniel Wilcox",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 2648415,
+    "player": "Daniel Wilcox"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_packers__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Packers"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Marco Rivera",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 3610416,
+    "player": "Marco Rivera"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_buccaneers__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Onome Ojo",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 68204860,
+    "player": "Onome Ojo"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_cardinals__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Carl Harry",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 12573767,
+    "player": "Carl Harry"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_lions__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lions"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Billy Cundiff",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 2658758,
+    "player": "Billy Cundiff"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_jets__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Dan Goodspeed",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 6775689,
+    "player": "Dan Goodspeed"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_giants__mlb_cardinals",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    }
+   ],
+   "text": "Lary Sorensen",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 6106700,
+    "player": "Lary Sorensen"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_guardians__mlb_cubs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Indians"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cubs"
+    }
+   ],
+   "text": "Tim Worrell",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1595545,
+    "player": "Tim Worrell"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_braves__mlb_dodgers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Braves"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    }
+   ],
+   "text": "Craig Kimbrel",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 27246393,
+    "player": "Craig Kimbrel"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_rays__mlb_marlins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rays"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Marlins"
+    }
+   ],
+   "text": "Larry Rothschild",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 2214154,
+    "player": "Larry Rothschild"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_rangers__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "Floyd Baker",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 7047123,
+    "player": "Floyd Baker"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_guardians__mlb_giants",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Indians"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    }
+   ],
+   "text": "Alvin Dark",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1166908,
+    "player": "Alvin Dark"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_yankees__mlb_mariners",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Yankees"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    }
+   ],
+   "text": "Hector Noesi",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 25149733,
+    "player": "Héctor Noesí"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_phillies__mlb_red_sox",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Sox"
+    }
+   ],
+   "text": "Gene Mauch",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 870949,
+    "player": "Gene Mauch"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_reds__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Reds"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "Ed Heusser",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 9221181,
+    "player": "Ed Heusser"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_giants__mlb_dodgers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    }
+   ],
+   "text": "David Huff",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 21419642,
+    "player": "David Huff"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_rangers__mlb_twins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Twins"
+    }
+   ],
+   "text": "Mike Kreevich",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 9908706,
+    "player": "Mike Kreevich"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_rangers__mlb_dodgers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    }
+   ],
+   "text": "Heinie Manush",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 516965,
+    "player": "Heinie Manush"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_rangers__mlb_white_sox",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    }
+   ],
+   "text": "Doc Cramer",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 835249,
+    "player": "Doc Cramer"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_twins__mlb_pirates",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Twins"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pirates"
+    }
+   ],
+   "text": "Pete Mackanin",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 2628980,
+    "player": "Pete Mackanin"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_phillies__mlb_rangers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    }
+   ],
+   "text": "Happy Townsend",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 17694789,
+    "player": "Happy Townsend"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_red_sox__mlb_ws_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Sox"
+    },
+    {
+     "fact_type": "mlb_ws_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Frank Tanana",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 882020,
+    "player": "Frank Tanana"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_rangers__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "Happy Townsend",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 17694789,
+    "player": "Happy Townsend"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_orioles__mlb_dodgers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Orioles"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    }
+   ],
+   "text": "Dave Wallace",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 2032365,
+    "player": "Dave Wallace"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_yankees__mlb_astros",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Yankees"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Astros"
+    }
+   ],
+   "text": "Bobby Meacham",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 2642892,
+    "player": "Bobby Meacham"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_giants__mlb_cubs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cubs"
+    }
+   ],
+   "text": "Eric Young Sr.",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 4254972,
+    "player": "Eric Young Sr."
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_flyers__nhl_red_wings",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Flyers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Wings"
+    }
+   ],
+   "text": "Colin Campbell",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 3129179,
+    "player": "Colin Campbell"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_coyotes__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Coyotes"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Josh Brown",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 59725016,
+    "player": "Josh Brown"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_jets__nhl_30g_season",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    },
+    {
+     "fact_type": "nhl_30_goal_season",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Bobby Hull",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 105319,
+    "player": "Bobby Hull"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_sabres__nhl_devils",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sabres"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Devils"
+    }
+   ],
+   "text": "Lindy Ruff",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 644489,
+    "player": "Lindy Ruff"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_canadiens__nhl_avalanche",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Avalanche"
+    }
+   ],
+   "text": "Colin Campbell",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 3129179,
+    "player": "Colin Campbell"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_avalanche__nhl_100_playoff_pts",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Avalanche"
+    },
+    {
+     "fact_type": "nhl_100_playoff_points",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Brad Marchand",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 32177001,
+    "player": "Brad Marchand"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_canadiens__nhl_flames",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Flames"
+    }
+   ],
+   "text": "Martin St. Louis",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 440032,
+    "player": "Martin St. Louis"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_bruins__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bruins"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Cam Neely",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1633601,
+    "player": "Cam Neely"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_bruins__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bruins"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Josh Brown",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 59725016,
+    "player": "Josh Brown"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_ducks__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Ducks"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Adam Henrique",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 29913655,
+    "player": "Adam Henrique"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_sabres__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sabres"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Jeff Skinner",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 27852714,
+    "player": "Jeff Skinner"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_lightning__nhl_ducks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lightning"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Ducks"
+    }
+   ],
+   "text": "Todd Fedoruk",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 3228992,
+    "player": "Todd Fedoruk"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_golden_knights__nhl_penguins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Golden Knights"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Penguins"
+    }
+   ],
+   "text": "Ryan Craig",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 3564144,
+    "player": "Ryan Craig"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_coyotes__nhl_wild",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Coyotes"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wild"
+    }
+   ],
+   "text": "Todd Fedoruk",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 3228992,
+    "player": "Todd Fedoruk"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_lightning__nhl_wild",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lightning"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wild"
+    }
+   ],
+   "text": "Todd Fedoruk",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 3228992,
+    "player": "Todd Fedoruk"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_canadiens__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Samuel Blais",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 55729584,
+    "player": "Sammy Blais"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_avalanche__nhl_flames",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Avalanche"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Flames"
+    }
+   ],
+   "text": "Matthew Tkachuk",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 47489074,
+    "player": "Matthew Tkachuk"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_jets__nhl_100pt_season",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    },
+    {
+     "fact_type": "nhl_100_point_season",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Bobby Hull",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 105319,
+    "player": "Bobby Hull"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_avalanche__nhl_panthers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Avalanche"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Panthers"
+    }
+   ],
+   "text": "Matthew Tkachuk",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 47489074,
+    "player": "Matthew Tkachuk"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_canucks__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canucks"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Vasily Podkolzin",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 59051457,
+    "player": "Vasily Podkolzin"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_freiburg__soc_gladbach",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Freiburg"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    }
+   ],
+   "text": "Mohammadou Idrissou",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1667702,
+    "player": "Mohamadou Idrissou"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_leverkusen__soc_gladbach",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bayer Leverkusen"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    }
+   ],
+   "text": "Pascal Ojigwe",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 21384614,
+    "player": "Pascal Ojigwe"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_gladbach__soc_empoli",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Empoli"
+    }
+   ],
+   "text": "Kevin Diks",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 43649167,
+    "player": "Kevin Diks"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_dortmund__soc_sevilla",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Dortmund"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sevilla"
+    }
+   ],
+   "text": "Adnan Januzaj",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 40214276,
+    "player": "Adnan Januzaj"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_bayern__soc_gladbach",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bayern Munich"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    }
+   ],
+   "text": "Christian Ziege",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1462512,
+    "player": "Christian Ziege"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_newcastle__soc_wolves",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Newcastle United"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wolverhampton Wanderers"
+    }
+   ],
+   "text": "Adam Armstrong",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 41809630,
+    "player": "Adam Armstrong"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_gladbach__soc_fiorentina",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fiorentina"
+    }
+   ],
+   "text": "Kevin Diks",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 43649167,
+    "player": "Kevin Diks"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_wolfsburg__soc_augsburg",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wolfsburg"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Augsburg"
+    }
+   ],
+   "text": "Aaron Zehnter",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 72931908,
+    "player": "Aaron Zehnter"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_lille__soc_lyon",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lille"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lyon"
+    }
+   ],
+   "text": "Abedi Pele",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 616624,
+    "player": "Abedi Pele"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_southampton__soc_brentford",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Southampton"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Brentford"
+    }
+   ],
+   "text": "Adrian Caceres",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 2965612,
+    "player": "Adrian Caceres"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_crystal_palace__soc_gladbach",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Crystal Palace"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    }
+   ],
+   "text": "Joonas Kolkka",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1829321,
+    "player": "Joonas Kolkka"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_chelsea__soc_brentford",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chelsea"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Brentford"
+    }
+   ],
+   "text": "Adrian Pettigrew",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 8117848,
+    "player": "Adrian Pettigrew"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_gladbach__soc_freiburg",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Freiburg"
+    }
+   ],
+   "text": "Tim Kleindienst",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 43009575,
+    "player": "Tim Kleindienst"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_frankfurt__soc_gladbach",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Eintracht Frankfurt"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    }
+   ],
+   "text": "Michael Fink",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 7082642,
+    "player": "Michael Fink"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_gladbach__soc_chelsea",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chelsea"
+    }
+   ],
+   "text": "Mikael Forssell",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1145346,
+    "player": "Mikael Forssell"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_rayo__soc_gladbach",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rayo Vallecano"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    }
+   ],
+   "text": "Kasey Keller",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 895763,
+    "player": "Kasey Keller"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_sevilla__soc_gladbach",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sevilla"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    }
+   ],
+   "text": "Toni Polster",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1518363,
+    "player": "Toni Polster"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_gladbach__soc_bayern",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bayern Munich"
+    }
+   ],
+   "text": "Karl Del'Haye",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 13944574,
+    "player": "Karl Del'Haye"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_gladbach__soc_freiburg",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Freiburg"
+    }
+   ],
+   "text": "Damir Buric",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 21060366,
+    "player": "Damir Burić"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_gladbach__soc_ac_milan",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Borussia Mönchengladbach"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "AC Milan"
+    }
+   ],
+   "text": "Oliver Bierhoff",
+   "expect": {
+    "status": "resolved",
+    "valid": false,
+    "page_id": 1129681,
+    "player": "Oliver Bierhoff"
+   }
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_raptors__nba_bulls",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Raptors"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bulls"
+    }
+   ],
+   "text": "Zzyzx Quibble",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_magic__nba_wizards",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Magic"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wizards"
+    }
+   ],
+   "text": "Blorp McFakename",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_suns__nba_allstar",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Suns"
+    },
+    {
+     "fact_type": "nba_all_star",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Qwerty Uiop",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_celtics__nba_knicks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Celtics"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Knicks"
+    }
+   ],
+   "text": "Xavier Nonexisto",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_clippers__nba_knicks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Clippers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Knicks"
+    }
+   ],
+   "text": "Jimbo Placeholder",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_wizards__nba_hornets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Wizards"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hornets"
+    }
+   ],
+   "text": "Nobody Atall",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_thunder__nba_76ers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "76ers"
+    }
+   ],
+   "text": "Fakey McFakerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_grizzlies__nba_bulls",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Grizzlies"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bulls"
+    }
+   ],
+   "text": "Lorem Ipsum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_thunder__nba_lakers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lakers"
+    }
+   ],
+   "text": "Test Playerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NBA",
+   "question_key": "nba_raptors__nba_heat",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Raptors"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Heat"
+    }
+   ],
+   "text": "Zorro Quantum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_jets__nfl_broncos",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Broncos"
+    }
+   ],
+   "text": "Zzyzx Quibble",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_lions__nfl_eagles",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lions"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Eagles"
+    }
+   ],
+   "text": "Blorp McFakename",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_buccaneers__nfl_giants",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    }
+   ],
+   "text": "Qwerty Uiop",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_vikings__nfl_jets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Vikings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    }
+   ],
+   "text": "Xavier Nonexisto",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_titans__nfl_buccaneers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Titans"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    }
+   ],
+   "text": "Jimbo Placeholder",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_cardinals__nfl_buccaneers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    }
+   ],
+   "text": "Nobody Atall",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_broncos__nfl_eagles",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Broncos"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Eagles"
+    }
+   ],
+   "text": "Fakey McFakerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_vikings__nfl_lions",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Vikings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lions"
+    }
+   ],
+   "text": "Lorem Ipsum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_ravens__nfl_bills",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Ravens"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bills"
+    }
+   ],
+   "text": "Test Playerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NFL",
+   "question_key": "nfl_49ers__nfl_lions",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "49ers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lions"
+    }
+   ],
+   "text": "Zorro Quantum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_dodgers__mlb_300hr",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    },
+    {
+     "fact_type": "mlb_300_home_runs",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Zzyzx Quibble",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_astros__mlb_brewers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Astros"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Brewers"
+    }
+   ],
+   "text": "Blorp McFakename",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_giants__mlb_pirates",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pirates"
+    }
+   ],
+   "text": "Qwerty Uiop",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_cardinals__mlb_allstar",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    },
+    {
+     "fact_type": "mlb_all_star",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Xavier Nonexisto",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_cubs__mlb_orioles",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cubs"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Orioles"
+    }
+   ],
+   "text": "Jimbo Placeholder",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_rangers__mlb_ws_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "mlb_ws_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Nobody Atall",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_dodgers__mlb_brewers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dodgers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Brewers"
+    }
+   ],
+   "text": "Fakey McFakerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_angels__mlb_white_sox",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Angels"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    }
+   ],
+   "text": "Lorem Ipsum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_cardinals__mlb_ws_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    },
+    {
+     "fact_type": "mlb_ws_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Test Playerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "MLB",
+   "question_key": "mlb_reds__mlb_mariners",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Reds"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    }
+   ],
+   "text": "Zorro Quantum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_red_wings__nhl_penguins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Wings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Penguins"
+    }
+   ],
+   "text": "Zzyzx Quibble",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_hurricanes__nhl_penguins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hurricanes"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Penguins"
+    }
+   ],
+   "text": "Blorp McFakename",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_stars__nhl_red_wings",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Stars"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Wings"
+    }
+   ],
+   "text": "Qwerty Uiop",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_blue_jackets__nhl_stanley_cup",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blue Jackets"
+    },
+    {
+     "fact_type": "nhl_stanley_cup",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Xavier Nonexisto",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_penguins__nhl_avalanche",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Penguins"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Avalanche"
+    }
+   ],
+   "text": "Jimbo Placeholder",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_canadiens__nhl_kings",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Kings"
+    }
+   ],
+   "text": "Nobody Atall",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_blue_jackets__nhl_stars",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blue Jackets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Stars"
+    }
+   ],
+   "text": "Fakey McFakerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_maple_leafs__nhl_red_wings",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Maple Leafs"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Wings"
+    }
+   ],
+   "text": "Lorem Ipsum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_stars__nhl_blackhawks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Stars"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blackhawks"
+    }
+   ],
+   "text": "Test Playerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "NHL",
+   "question_key": "nhl_penguins__nhl_panthers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Penguins"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Panthers"
+    }
+   ],
+   "text": "Zorro Quantum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_auxerre__soc_newcastle",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Auxerre"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Newcastle United"
+    }
+   ],
+   "text": "Zzyzx Quibble",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_man_city__soc_liverpool",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Manchester City"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Liverpool"
+    }
+   ],
+   "text": "Blorp McFakename",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_espanyol__soc_real_sociedad",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Espanyol"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Real Sociedad"
+    }
+   ],
+   "text": "Qwerty Uiop",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_juventus__soc_genoa",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Juventus"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Genoa"
+    }
+   ],
+   "text": "Xavier Nonexisto",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_ac_milan__soc_chelsea",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "AC Milan"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chelsea"
+    }
+   ],
+   "text": "Jimbo Placeholder",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_udinese__soc_fiorentina",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Udinese"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fiorentina"
+    }
+   ],
+   "text": "Nobody Atall",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_man_utd__soc_southampton",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Manchester United"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Southampton"
+    }
+   ],
+   "text": "Fakey McFakerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_napoli__soc_toulouse",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Napoli"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Toulouse"
+    }
+   ],
+   "text": "Lorem Ipsum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_frankfurt__soc_fiorentina",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Eintracht Frankfurt"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fiorentina"
+    }
+   ],
+   "text": "Test Playerson",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "incorrect",
+   "sport": "Soccer",
+   "question_key": "soc_juventus__soc_barcelona",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Juventus"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Barcelona"
+    }
+   ],
+   "text": "Zorro Quantum",
+   "expect": {
+    "status_not": "resolved",
+    "valid": false
+   },
+   "note": "made-up name: never resolves, never accepted"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mariners__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Ken Griffey",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Ken Griffey Jr.",
+    "valid_option": true
+   },
+   "note": "unsuffixed namesake -> chooser"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mariners__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Ken Griffey Jr.",
+   "expect": {
+    "status": "resolved",
+    "name": "Ken Griffey Jr.",
+    "valid": true
+   },
+   "note": "suffixed"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mariners__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "ken griffey jr",
+   "expect": {
+    "status": "resolved",
+    "name": "Ken Griffey Jr.",
+    "valid": true
+   },
+   "note": "case + no period"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mariners__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Ken Griffey Sr.",
+   "expect": {
+    "status": "resolved",
+    "name": "Ken Griffey Sr.",
+    "valid": false
+   },
+   "note": "father never MVP"
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_thunder__nba_dpoy",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    },
+    {
+     "fact_type": "nba_dpoy",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Gary Payton",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Gary Payton",
+    "valid_option": true
+   },
+   "note": "Payton vs Payton II"
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_thunder__nba_dpoy",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    },
+    {
+     "fact_type": "nba_dpoy",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Gary Payton II",
+   "expect": {
+    "status": "resolved",
+    "name": "Gary Payton II",
+    "valid": false
+   },
+   "note": "son not DPOY with Sonics"
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_thunder__nba_dpoy",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    },
+    {
+     "fact_type": "nba_dpoy",
+     "fact_value": "true"
+    }
+   ],
+   "text": "The Glove",
+   "expect": {
+    "status": "resolved",
+    "name": "Gary Payton",
+    "valid": true
+   },
+   "note": "curated nickname"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_rangers__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Pudge",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Iván Rodríguez",
+    "valid_option": true
+   },
+   "note": "shared nickname"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_rangers__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Ivan Rodriguez",
+   "expect": {
+    "status": "resolved",
+    "name": "Iván Rodríguez",
+    "valid": true
+   },
+   "note": "accents dropped"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mariners__mlb_cy_young",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    },
+    {
+     "fact_type": "mlb_cy_young",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Big Unit",
+   "expect": {
+    "status": "resolved",
+    "name": "Randy Johnson",
+    "valid": true
+   },
+   "note": "nickname"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_red_sox__mlb_cy_young",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Sox"
+    },
+    {
+     "fact_type": "mlb_cy_young",
+     "fact_value": "true"
+    }
+   ],
+   "text": "The Rocket",
+   "expect": {
+    "status": "resolved",
+    "name": "Roger Clemens",
+    "valid": true
+   },
+   "note": "sport-specific nickname"
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_canadiens__nhl_hart",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    },
+    {
+     "fact_type": "nhl_hart_trophy",
+     "fact_value": "true"
+    }
+   ],
+   "text": "The Rocket",
+   "expect": {
+    "status": "resolved",
+    "name": "Maurice Richard",
+    "valid": true
+   },
+   "note": "same nickname, other sport"
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_giants__nfl_dpoy",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "nfl_dpoy",
+     "fact_value": "true"
+    }
+   ],
+   "text": "LT",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Lawrence Taylor",
+    "valid_option": true
+   },
+   "note": "shared nickname"
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_49ers__nfl_sb_champ",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "49ers"
+    },
+    {
+     "fact_type": "nfl_super_bowl_winner",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Joe Cool",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Joe Montana",
+    "valid_option": true
+   },
+   "note": "shared nickname"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mariners__mlb_allstar",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    },
+    {
+     "fact_type": "mlb_all_star",
+     "fact_value": "true"
+    }
+   ],
+   "text": "The Kid",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Ken Griffey Jr.",
+    "valid_option": true
+   },
+   "note": "3-way nickname"
+  },
+  {
+   "group": "tricky",
+   "sport": "Soccer",
+   "question_key": "soc_barcelona__soc_liverpool",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Barcelona"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Liverpool"
+    }
+   ],
+   "text": "Luis Suarez",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Luis Suárez",
+    "valid_option": true
+   },
+   "note": "split namesakes"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_padres__mlb_hof",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Padres"
+    },
+    {
+     "fact_type": "mlb_hall_of_fame",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Tony Gwynn Sr.",
+   "expect": {
+    "status": "resolved",
+    "name": "Tony Gwynn",
+    "valid": true
+   },
+   "note": "added in 018g"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_padres__mlb_hof",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Padres"
+    },
+    {
+     "fact_type": "mlb_hall_of_fame",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Tony Gwynn",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Tony Gwynn",
+    "valid_option": true
+   },
+   "note": "Gwynn vs Gwynn Jr."
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_cubs__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cubs"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Frank Thomas",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Frank Thomas",
+    "valid_option": false
+   },
+   "note": "old checker combined two people"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_white_sox__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Frank Thomas",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Frank Thomas",
+    "valid_option": true
+   },
+   "note": "Big Hurt among options"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_yankees__mlb_allstar",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Yankees"
+    },
+    {
+     "fact_type": "mlb_all_star",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Burrell",
+   "expect": {
+    "status_not": "resolved"
+   },
+   "note": "surname alone never resolves"
+  },
+  {
+   "group": "tricky",
+   "sport": "Soccer",
+   "question_key": "soc_juventus__soc_roma",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Juventus"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Roma"
+    }
+   ],
+   "text": "Totti",
+   "expect": {
+    "status_not": "resolved"
+   },
+   "note": "surname nickname removed"
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_lakers__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lakers"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Shaq",
+   "expect": {
+    "status": "resolved",
+    "name": "Shaquille O'Neal",
+    "valid": true
+   },
+   "note": "nickname"
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_lakers__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lakers"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "AC Green",
+   "expect": {
+    "status": "resolved",
+    "name": "A. C. Green",
+    "valid": true
+   },
+   "note": "initials"
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_lakers__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lakers"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Ron Artest",
+   "expect": {
+    "status": "resolved",
+    "valid": true
+   },
+   "note": "former name"
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_falcons__nfl_commanders",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Falcons"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Commanders"
+    }
+   ],
+   "text": "Olamide Zaccheus",
+   "expect": {
+    "status": "resolved",
+    "name": "Olamide Zaccheaus",
+    "valid": true
+   },
+   "note": "typo, real game"
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_yankees__mlb_allstar",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Yankees"
+    },
+    {
+     "fact_type": "mlb_all_star",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Derek Jeterr",
+   "expect": {
+    "status": "resolved",
+    "name": "Derek Jeter",
+    "valid": true
+   },
+   "note": "one-letter typo"
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_canucks__nhl_30g_season",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canucks"
+    },
+    {
+     "fact_type": "nhl_30_goal_season",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Elias Pettersson",
+   "expect": {
+    "status": "ambiguous",
+    "includes": "Elias Pettersson",
+    "valid_option": true
+   },
+   "note": "two Canucks namesakes"
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_texans__nfl_colts",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Texans"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Colts"
+    }
+   ],
+   "text": "LaDarius Hednerson",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 74718894,
+    "player": "LaDarius Henderson"
+   },
+   "note": "typo of \"LaDarius Henderson\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_cardinals__mlb_mariners",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    }
+   ],
+   "text": "Rdck Wilkins",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 6069690,
+    "player": "Rick Wilkins"
+   },
+   "note": "typo of \"Rick Wilkins\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_rams__nfl_49ers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rams"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "49ers"
+    }
+   ],
+   "text": "Coleman lhelton",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 61891219,
+    "player": "Coleman Shelton"
+   },
+   "note": "typo of \"Coleman Shelton\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_cardinals__mlb_padres",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Padres"
+    }
+   ],
+   "text": "Mark Seeney",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2806705,
+    "player": "Mark Sweeney"
+   },
+   "note": "typo of \"Mark Sweeney\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_hawks__nba_pacers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hawks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pacers"
+    }
+   ],
+   "text": "Dudley Bradely",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 8378018,
+    "player": "Dudley Bradley"
+   },
+   "note": "typo of \"Dudley Bradley\""
+  },
+  {
+   "group": "tricky",
+   "sport": "Soccer",
+   "question_key": "soc_juventus__soc_udinese",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Juventus"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Udinese"
+    }
+   ],
+   "text": "Maaco Zanchi",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12484541,
+    "player": "Marco Zanchi"
+   },
+   "note": "typo of \"Marco Zanchi\""
+  },
+  {
+   "group": "tricky",
+   "sport": "Soccer",
+   "question_key": "soc_empoli__soc_fiorentina",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Empoli"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Fiorentina"
+    }
+   ],
+   "text": "Manuel Papqual",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 4244986,
+    "player": "Manuel Pasqual"
+   },
+   "note": "typo of \"Manuel Pasqual\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_titans__nfl_cardinals",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Titans"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cardinals"
+    }
+   ],
+   "text": "Ricyk Schmitt",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12899149,
+    "player": "Ricky Schmitt"
+   },
+   "note": "typo of \"Ricky Schmitt\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_seahawks__nfl_49ers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Seahawks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "49ers"
+    }
+   ],
+   "text": "Dakoda Shepsey",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 61927544,
+    "player": "Dakoda Shepley"
+   },
+   "note": "typo of \"Dakoda Shepley\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mets__mlb_diamondbacks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Diamondbacks"
+    }
+   ],
+   "text": "Ricky ottalico",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1593472,
+    "player": "Ricky Bottalico"
+   },
+   "note": "typo of \"Ricky Bottalico\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_steelers__nfl_saints",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Steelers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Saints"
+    }
+   ],
+   "text": "Marquez Valdeq-Scantling",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 57264939,
+    "player": "Marquez Valdes-Scantling"
+   },
+   "note": "typo of \"Marquez Valdes-Scantling\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_patriots__nfl_bears",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Patriots"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bears"
+    }
+   ],
+   "text": "Raymont Hfrris",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 4069937,
+    "player": "Raymont Harris"
+   },
+   "note": "typo of \"Raymont Harris\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_titans__nfl_buccaneers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Titans"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Buccaneers"
+    }
+   ],
+   "text": "Björn Nittmo",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12163811,
+    "player": "Björn Nittmo"
+   },
+   "note": "accented of \"Bjorn Nittmo\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_flames__nhl_capitals",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Flames"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Capitals"
+    }
+   ],
+   "text": "Jaromír Jágr",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 255202,
+    "player": "Jaromír Jágr"
+   },
+   "note": "accented of \"Jaromir Jagr\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_reds__mlb_nationals",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Reds"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nationals"
+    }
+   ],
+   "text": "Asdrúbal Cabrera",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 7757562,
+    "player": "Asdrúbal Cabrera"
+   },
+   "note": "accented of \"Asdrubal Cabrera\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_islanders__nhl_predators",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Islanders"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Predators"
+    }
+   ],
+   "text": "Vladimír Országh",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5564288,
+    "player": "Vladimír Országh"
+   },
+   "note": "accented of \"Vladimir Orszagh\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_reds__mlb_mariners",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Reds"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mariners"
+    }
+   ],
+   "text": "José Guillén",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1191893,
+    "player": "José Guillén"
+   },
+   "note": "accented of \"Jose Guillen\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_warriors__nba_champion",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Warriors"
+    },
+    {
+     "fact_type": "nba_champion",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Kristaps Porziņģis",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 42616154,
+    "player": "Kristaps Porziņģis"
+   },
+   "note": "accented of \"Kristaps Porzingis\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mets__mlb_phillies",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Phillies"
+    }
+   ],
+   "text": "Ricky Ledée",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3492330,
+    "player": "Ricky Ledée"
+   },
+   "note": "accented of \"Ricky Ledee\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_rays__mlb_astros",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rays"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Astros"
+    }
+   ],
+   "text": "José Cruz Jr.",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1712374,
+    "player": "José Cruz Jr."
+   },
+   "note": "accented of \"Jose Cruz Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "Soccer",
+   "question_key": "soc_sevilla__soc_arsenal",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Sevilla"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Arsenal"
+    }
+   ],
+   "text": "Júlio Baptista",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2129433,
+    "player": "Júlio Baptista"
+   },
+   "note": "accented of \"Julio Baptista\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_yankees__mlb_white_sox",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Yankees"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "White Sox"
+    }
+   ],
+   "text": "Mélido Pérez",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 6364689,
+    "player": "Mélido Pérez"
+   },
+   "note": "accented of \"Melido Perez\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_red_wings__nhl_canadiens",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Red Wings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Canadiens"
+    }
+   ],
+   "text": "Tomáš Tatar",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 21370011,
+    "player": "Tomáš Tatar"
+   },
+   "note": "accented of \"Tomas Tatar\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_braves__mlb_rangers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Braves"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    }
+   ],
+   "text": "Willie Montañez",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1502630,
+    "player": "Willie Montañez"
+   },
+   "note": "accented of \"Willie Montanez\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_nets__nba_hornets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Hornets"
+    }
+   ],
+   "text": "Chris Douglas Roberts",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 16780836,
+    "player": "Chris Douglas-Roberts"
+   },
+   "note": "punctuation of \"Chris Douglas-Roberts\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_diamondbacks__mlb_mets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Diamondbacks"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mets"
+    }
+   ],
+   "text": "J D Martinez",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 32577543,
+    "player": "J. D. Martinez"
+   },
+   "note": "punctuation of \"J. D. Martinez\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_suns__nba_50pt_game",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Suns"
+    },
+    {
+     "fact_type": "nba_50_point_game",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Shaquille ONeal",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 147726,
+    "player": "Shaquille O'Neal"
+   },
+   "note": "punctuation of \"Shaquille O'Neal\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_spurs__nba_pelicans",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Spurs"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pelicans"
+    }
+   ],
+   "text": "Devonte Graham",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 54302366,
+    "player": "Devonte' Graham"
+   },
+   "note": "punctuation of \"Devonte' Graham\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_giants__mlb_rangers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Giants"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rangers"
+    }
+   ],
+   "text": "Danny OConnell",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 9036634,
+    "player": "Danny O'Connell"
+   },
+   "note": "punctuation of \"Danny O'Connell\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_commanders__nfl_steelers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Commanders"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Steelers"
+    }
+   ],
+   "text": "DaMon Cromartie Smith",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 27118509,
+    "player": "Da'Mon Cromartie-Smith"
+   },
+   "note": "punctuation of \"Da'Mon Cromartie-Smith\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_colts__nfl_seahawks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Colts"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Seahawks"
+    }
+   ],
+   "text": "T J Green",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 50203128,
+    "player": "T. J. Green"
+   },
+   "note": "punctuation of \"T. J. Green\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_spurs__nba_rockets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Spurs"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rockets"
+    }
+   ],
+   "text": "Pops Mensah Bonsu",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3473291,
+    "player": "Pops Mensah-Bonsu"
+   },
+   "note": "punctuation of \"Pops Mensah-Bonsu\""
+  },
+  {
+   "group": "tricky",
+   "sport": "Soccer",
+   "question_key": "soc_freiburg__soc_heidenheim",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Freiburg"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Heidenheim"
+    }
+   ],
+   "text": "Jan Niklas Beste",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 62205635,
+    "player": "Jan-Niklas Beste"
+   },
+   "note": "punctuation of \"Jan-Niklas Beste\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_jaguars__nfl_falcons",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jaguars"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Falcons"
+    }
+   ],
+   "text": "C J Reavis",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 59228461,
+    "player": "C. J. Reavis"
+   },
+   "note": "punctuation of \"C. J. Reavis\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_colts__nfl_cowboys",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Colts"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cowboys"
+    }
+   ],
+   "text": "J W Lockett",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 11871519,
+    "player": "J. W. Lockett"
+   },
+   "note": "punctuation of \"J. W. Lockett\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_nationals__mlb_padres",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nationals"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Padres"
+    }
+   ],
+   "text": "Greg A Harris",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5258962,
+    "player": "Greg A. Harris"
+   },
+   "note": "punctuation of \"Greg A. Harris\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_blues__nhl_kings",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blues"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Kings"
+    }
+   ],
+   "text": "The Great One",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 33422,
+    "player": "Wayne Gretzky"
+   },
+   "note": "nickname of \"Wayne Gretzky\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_athletics__mlb_200hr",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Athletics"
+    },
+    {
+     "fact_type": "mlb_200_home_runs",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Mr. October",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 59396,
+    "player": "Reggie Jackson"
+   },
+   "note": "nickname of \"Reggie Jackson\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_lakers__nba_all_nba",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lakers"
+    },
+    {
+     "fact_type": "nba_all_nba_team",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Black Mamba",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 246185,
+    "player": "Kobe Bryant"
+   },
+   "note": "nickname of \"Kobe Bryant\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_braves__mlb_2500hits",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Braves"
+    },
+    {
+     "fact_type": "mlb_2500_career_hits",
+     "fact_value": "true"
+    }
+   ],
+   "text": "The Babe",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 4173,
+    "player": "Babe Ruth"
+   },
+   "note": "nickname of \"Babe Ruth\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_suns__nba_finals_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Suns"
+    },
+    {
+     "fact_type": "nba_finals_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Shaq",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 147726,
+    "player": "Shaquille O'Neal"
+   },
+   "note": "nickname of \"Shaquille O'Neal\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_pistons__nba_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    },
+    {
+     "fact_type": "nba_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "The Answer",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 305473,
+    "player": "Allen Iverson"
+   },
+   "note": "nickname of \"Allen Iverson\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_heat__nba_lakers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Heat"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lakers"
+    }
+   ],
+   "text": "The Glove",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 739751,
+    "player": "Gary Payton"
+   },
+   "note": "nickname of \"Gary Payton\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_spurs__nba_thunder",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Spurs"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    }
+   ],
+   "text": "CP3",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 4987149,
+    "player": "Chris Paul"
+   },
+   "note": "nickname of \"Chris Paul\""
+  },
+  {
+   "group": "tricky",
+   "sport": "Soccer",
+   "question_key": "soc_man_utd__soc_psg",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Manchester United"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Paris Saint-Germain"
+    }
+   ],
+   "text": "Zlatan",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 728776,
+    "player": "Zlatan Ibrahimović"
+   },
+   "note": "nickname of \"Zlatan Ibrahimovic\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_oilers__nhl_50g_season",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Oilers"
+    },
+    {
+     "fact_type": "nhl_50_goal_season",
+     "fact_value": "true"
+    }
+   ],
+   "text": "The Great One",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 33422,
+    "player": "Wayne Gretzky"
+   },
+   "note": "nickname of \"Wayne Gretzky\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_celtics__nba_all_nba",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Celtics"
+    },
+    {
+     "fact_type": "nba_all_nba_team",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Pistol Pete",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 154726,
+    "player": "Pete Maravich"
+   },
+   "note": "nickname of \"Pete Maravich\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_mets__mlb_mvp",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Mets"
+    },
+    {
+     "fact_type": "mlb_mvp",
+     "fact_value": "true"
+    }
+   ],
+   "text": "Say Hey Kid",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 62512,
+    "player": "Willie Mays"
+   },
+   "note": "nickname of \"Willie Mays\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_pistons__nba_rockets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rockets"
+    }
+   ],
+   "text": "James Ennis",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 39086620,
+    "player": "James Ennis III"
+   },
+   "note": "suffix_dropped of \"James Ennis III\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_49ers__nfl_chiefs",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "49ers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chiefs"
+    }
+   ],
+   "text": "Arland Bruce",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 2828204,
+    "player": "Arland Bruce III"
+   },
+   "note": "suffix_dropped of \"Arland Bruce III\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_cowboys__nfl_saints",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cowboys"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Saints"
+    }
+   ],
+   "text": "Troy Pride",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 62439416,
+    "player": "Troy Pride"
+   },
+   "note": "suffix_dropped of \"Troy Pride Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_rams__nfl_ravens",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rams"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Ravens"
+    }
+   ],
+   "text": "Darrell Williams",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 55711689,
+    "player": "Darrell Williams Jr."
+   },
+   "note": "suffix_dropped of \"Darrell Williams Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_stars__nhl_coyotes",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Stars"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Coyotes"
+    }
+   ],
+   "text": "Moe Mantha",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1458072,
+    "player": "Moe Mantha Jr."
+   },
+   "note": "suffix_dropped of \"Moe Mantha Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_heat__nba_pelicans",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Heat"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pelicans"
+    }
+   ],
+   "text": "Roger Mason",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 5883990,
+    "player": "Roger Mason Jr."
+   },
+   "note": "suffix_dropped of \"Roger Mason Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_steelers__nfl_dolphins",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Steelers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Dolphins"
+    }
+   ],
+   "text": "Anthony McFarland",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 62497853,
+    "player": "Anthony McFarland Jr."
+   },
+   "note": "suffix_dropped of \"Anthony McFarland Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_raptors__nba_pacers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Raptors"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pacers"
+    }
+   ],
+   "text": "Bruce Brown",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 57012560,
+    "player": "Bruce Brown"
+   },
+   "note": "suffix_dropped of \"Bruce Brown Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_trail_blazers__nba_nets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Trail Blazers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Nets"
+    }
+   ],
+   "text": "Harry Giles",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 47663842,
+    "player": "Harry Giles III"
+   },
+   "note": "suffix_dropped of \"Harry Giles III\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_lions__nfl_steelers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Lions"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Steelers"
+    }
+   ],
+   "text": "John H. Baker",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1816706,
+    "player": "John H. Baker Jr."
+   },
+   "note": "suffix_dropped of \"John H. Baker Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_pistons__nba_knicks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Knicks"
+    }
+   ],
+   "text": "Dennis Smith",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 51404013,
+    "player": "Dennis Smith Jr."
+   },
+   "note": "suffix_dropped of \"Dennis Smith Jr.\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_warriors__nba_pistons",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Warriors"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Pistons"
+    }
+   ],
+   "text": "Lindy Waters",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 69808306,
+    "player": "Lindy Waters III"
+   },
+   "note": "suffix_dropped of \"Lindy Waters III\""
+  },
+  {
+   "group": "tricky",
+   "sport": "Soccer",
+   "question_key": "soc_newcastle__soc_leicester",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Newcastle United"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Leicester City"
+    }
+   ],
+   "text": "harvey barnes",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 52509311,
+    "player": "Harvey Barnes"
+   },
+   "note": "lowercase of \"Harvey Barnes\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_royals__mlb_athletics",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Royals"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Athletics"
+    }
+   ],
+   "text": "adrian garrett",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 12538411,
+    "player": "Adrian Garrett"
+   },
+   "note": "lowercase of \"Adrian Garrett\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_blue_jackets__nhl_coyotes",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Blue Jackets"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Coyotes"
+    }
+   ],
+   "text": "riley nash",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 11909351,
+    "player": "Riley Nash"
+   },
+   "note": "lowercase of \"Riley Nash\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_bills__nfl_seahawks",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Bills"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Seahawks"
+    }
+   ],
+   "text": "joey ivie",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 53922293,
+    "player": "Joey Ivie"
+   },
+   "note": "lowercase of \"Joey Ivie\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_vikings__nfl_ravens",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Vikings"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Ravens"
+    }
+   ],
+   "text": "todd bouman",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 3460068,
+    "player": "Todd Bouman"
+   },
+   "note": "lowercase of \"Todd Bouman\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_rams__nfl_chargers",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Rams"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Chargers"
+    }
+   ],
+   "text": "greg wojcik",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 57364915,
+    "player": "Greg Wojcik"
+   },
+   "note": "lowercase of \"Greg Wojcik\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_cowboys__nfl_jets",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Cowboys"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Jets"
+    }
+   ],
+   "text": "j. j. wilcox",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 39042728,
+    "player": "J. J. Wilcox"
+   },
+   "note": "lowercase of \"J. J. Wilcox\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NBA",
+   "question_key": "nba_warriors__nba_thunder",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Warriors"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Thunder"
+    }
+   ],
+   "text": "john lucas ii",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 30864579,
+    "player": "John Lucas II"
+   },
+   "note": "lowercase of \"John Lucas II\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_tigers__mlb_orioles",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Tigers"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Orioles"
+    }
+   ],
+   "text": "mickey tettleton",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1930044,
+    "player": "Mickey Tettleton"
+   },
+   "note": "lowercase of \"Mickey Tettleton\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NHL",
+   "question_key": "nhl_flames__nhl_100_playoff_pts",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Flames"
+    },
+    {
+     "fact_type": "nhl_100_playoff_points",
+     "fact_value": "true"
+    }
+   ],
+   "text": "doug gilmour",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 207480,
+    "player": "Doug Gilmour"
+   },
+   "note": "lowercase of \"Doug Gilmour\""
+  },
+  {
+   "group": "tricky",
+   "sport": "NFL",
+   "question_key": "nfl_colts__nfl_pro_bowl",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Colts"
+    },
+    {
+     "fact_type": "nfl_pro_bowl",
+     "fact_value": "true"
+    }
+   ],
+   "text": "xavier rhodes",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 33004065,
+    "player": "Xavier Rhodes"
+   },
+   "note": "lowercase of \"Xavier Rhodes\""
+  },
+  {
+   "group": "tricky",
+   "sport": "MLB",
+   "question_key": "mlb_twins__mlb_yankees",
+   "rules": [
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Twins"
+    },
+    {
+     "fact_type": "played_for_team",
+     "fact_value": "Yankees"
+    }
+   ],
+   "text": "everett scott",
+   "expect": {
+    "status": "resolved",
+    "valid": true,
+    "page_id": 1835302,
+    "player": "Everett Scott"
+   },
+   "note": "lowercase of \"Everett Scott\""
+  }
+ ]
+}

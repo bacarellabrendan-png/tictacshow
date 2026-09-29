@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { DIFFICULTY_META, normalizeStr } from "./data/questions.js";
 import {
   generateBoard, expandBoard, getCategoryDisplay,
-  getIntersectionPlayers, getIntersectionRarities, getPlayerRarity, ensureSportData,
+  getIntersectionPlayers, getIntersectionRarities, getPlayerName, ensureSportData,
 } from "./data/boardGenerator.js";
 import { blendRarities } from "./data/rarity.js";
 
@@ -134,32 +134,18 @@ async function dbUpdate(table, qs, body) {
   });
 }
 
-/** Validate an answer against player_facts. Returns true only if ALL rules match. */
-async function validateAnswer(guess, config) {
-  if (!config?.rules?.length) return false;
-  try {
-    const r = await sbFetch('/rest/v1/rpc/validate_answer', {
-      method: 'POST',
-      body: JSON.stringify({
-        p_player_name: guess.trim(),
-        p_sport: config.sport,
-        p_rules: config.rules,
-      }),
-    });
-    return r.ok && r.data === true;
-  } catch { return false; /* network failure — reject */ }
-}
-
 /**
- * Record one human answer (valid or rejected) and return the game's ruling.
- * The record_answer RPC runs the same validate_answer check, logs the answer to
- * answer_submissions once per "<game>:<move>:<role>" key, and returns its id.
- * If the RPC refuses or fails, fall back to validating directly (not recorded).
- * Returns { valid, submissionId }.
+ * Record one human answer and return the game's ruling (ID-based checking).
+ * `playerId` is the player picked from autocomplete or the chooser; without it the
+ * server resolves the typed text (exact name, name without Jr/Sr, nickname, typo).
+ * record_answer_v3 logs the answer once per "<game>:<move>:<role>" key. Returns:
+ *   { status: "choose", kind, candidates }  name is ambiguous / a did-you-mean: nothing recorded
+ *   { status: "recorded", valid, submissionId, playerId, playerName }
+ *   { status: "error" }                      the check couldn't run: nothing recorded
  */
-async function submitAndRule({ gameId, moveId, role, gameMode, questionKey, cell, answer }) {
+async function submitAndRule({ gameId, moveId, role, gameMode, questionKey, cell, answer, playerId }) {
   try {
-    const r = await sbFetch("/rest/v1/rpc/record_answer", {
+    const r = await sbFetch("/rest/v1/rpc/record_answer_v3", {
       method: "POST",
       body: JSON.stringify({
         p_submission_key: `${gameId}:${moveId}:${role}`,
@@ -168,16 +154,21 @@ async function submitAndRule({ gameId, moveId, role, gameMode, questionKey, cell
         p_sport: cell.sport,
         p_rules: cell.rules,
         p_answer: answer.trim(),
+        p_player_id: playerId ?? null,
       }),
     });
-    if (r.ok && r.data && typeof r.data === "object") return { valid: !!r.data.valid, submissionId: r.data.id };
-  } catch { /* fall through to direct validation */ }
-  return { valid: await validateAnswer(answer, cell), submissionId: null };
+    const d = r.ok ? r.data : null;
+    if (d?.status === "choose") return { status: "choose", kind: d.kind, candidates: d.candidates || [] };
+    if (d?.status === "recorded") {
+      return { status: "recorded", valid: !!d.valid, submissionId: d.id, playerId: d.player_id ?? null, playerName: d.player_name ?? null };
+    }
+  } catch { /* network failure */ }
+  return { status: "error" };
 }
 
-/** Real valid-submission counts for a square: { total, counts: Map<normalizedName, n> }, or null. */
+/** Real valid-submission counts for a square: { total, counts: Map<playerId, n> }, or null. */
 async function fetchSquareCounts(questionKey) {
-  const r = await sbFetch("/rest/v1/rpc/get_square_counts", {
+  const r = await sbFetch("/rest/v1/rpc/get_square_counts_v2", {
     method: "POST",
     body: JSON.stringify({ p_question_key: questionKey }),
   });
@@ -185,11 +176,25 @@ async function fetchSquareCounts(questionKey) {
   const counts = new Map();
   let total = 0;
   for (const row of r.data) {
-    const key = normalizeStr(row.player_name);
-    counts.set(key, (counts.get(key) || 0) + Number(row.submissions));
+    counts.set(Number(row.player_id), Number(row.submissions));
     total += Number(row.submissions);
   }
   return { total, counts };
+}
+
+/** Rarity % of one side's answer on a move, looked up by player id. */
+function answerRarity(rarities, move, role) {
+  const id = move[`${role}_player_id`];
+  if (!rarities || id == null) return null;
+  if (!rarities.has(id)) console.warn(`[rarity] no rarity for player ${id}; using 0.1%`);
+  return rarities.get(id) ?? 0.1;
+}
+
+/** Both answers valid and naming the same player (by id; by text for older moves without ids). */
+function isSamePlayer(mv) {
+  if (!mv.p1_valid || !mv.p2_valid) return false;
+  if (mv.p1_player_id != null && mv.p2_player_id != null) return mv.p1_player_id === mv.p2_player_id;
+  return normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "");
 }
 
 /** Rarity % for every player on a cell: prior estimate blended with real submissions. */
@@ -227,20 +232,20 @@ const CPU_NAMES = { easy: "Rookie", medium: "Veteran", hard: "Coach" };
 
   If no players fall in the target range, pick the closest available.
 */
-function cpuPickAnswer(cell, cpuDiff, humanAnswer, liveRarities) {
-  const normHuman = humanAnswer ? normalizeStr(humanAnswer) : "";
-
+function cpuPickAnswer(cell, cpuDiff, humanPlayerId, liveRarities) {
   if (cell.rowCat && cell.colCat) {
     // Same blended numbers that decide the square, when available
     const rarities = liveRarities ?? getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
     const all = getIntersectionPlayers(cell.sport, cell.rowCat, cell.colCat);
-    const players = normHuman ? all.filter(p => normalizeStr(p) !== normHuman) : all;
-    if (!players.length) return { name: "No answer", valid: false, rarity: null };
+    // Never pick the player the human just named
+    const players = humanPlayerId != null ? all.filter(id => id !== humanPlayerId) : all;
+    if (!players.length) return { name: "No answer", playerId: null, valid: false, rarity: null };
 
     // Build array with rarity % for each player
-    const withRarity = players.map(p => ({
-      name: p,
-      rarity: rarities.get(normalizeStr(p)) ?? 0.1,
+    const withRarity = players.map(id => ({
+      playerId: id,
+      name: getPlayerName(cell.sport, id) ?? "Unknown player",
+      rarity: rarities.get(id) ?? 0.1,
     }));
 
     // Sort by rarity descending (most obvious first)
@@ -266,9 +271,9 @@ function cpuPickAnswer(cell, cpuDiff, humanAnswer, liveRarities) {
 
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
     console.log(`[CPU ${cpuDiff}] picked "${pick.name}" rarity=${pick.rarity.toFixed(1)}% (target ${lo}-${hi === Infinity ? "∞" : hi}%) from ${withRarity.length} players`);
-    return { name: pick.name, valid: true, rarity: pick.rarity };
+    return { name: pick.name, playerId: pick.playerId, valid: true, rarity: pick.rarity };
   }
-  return { name: "No answer", valid: false, rarity: null };
+  return { name: "No answer", playerId: null, valid: false, rarity: null };
 }
 
 function cpuPickCell(board) {
@@ -328,23 +333,22 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
   const wrapRef   = useRef(null);
   const debounceT = useRef(null);
 
-  // Query player_facts for autocomplete — only suggests players that can validate
+  // One suggestion per player (namesakes listed separately, each with a detail line), only
+  // players who own facts in this sport. Accents, punctuation and nicknames are handled
+  // server-side by autocomplete_players_v2.
   useEffect(() => {
     const q = value.trim();
-    if (q.length < 1) { setSuggestions([]); return; }
+    if (q.length < 2 || !sport) { setSuggestions([]); return; }
     clearTimeout(debounceT.current);
+    let stale = false;
     debounceT.current = setTimeout(async () => {
-      // Strip accents from query so "Iván" matches "Ivan" in the DB
-      const qNorm = q.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const sportFilter = sport ? `&sport=eq.${encodeURIComponent(sport)}` : "";
-      const r = await dbSelect("player_facts",
-        `?player_name=ilike.*${encodeURIComponent(qNorm)}*${sportFilter}&select=player_name&order=player_name&limit=40`);
-      if (r.ok && Array.isArray(r.data)) {
-        const unique = [...new Set(r.data.map(row => row.player_name))];
-        setSuggestions(unique.slice(0, 8));
-      }
+      const r = await sbFetch("/rest/v1/rpc/autocomplete_players_v2", {
+        method: "POST",
+        body: JSON.stringify({ p_query: q, p_sport: sport, p_limit: 8 }),
+      });
+      if (!stale && r.ok && Array.isArray(r.data)) setSuggestions(r.data);
     }, 150);
-    return () => clearTimeout(debounceT.current);
+    return () => { stale = true; clearTimeout(debounceT.current); };
   }, [value, sport]);
 
   useEffect(() => setHi(0), [value]);
@@ -383,13 +387,14 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
           borderRadius: 10, zIndex: 200, overflow: "hidden",
           boxShadow: "0 12px 32px rgba(0,0,0,0.6)",
         }}>
-          {suggestions.map((name, i) => (
+          {suggestions.map((s, i) => (
             <div
-              key={name}
-              onMouseDown={e => { e.preventDefault(); onSelect(name); setOpen(false); }}
+              key={s.player_id}
+              data-testid="ac-option"
+              onMouseDown={e => { e.preventDefault(); onSelect(s); setOpen(false); }}
               onMouseEnter={() => setHi(i)}
               style={{
-                padding: "0.7rem 1.1rem",
+                padding: "0.6rem 1.1rem",
                 background: i === hi ? `${accentColor ?? ACCENT}22` : "transparent",
                 color: i === hi ? HI : MID,
                 fontSize: "0.92rem", cursor: "pointer",
@@ -397,7 +402,15 @@ function AutocompleteInput({ value, onChange, onSelect, onSubmit, disabled, plac
                 transition: "background 0.1s",
               }}
             >
-              {name}
+              <div>
+                {s.display_name}
+                {s.matched_alias && <span style={{ color: LO, fontSize: "0.8rem" }}> · “{s.matched_alias}”</span>}
+              </div>
+              {s.detail && (
+                <div style={{ fontSize: "0.72rem", color: LO, fontFamily: "'Roboto Mono',monospace", marginTop: "0.15rem" }}>
+                  {s.detail}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -635,6 +648,10 @@ export default function App() {
   const [game,          setGame]          = useState(null);
   const [currentMove,   setCurrentMove]   = useState(null);
   const [myAnswer,      setMyAnswer]      = useState("");
+  const [myPick,        setMyPick]        = useState(null);  // { playerId, name } picked from autocomplete
+  const [chooser,       setChooser]       = useState(null);  // { kind, candidates } when a name needs a choice
+  const [checking,      setChecking]      = useState(false); // an answer is being checked
+  const [answerError,   setAnswerError]   = useState("");
   const [submitted,     setSubmitted]     = useState(false);
   const [copyMsg,       setCopyMsg]       = useState("");
   const [revealData,    setRevealData]    = useState(null);
@@ -750,7 +767,7 @@ export default function App() {
     // Same-answer retry: resolver set phase to "retry" — non-resolver resets for re-answering
     if (fresh.phase === "retry" && cur.phase === "answering" && !showingReveal.current) {
       setSubmitted(false);
-      setMyAnswer("");
+      clearAnswer();
       setCurrentMove(null); // triggers load-move effect to re-fetch the updated move
     }
     setGame(fresh);
@@ -764,8 +781,7 @@ export default function App() {
     const winnerName =
       move.result === "p1" ? g.player1_name :
       move.result === "p2" ? g.player2_name : null;
-    const isSameAnswer  = move.p1_valid && move.p2_valid &&
-      normalizeStr(move.p1_answer ?? "") === normalizeStr(move.p2_answer ?? "");
+    const isSameAnswer  = isSamePlayer(move);
     const isBothInvalid = !move.p1_valid && !move.p2_valid;
     // On same-answer retry the SAME player goes again; otherwise the OTHER player picks next
     const nextPickerName = isSameAnswer
@@ -841,7 +857,7 @@ export default function App() {
 
   function dismissReveal() {
     setRevealData(null); setRevealStep(0); setReportStatus(null); setReportForm(null);
-    setSubmitted(false); setMyAnswer("");
+    setSubmitted(false); clearAnswer();
     resolving.current = false; showingReveal.current = false;
     // On same-answer retry, restore the new move so the player can answer again
     if (pendingRetryMove.current) {
@@ -864,9 +880,14 @@ export default function App() {
     setLobbyLoading(false);
   }
 
+  /** Empty the answer box and forget any picked player / pending choice. */
+  function clearAnswer() {
+    setMyAnswer(""); setMyPick(null); setChooser(null); setAnswerError(""); setChecking(false);
+  }
+
   function resetGameState(g) {
     setGame(g); gameRef.current = g;
-    setCurrentMove(null); setMyAnswer(""); setSubmitted(false);
+    setCurrentMove(null); clearAnswer(); setSubmitted(false);
     setRevealData(null); setRevealStep(0); setPreviewCell(null); setReportStatus(null); setReportForm(null);
     resolving.current = false; showingReveal.current = false; cpuThinking.current = false;
   }
@@ -1076,6 +1097,7 @@ export default function App() {
       p1_answer: null, p2_answer: null,
       p1_valid: null, p2_valid: null,
       p1_rarity: null, p2_rarity: null, result: null,
+      p1_player_id: null, p2_player_id: null,
     };
     setCurrentMove(move);
     const updated = { ...g, active_cell: idx, phase: "answering" };
@@ -1085,20 +1107,37 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // SUBMIT ANSWER — multiplayer
   // ─────────────────────────────────────────────────────────────────────────────
-  async function submitAnswer() {
-    if (submitted || !myAnswer.trim() || !game || !currentMove) return;
+  /**
+   * Check the answer in the box (or the player picked in the chooser). Returns the
+   * recorded ruling, or null when the player must choose / the check failed.
+   * `chosen` = { player_id, display_name } from the chooser.
+   */
+  async function checkMyAnswer({ gameId, moveId, role, gameMode, cell, chosen }) {
+    setChecking(true); setAnswerError("");
+    const res = await submitAndRule({
+      gameId, moveId, role, gameMode, questionKey: cellKey(cell), cell, answer: myAnswer,
+      playerId: chosen?.player_id ?? myPick?.playerId ?? null,
+    });
+    setChecking(false);
+    if (res.status === "choose") { setChooser({ kind: res.kind, candidates: res.candidates }); return null; }
+    if (res.status === "error") { setAnswerError("Couldn't check that answer. Try again."); return null; }
+    setChooser(null);
+    // Show the player the answer resolved to ("Big Unit" → Randy Johnson); unresolved text as typed
+    return { ...res, shown: res.playerId != null && res.playerName ? res.playerName : myAnswer.trim() };
+  }
+
+  async function submitAnswer(chosen) {
+    if (submitted || checking || !myAnswer.trim() || !game || !currentMove) return;
     const myRole = game.player1_id === user.id ? "p1" : "p2";
     const cell   = game.cells[game.active_cell];
-    const qKey   = cellKey(cell);
-    const { valid, submissionId } = await submitAndRule({
-      gameId: game.id, moveId: currentMove.id, role: myRole, gameMode: "multiplayer",
-      questionKey: qKey, cell, answer: myAnswer,
-    });
+    const res = await checkMyAnswer({ gameId: game.id, moveId: currentMove.id, role: myRole, gameMode: "multiplayer", cell, chosen });
+    if (!res) return;
+    const { valid, submissionId, playerId, shown } = res;
     mySubmission.current = { moveId: currentMove.id, role: myRole, id: submissionId };
     // Rarity is written by the resolver once both answers are in
     const patch  = myRole === "p1"
-      ? { p1_answer: myAnswer, p1_valid: valid, p1_rarity: null, p1_submission_id: submissionId }
-      : { p2_answer: myAnswer, p2_valid: valid, p2_rarity: null, p2_submission_id: submissionId };
+      ? { p1_answer: shown, p1_valid: valid, p1_rarity: null, p1_submission_id: submissionId, p1_player_id: playerId }
+      : { p2_answer: shown, p2_valid: valid, p2_rarity: null, p2_submission_id: submissionId, p2_player_id: playerId };
     await dbUpdate("moves", `?id=eq.${currentMove.id}`, patch);
     setSubmitted(true);
     const freshMv = await dbSelect("moves", `?id=eq.${currentMove.id}`);
@@ -1112,21 +1151,19 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // SUBMIT ANSWER — CPU
   // ─────────────────────────────────────────────────────────────────────────────
-  async function submitAnswerCpu() {
-    if (submitted || !myAnswer.trim() || !game || !currentMove) return;
+  async function submitAnswerCpu(chosen) {
+    if (submitted || checking || !myAnswer.trim() || !game || !currentMove) return;
     const cell  = game.cells[game.active_cell];
-    const qKey  = cellKey(cell);
     // Snapshot rarity BEFORE recording: the CPU's answer is never recorded, so
     // counting the human's own submission would be a one-sided penalty.
     const liveRarities = await liveCellRarities(cell);
-    const { valid, submissionId } = await submitAndRule({
-      gameId: game.id, moveId: currentMove.id, role: "p1", gameMode: "cpu",
-      questionKey: qKey, cell, answer: myAnswer,
-    });
+    const res = await checkMyAnswer({ gameId: game.id, moveId: currentMove.id, role: "p1", gameMode: "cpu", cell, chosen });
+    if (!res) return;
+    const { valid, submissionId, playerId, shown } = res;
     mySubmission.current = { moveId: currentMove.id, role: "p1", id: submissionId };
     const updatedMove = {
       ...currentMove,
-      p1_answer: myAnswer, p1_valid: valid, p1_rarity: null, p1_submission_id: submissionId,
+      p1_answer: shown, p1_valid: valid, p1_rarity: null, p1_submission_id: submissionId, p1_player_id: playerId,
     };
     setCurrentMove(updatedMove);
     setSubmitted(true);
@@ -1136,12 +1173,13 @@ export default function App() {
     setTimeout(async () => {
       const g = gameRef.current;
       if (!g) return;
-      const cpuAns = cpuPickAnswer(cell, g.cpuDiff ?? "medium", myAnswer, liveRarities);
+      const cpuAns = cpuPickAnswer(cell, g.cpuDiff ?? "medium", valid ? playerId : null, liveRarities);
       const finalMove = {
         ...updatedMove,
         p2_answer: cpuAns.name,
         p2_valid:  cpuAns.valid,
         p2_rarity: null,
+        p2_player_id: cpuAns.playerId,
       };
       await resolveCpuMove(finalMove, liveRarities);
     }, delay);
@@ -1154,9 +1192,8 @@ export default function App() {
     const gRes = await dbSelect("games", `?id=eq.${game.id}`);
     const g    = gRes.data[0];
 
-    // ── Same answer: same cell stays, same player retries ──
-    if (mv.p1_valid && mv.p2_valid &&
-        normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "")) {
+    // ── Same answer (same player, by id): same cell stays, same player retries ──
+    if (isSamePlayer(mv)) {
       const qKey = cellKey(g.cells[g.active_cell]);
       // Clear answers on the move
       await dbUpdate("moves", `?id=eq.${mv.id}`, {
@@ -1165,6 +1202,7 @@ export default function App() {
         p1_valid: null,  p2_valid: null,
         p1_rarity: null, p2_rarity: null,
         p1_submission_id: null, p2_submission_id: null,
+        p1_player_id: null, p2_player_id: null,
       });
       // Keep same active_cell and choosing_player; switch to "retry" phase
       await dbUpdate("games", `?id=eq.${game.id}`, { phase: "retry" });
@@ -1175,6 +1213,7 @@ export default function App() {
         p1_valid: null, p2_valid: null,
         p1_rarity: null, p2_rarity: null, result: null,
         p1_submission_id: null, p2_submission_id: null,
+        p1_player_id: null, p2_player_id: null,
       };
       triggerReveal({ ...mv, result: "same_answer" }, g);
       await refreshGame();
@@ -1189,8 +1228,8 @@ export default function App() {
     let p1Rarity = null, p2Rarity = null;
     if (mv.p1_valid || mv.p2_valid) {
       cellRarities = await liveCellRarities(g.cells[g.active_cell]);
-      if (mv.p1_valid) p1Rarity = cellRarities.get(normalizeStr(mv.p1_answer)) ?? 0.1;
-      if (mv.p2_valid) p2Rarity = cellRarities.get(normalizeStr(mv.p2_answer)) ?? 0.1;
+      if (mv.p1_valid) p1Rarity = answerRarity(cellRarities, mv, "p1");
+      if (mv.p2_valid) p2Rarity = answerRarity(cellRarities, mv, "p2");
     }
     if (!mv.p1_valid && !mv.p2_valid) {
       result = "reset";
@@ -1236,14 +1275,14 @@ export default function App() {
     const g = gameRef.current;
     if (!g) return;
 
-    // ── Same answer: same cell stays, same player retries ──
-    if (mv.p1_valid && mv.p2_valid &&
-        normalizeStr(mv.p1_answer ?? "") === normalizeStr(mv.p2_answer ?? "")) {
+    // ── Same answer (same player, by id): same cell stays, same player retries ──
+    if (isSamePlayer(mv)) {
       const qKey = cellKey(g.cells[g.active_cell]);
       const newMove  = {
         id: `move-${Date.now()}`, game_id: g.id, cell_index: g.active_cell,
         question_key: qKey, p1_answer: null, p2_answer: null,
         p1_valid: null, p2_valid: null, p1_rarity: null, p2_rarity: null, result: null,
+        p1_player_id: null, p2_player_id: null,
       };
       pendingRetryMove.current = newMove;
       const updated = { ...g, phase: "retry" };
@@ -1256,8 +1295,8 @@ export default function App() {
     let result;
     // Same blended numbers the CPU picked with (snapshotted before the human's answer was recorded)
     const cellRarities = liveRarities ?? await liveCellRarities(g.cells[g.active_cell]);
-    const p1Rarity = mv.p1_valid ? (cellRarities.get(normalizeStr(mv.p1_answer)) ?? 0.1) : null;
-    const p2Rarity = mv.p2_valid ? (cellRarities.get(normalizeStr(mv.p2_answer)) ?? 0.1) : null;
+    const p1Rarity = mv.p1_valid ? answerRarity(cellRarities, mv, "p1") : null;
+    const p2Rarity = mv.p2_valid ? answerRarity(cellRarities, mv, "p2") : null;
     mv = { ...mv, p1_rarity: p1Rarity, p2_rarity: p2Rarity };
     if (!mv.p1_valid && !mv.p2_valid) {
       result = "reset";
@@ -1980,23 +2019,30 @@ export default function App() {
                   {activeQ.clue}
                 </div>
                 {!submitted ? (
-                  <div style={{ display: "flex", gap: "0.6rem" }}>
-                    <AutocompleteInput
-                      value={myAnswer}
-                      disabled={submitted}
-                      accentColor={diffColor}
-                      placeholder="Type a name…"
-                      onChange={v => setMyAnswer(v)}
-                      onSelect={v => setMyAnswer(v)}
-                      onSubmit={game.isCpu ? submitAnswerCpu : submitAnswer}
-                      sport={game.sport}
-                    />
-                    <button className="sb" style={{ background: diffColor }}
-                      onClick={game.isCpu ? submitAnswerCpu : submitAnswer}
-                      disabled={!myAnswer.trim()}>
-                      LOCK IN
-                    </button>
-                  </div>
+                  <>
+                    <div style={{ display: "flex", gap: "0.6rem" }}>
+                      <AutocompleteInput
+                        value={myAnswer}
+                        disabled={submitted || checking || !!chooser}
+                        accentColor={diffColor}
+                        placeholder="Type a name…"
+                        onChange={v => { setMyAnswer(v); setMyPick(null); setAnswerError(""); }}
+                        onSelect={s => { setMyAnswer(s.display_name); setMyPick({ playerId: s.player_id, name: s.display_name }); setAnswerError(""); }}
+                        onSubmit={() => (game.isCpu ? submitAnswerCpu() : submitAnswer())}
+                        sport={game.sport ?? activeQ.sport}
+                      />
+                      <button className="sb" style={{ background: diffColor }} data-testid="lock-in"
+                        onClick={() => (game.isCpu ? submitAnswerCpu() : submitAnswer())}
+                        disabled={!myAnswer.trim() || checking || !!chooser}>
+                        {checking ? "CHECKING…" : "LOCK IN"}
+                      </button>
+                    </div>
+                    {answerError && (
+                      <div role="alert" style={{ color: "#FC5C65", fontSize: "0.8rem", marginTop: "0.6rem", fontFamily: "'Roboto Mono',monospace" }}>
+                        {answerError}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div style={{
                     background: SURF2, border: `1.5px solid ${PC[myRole ?? "p1"]}`,
@@ -2092,6 +2138,49 @@ export default function App() {
         </div>
       )}
 
+      {/* ── CHOOSER: the typed name matches several players, or is a near-miss. Always shown
+             for an ambiguous name, even when no option fits the square, so it reveals nothing. ── */}
+      {screen === "game" && chooser && !submitted && game && (
+        <div data-testid="chooser" style={{
+          position: "fixed", inset: 0, background: "rgba(8,8,18,0.88)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 350, padding: "1.5rem", animation: "fadeIn 0.2s ease",
+        }}>
+          <div style={{
+            background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: 20,
+            padding: "1.75rem", maxWidth: 460, width: "100%", boxShadow: "0 24px 72px rgba(0,0,0,0.8)",
+          }}>
+            <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.5rem", letterSpacing: "2px", color: HI, marginBottom: "0.3rem" }}>
+              {chooser.kind === "suggest" ? "DID YOU MEAN…" : "WHICH ONE?"}
+            </div>
+            <div style={{ color: MID, fontSize: "0.85rem", fontStyle: "italic", marginBottom: "1.1rem" }}>
+              {chooser.kind === "suggest"
+                ? <>No player is called “{myAnswer.trim()}”. Pick the one you meant.</>
+                : <>More than one player is called “{myAnswer.trim()}”. Pick the one you mean.</>}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.1rem" }}>
+              {chooser.candidates.map(c => (
+                <button key={c.player_id} data-testid="chooser-option" disabled={checking}
+                  onClick={() => (game.isCpu ? submitAnswerCpu(c) : submitAnswer(c))}
+                  style={{
+                    textAlign: "left", background: SURF2, border: `1.5px solid ${BORDER}`, borderRadius: 12,
+                    padding: "0.75rem 1rem", color: HI, cursor: checking ? "wait" : "pointer", fontFamily: "inherit",
+                  }}>
+                  <div style={{ fontSize: "1rem" }}>{c.display_name}</div>
+                  {c.detail && (
+                    <div style={{ fontSize: "0.72rem", color: LO, fontFamily: "'Roboto Mono',monospace", marginTop: "0.2rem" }}>{c.detail}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button className="ghost-btn" data-testid="chooser-back" style={{ width: "100%" }} disabled={checking}
+              onClick={() => setChooser(null)}>
+              CHANGE MY ANSWER
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── REVEAL MODAL (full-screen overlay, dismisses on Continue click) ── */}
       {revealData && (
         <div style={{
@@ -2133,7 +2222,7 @@ export default function App() {
                 const cr = revealData.cellRarities;
                 const rarity = !(answer && valid) ? null
                   : stored != null ? Number(stored)
-                  : cr ? (cr.get(normalizeStr(answer)) ?? 0.1) : null;
+                  : answerRarity(cr, revealData.move, p);
                 const won    = revealData.result === p;
                 return (
                   <div key={p} style={{
@@ -2219,7 +2308,7 @@ export default function App() {
                       if (!revealData.move[`${wKey}_valid`] || !revealData.move[`${lKey}_valid`]) return null;
                       const rarityOf = k => revealData.move[`${k}_rarity`] != null
                         ? Number(revealData.move[`${k}_rarity`])
-                        : cr ? (cr.get(normalizeStr(revealData.move[`${k}_answer`])) ?? 0.1) : null;
+                        : answerRarity(cr, revealData.move, k);
                       const wRarity = rarityOf(wKey);
                       const lRarity = rarityOf(lKey);
                       if (wRarity == null || lRarity == null) return null;

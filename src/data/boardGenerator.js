@@ -17,7 +17,6 @@ import {
   NON_TEAM_BY_SPORT,
   CATEGORY_MAP,
 } from "./categories.js";
-import { normalizeStr } from "./questions.js";
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────────
 
@@ -52,33 +51,39 @@ function resolveSport(mode) {
 // Cache per sport: { playersByFact, teams, nonTeam, compat }
 const _cache = new Map();
 
+/** Fetch every row of a PostgREST query, 1,000 at a time. */
+async function fetchAll(sbFetch, path, qs) {
+  const rows = [];
+  const PAGE = 1000;
+  for (let offset = 0; ; offset += PAGE) {
+    const { ok, data } = await sbFetch(`/rest/v1/${path}?${qs}&limit=${PAGE}&offset=${offset}`);
+    if (!ok || !Array.isArray(data) || data.length === 0) break;
+    rows.push(...data);
+    if (data.length < PAGE) break;
+  }
+  return rows;
+}
+
 /**
- * Fetch ALL player_facts for a sport and build a local index + compatibility matrix.
+ * Fetch a sport's OWNED player_facts (facts linked to a player id) and build a local
+ * index + compatibility matrix. Everything is keyed by player id, never by name, so
+ * namesakes stay separate and boards/CPU answers only use facts the checker accepts.
  */
 async function preloadSport(sport, sbFetch, minAnswers) {
   const cacheKey = `${sport}|${minAnswers}`;
   if (_cache.has(cacheKey)) return _cache.get(cacheKey);
 
-  // Paginate to get ALL rows
-  const allRows = [];
-  let offset = 0;
-  const PAGE = 1000;
-  while (true) {
-    const qs =
-      `?sport=eq.${encodeURIComponent(sport)}` +
-      `&select=player_name,fact_type,fact_value` +
-      `&limit=${PAGE}&offset=${offset}`;
-    const { ok, data } = await sbFetch(`/rest/v1/player_facts${qs}`);
-    if (!ok || !Array.isArray(data) || data.length === 0) break;
-    allRows.push(...data);
-    if (data.length < PAGE) break;
-    offset += PAGE;
-  }
+  const sportEq = `sport=eq.${encodeURIComponent(sport)}`;
+  const [allRows, people, views] = await Promise.all([
+    fetchAll(sbFetch, "player_facts", `${sportEq}&player_id=not.is.null&select=player_id,fact_type,fact_value&order=id`),
+    fetchAll(sbFetch, "players", `sports=cs.${encodeURIComponent(`{${sport}}`)}&select=id,display_name&order=id`),
+    fetchAll(sbFetch, "player_pageviews", `${sportEq}&select=player_id,pageviews_12m&order=player_id`),
+  ]);
 
-  // Build index: "fact_type|fact_value" → Set<lowercase player name>
+  // Build index: "fact_type|fact_value" → Set<player id>
   const playersByFact = new Map();
-  // Map lowercase → original case (for CPU answer picking)
-  const originalNames = new Map();
+  // player id → display name (CPU answers, reveal)
+  const names = new Map(people.map(p => [p.id, p.display_name]));
   // Count total fact entries per player — proxy for "fame" (more facts = more well-known)
   const factCounts = new Map();
   // Count award/accolade facts only (exclude played_for_team) — better fame proxy
@@ -86,12 +91,11 @@ async function preloadSport(sport, sbFetch, minAnswers) {
   for (const r of allRows) {
     const key = `${r.fact_type}|${r.fact_value}`;
     if (!playersByFact.has(key)) playersByFact.set(key, new Set());
-    const lower = r.player_name.toLowerCase();
-    playersByFact.get(key).add(lower);
-    originalNames.set(lower, r.player_name);
-    factCounts.set(lower, (factCounts.get(lower) || 0) + 1);
+    const id = r.player_id;
+    playersByFact.get(key).add(id);
+    factCounts.set(id, (factCounts.get(id) || 0) + 1);
     if (r.fact_type !== 'played_for_team') {
-      awardCounts.set(lower, (awardCounts.get(lower) || 0) + 1);
+      awardCounts.set(id, (awardCounts.get(id) || 0) + 1);
     }
   }
 
@@ -144,24 +148,11 @@ async function preloadSport(sport, sbFetch, minAnswers) {
     compat.set(row.id, rowMap);
   }
 
-  // Load pageview data from player_fame for this sport
-  const pageviews = new Map();
-  let pvOffset = 0;
-  while (true) {
-    const pvQs =
-      `?sport=eq.${encodeURIComponent(sport)}` +
-      `&select=player_name,wikipedia_pageviews_12m` +
-      `&limit=${PAGE}&offset=${pvOffset}`;
-    const pv = await sbFetch(`/rest/v1/player_fame${pvQs}`);
-    if (!pv.ok || !Array.isArray(pv.data) || pv.data.length === 0) break;
-    for (const r of pv.data) {
-      pageviews.set(r.player_name.toLowerCase(), r.wikipedia_pageviews_12m || 0);
-    }
-    if (pv.data.length < PAGE) break;
-    pvOffset += PAGE;
-  }
+  // Page-view estimate per player id for this sport (player_pageviews: every player who
+  // owns a fact has one, so no valid answer falls back to the default)
+  const pageviews = new Map(views.map(v => [v.player_id, Number(v.pageviews_12m) || 0]));
 
-  const result = { playersByFact, teams, nonTeam, compat, originalNames, factCounts, awardCounts, pageviews };
+  const result = { playersByFact, teams, nonTeam, compat, names, factCounts, awardCounts, pageviews };
   _cache.set(cacheKey, result);
   return result;
 }
@@ -327,35 +318,41 @@ export function getCategoryDisplay(catId) {
   return { label: cat.label, shortLabel: cat.shortLabel };
 }
 
+function cachedSport(sport) {
+  for (const [key, val] of _cache) {
+    if (key.startsWith(sport + "|")) return val;
+  }
+  return null;
+}
+
 /**
- * Get players satisfying both a row and column category (for CPU answers).
- * Uses cached data from generateBoard — returns original-case names
- * sorted by fact count descending (most well-known players first).
+ * Get the ids of players satisfying both a row and column category (for CPU answers
+ * and rarity). Uses cached data from generateBoard, sorted by fact count descending
+ * (most well-known players first).
  */
 export function getIntersectionPlayers(sport, rowCatId, colCatId) {
   const row = CATEGORY_MAP[rowCatId];
   const col = CATEGORY_MAP[colCatId];
   if (!row || !col) return [];
-
-  let cached = null;
-  for (const [key, val] of _cache) {
-    if (key.startsWith(sport + "|")) { cached = val; break; }
-  }
+  const cached = cachedSport(sport);
   if (!cached) return [];
 
-  const { playersByFact, originalNames, factCounts } = cached;
-  const rowKey = `${row.fact.type}|${row.fact.value}`;
-  const colKey = `${col.fact.type}|${col.fact.value}`;
-  const rowPlayers = playersByFact.get(rowKey) || new Set();
-  const colPlayers = playersByFact.get(colKey) || new Set();
+  const { playersByFact, factCounts } = cached;
+  const rowPlayers = playersByFact.get(`${row.fact.type}|${row.fact.value}`) || new Set();
+  const colPlayers = playersByFact.get(`${col.fact.type}|${col.fact.value}`) || new Set();
 
   const result = [];
-  for (const p of rowPlayers) {
-    if (colPlayers.has(p)) result.push(p);
+  for (const id of rowPlayers) {
+    if (colPlayers.has(id)) result.push(id);
   }
   // Sort by fact count descending — players with more facts are more well-known
   result.sort((a, b) => (factCounts.get(b) || 0) - (factCounts.get(a) || 0));
-  return result.map(p => originalNames.get(p) || p);
+  return result;
+}
+
+/** Display name for a player id (from the sport's cached data), or null. */
+export function getPlayerName(sport, playerId) {
+  return cachedSport(sport)?.names.get(playerId) ?? null;
 }
 
 /**
@@ -364,33 +361,29 @@ export function getIntersectionPlayers(sport, rowCatId, colCatId) {
  * a Zipf distribution to model "what % of people would guess this player
  * for THIS specific square."
  *
- * Players with no pageview data default to the bottom of the pool.
  * Every valid player gets at least 0.01% — no valid answer is ever 0%.
+ * Keyed by player id. Every player who owns a fact has a page-view estimate
+ * (player_pageviews), so no valid answer falls back to a default.
  *
- * Known limitation: Wikipedia pageviews don't disambiguate common names.
- * Players like "Don Johnson", "Bobby Brown", or "Kenny Rogers" get inflated
- * pageviews from their more famous non-athlete namesakes. Once answer_stats
- * accumulates ≥25 real submissions for an intersection, live gameplay data
- * will override these Zipf-based estimates and fix the rankings naturally.
+ * Known limitation: namesakes still share one page's views until the page-view
+ * re-seed; real submissions (blended in rarity.js) correct the rankings over time.
  */
 export function getIntersectionRarities(sport, rowCatId, colCatId) {
   const players = getIntersectionPlayers(sport, rowCatId, colCatId);
   if (!players.length) return new Map();
-
-  let cached = null;
-  for (const [key, val] of _cache) {
-    if (key.startsWith(sport + "|")) { cached = val; break; }
-  }
+  const cached = cachedSport(sport);
   if (!cached) return new Map();
 
   const { pageviews, factCounts } = cached;
+  const missing = players.filter(id => !pageviews.has(id));
+  if (missing.length) console.warn(`[rarity] ${missing.length} players without a page-view estimate on ${rowCatId}__${colCatId}:`, missing);
 
-  // Sort by Wikipedia pageviews desc; no pageview data → bottom, tie-break by factCounts
+  // Sort by Wikipedia pageviews desc; tie-break by fact count
   const sorted = [...players].sort((a, b) => {
-    const aViews = pageviews.get(a.toLowerCase()) ?? -1;
-    const bViews = pageviews.get(b.toLowerCase()) ?? -1;
+    const aViews = pageviews.get(a) ?? -1;
+    const bViews = pageviews.get(b) ?? -1;
     if (bViews !== aViews) return bViews - aViews;
-    return (factCounts.get(b.toLowerCase()) || 0) - (factCounts.get(a.toLowerCase()) || 0);
+    return (factCounts.get(b) || 0) - (factCounts.get(a) || 0);
   });
 
   // Exponential decay: weight(rank) = e^(-k * rank)
@@ -408,21 +401,7 @@ export function getIntersectionRarities(sport, rowCatId, colCatId) {
   const result = new Map();
   for (let i = 0; i < sorted.length; i++) {
     const pct = (weights[i] / totalWeight) * 100;
-    // Keyed by normalizeStr so lookups with a typed answer ("Shaquille ONeal",
-    // "shaquille o'neal") hit the same entry as the stored spelling.
-    result.set(normalizeStr(sorted[i]), Math.max(MIN_PCT, pct));
+    result.set(sorted[i], Math.max(MIN_PCT, pct));   // player id → prior %
   }
   return result;
-}
-
-/**
- * Get rarity % for a single player on a specific intersection.
- * Returns the percentage, or null if the player isn't in the pool.
- * If the player validates but isn't in our cache, returns 0.1% (very rare).
- */
-export function getPlayerRarity(sport, rowCatId, colCatId, playerName) {
-  const rarities = getIntersectionRarities(sport, rowCatId, colCatId);
-  const key = normalizeStr(playerName);
-  if (rarities.has(key)) return rarities.get(key);
-  return 0.1; // Validated but not in cache = truly obscure
 }
