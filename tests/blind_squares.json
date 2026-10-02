@@ -1,0 +1,337 @@
+[
+ {
+  "row": "nba_nuggets",
+  "col": "nba_mvp",
+  "obvious": [
+   "Nikola Jokic"
+  ]
+ },
+ {
+  "row": "nba_pelicans",
+  "col": "nba_allstar",
+  "obvious": [
+   "Anthony Davis"
+  ]
+ },
+ {
+  "row": "nba_grizzlies",
+  "col": "nba_dpoy",
+  "obvious": [
+   "Marc Gasol",
+   "Jaren Jackson Jr."
+  ]
+ },
+ {
+  "row": "nba_clippers",
+  "col": "nba_sixth_man",
+  "obvious": [
+   "Lou Williams",
+   "Jamal Crawford",
+   "Montrezl Harrell"
+  ]
+ },
+ {
+  "row": "nba_cavaliers",
+  "col": "nba_mvp",
+  "obvious": [
+   "LeBron James"
+  ]
+ },
+ {
+  "row": "nba_magic",
+  "col": "nba_dpoy",
+  "obvious": [
+   "Dwight Howard"
+  ]
+ },
+ {
+  "row": "mlb_mariners",
+  "col": "mlb_allstar",
+  "obvious": [
+   "Ken Griffey Jr.",
+   "Ichiro Suzuki"
+  ]
+ },
+ {
+  "row": "mlb_twins",
+  "col": "mlb_mvp",
+  "obvious": [
+   "Joe Mauer"
+  ]
+ },
+ {
+  "row": "mlb_padres",
+  "col": "mlb_cy_young",
+  "obvious": [
+   "Jake Peavy"
+  ]
+ },
+ {
+  "row": "mlb_orioles",
+  "col": "mlb_roy",
+  "obvious": [
+   "Cal Ripken Jr."
+  ]
+ },
+ {
+  "row": "mlb_pirates",
+  "col": "mlb_ws_champ",
+  "obvious": [
+   "Roberto Clemente",
+   "Willie Stargell"
+  ]
+ },
+ {
+  "row": "nhl_penguins",
+  "col": "nhl_hart",
+  "obvious": [
+   "Mario Lemieux",
+   "Sidney Crosby"
+  ]
+ },
+ {
+  "row": "nhl_oilers",
+  "col": "nhl_stanley_cup",
+  "obvious": [
+   "Wayne Gretzky",
+   "Mark Messier"
+  ]
+ },
+ {
+  "row": "nhl_canadiens",
+  "col": "nhl_vezina",
+  "obvious": [
+   "Patrick Roy",
+   "Ken Dryden",
+   "Jacques Plante",
+   "Carey Price"
+  ]
+ },
+ {
+  "row": "nhl_capitals",
+  "col": "nhl_hart",
+  "obvious": [
+   "Alexander Ovechkin"
+  ]
+ },
+ {
+  "row": "nfl_titans",
+  "col": "nfl_pro_bowl",
+  "obvious": [
+   "Derrick Henry",
+   "Eddie George",
+   "Steve McNair"
+  ]
+ },
+ {
+  "row": "nfl_ravens",
+  "col": "nfl_sb_champ",
+  "obvious": [
+   "Ray Lewis",
+   "Joe Flacco"
+  ]
+ },
+ {
+  "row": "nba_lakers",
+  "col": "nba_heat",
+  "obvious": [
+   "Shaquille O'Neal",
+   "LeBron James"
+  ]
+ },
+ {
+  "row": "nba_thunder",
+  "col": "nba_mvp",
+  "obvious": [
+   "Kevin Durant",
+   "Russell Westbrook",
+   "Shai Gilgeous-Alexander"
+  ]
+ },
+ {
+  "row": "nba_bulls",
+  "col": "nba_dpoy",
+  "obvious": [
+   "Michael Jordan",
+   "Joakim Noah"
+  ]
+ },
+ {
+  "row": "nba_suns",
+  "col": "nba_mvp",
+  "obvious": [
+   "Steve Nash"
+  ]
+ },
+ {
+  "row": "nba_knicks",
+  "col": "nba_allstar",
+  "obvious": [
+   "Patrick Ewing"
+  ]
+ },
+ {
+  "row": "nba_celtics",
+  "col": "nba_nets",
+  "obvious": [
+   "Kevin Garnett",
+   "Paul Pierce"
+  ]
+ },
+ {
+  "row": "mlb_red_sox",
+  "col": "mlb_yankees",
+  "obvious": [
+   "Babe Ruth",
+   "Johnny Damon"
+  ]
+ },
+ {
+  "row": "mlb_giants",
+  "col": "mlb_mvp",
+  "obvious": [
+   "Barry Bonds",
+   "Willie Mays"
+  ]
+ },
+ {
+  "row": "mlb_braves",
+  "col": "mlb_cy_young",
+  "obvious": [
+   "Greg Maddux",
+   "Tom Glavine",
+   "John Smoltz"
+  ]
+ },
+ {
+  "row": "mlb_cardinals",
+  "col": "mlb_allstar",
+  "obvious": [
+   "Albert Pujols",
+   "Stan Musial",
+   "Yadier Molina"
+  ]
+ },
+ {
+  "row": "mlb_dodgers",
+  "col": "mlb_roy",
+  "obvious": [
+   "Jackie Robinson",
+   "Fernando Valenzuela",
+   "Mike Piazza"
+  ]
+ },
+ {
+  "row": "nhl_bruins",
+  "col": "nhl_norris",
+  "obvious": [
+   "Bobby Orr",
+   "Zdeno Chara"
+  ]
+ },
+ {
+  "row": "nhl_blackhawks",
+  "col": "nhl_stanley_cup",
+  "obvious": [
+   "Jonathan Toews",
+   "Patrick Kane"
+  ]
+ },
+ {
+  "row": "nhl_rangers",
+  "col": "nhl_oilers",
+  "obvious": [
+   "Mark Messier",
+   "Wayne Gretzky"
+  ]
+ },
+ {
+  "row": "nhl_lightning",
+  "col": "nhl_hart",
+  "obvious": [
+   "Nikita Kucherov",
+   "Martin St. Louis"
+  ]
+ },
+ {
+  "row": "nfl_patriots",
+  "col": "nfl_buccaneers",
+  "obvious": [
+   "Tom Brady",
+   "Rob Gronkowski"
+  ]
+ },
+ {
+  "row": "nfl_colts",
+  "col": "nfl_broncos",
+  "obvious": [
+   "Peyton Manning"
+  ]
+ },
+ {
+  "row": "nfl_chiefs",
+  "col": "nfl_sb_champ",
+  "obvious": [
+   "Patrick Mahomes",
+   "Travis Kelce"
+  ]
+ },
+ {
+  "row": "nfl_steelers",
+  "col": "nfl_pro_bowl",
+  "obvious": [
+   "Troy Polamalu",
+   "Ben Roethlisberger",
+   "Joe Greene"
+  ]
+ },
+ {
+  "row": "nfl_packers",
+  "col": "nfl_jets",
+  "obvious": [
+   "Brett Favre",
+   "Aaron Rodgers"
+  ]
+ },
+ {
+  "row": "soc_chelsea",
+  "col": "soc_real_madrid",
+  "obvious": [
+   "Eden Hazard",
+   "Thibaut Courtois"
+  ]
+ },
+ {
+  "row": "soc_man_utd",
+  "col": "soc_real_madrid",
+  "obvious": [
+   "Cristiano Ronaldo",
+   "David Beckham"
+  ]
+ },
+ {
+  "row": "soc_barcelona",
+  "col": "soc_psg",
+  "obvious": [
+   "Lionel Messi",
+   "Neymar"
+  ]
+ },
+ {
+  "row": "soc_arsenal",
+  "col": "soc_barcelona",
+  "obvious": [
+   "Thierry Henry",
+   "Cesc Fabregas"
+  ]
+ },
+ {
+  "row": "soc_liverpool",
+  "col": "soc_barcelona",
+  "obvious": [
+   "Luis Suarez",
+   "Philippe Coutinho",
+   "Javier Mascherano"
+  ]
+ }
+]

@@ -355,20 +355,54 @@ export function getPlayerName(sport, playerId) {
   return cachedSport(sport)?.names.get(playerId) ?? null;
 }
 
+// Server-side prior (formula v2, get_square_prior), cached per square: player id → prior %
+const _serverPrior = new Map();
+const priorKey = (sport, rowCatId, colCatId) => `${sport}|${rowCatId}|${colCatId}`;
+
 /**
- * Compute per-intersection rarity percentages for all valid players.
- * Sorts players by Wikipedia pageviews (from player_fame), then applies
- * a Zipf distribution to model "what % of people would guess this player
- * for THIS specific square."
+ * Load a square's prior from the server (formula v2: tenure × award count × page views,
+ * ranked, e^(-0.55·rank)). Cached per square; concurrent callers share one request.
+ * Resolves false if the call failed; getIntersectionRarities then falls back to the
+ * page-view estimate.
+ */
+export function loadSquarePrior(sbFetch, sport, rowCatId, colCatId) {
+  const key = priorKey(sport, rowCatId, colCatId);
+  const hit = _serverPrior.get(key);
+  if (hit instanceof Map) return Promise.resolve(true);
+  if (hit) return hit;
+  const row = CATEGORY_MAP[rowCatId], col = CATEGORY_MAP[colCatId];
+  if (!row || !col) return Promise.resolve(false);
+  const p = sbFetch("/rest/v1/rpc/get_square_prior", {
+    method: "POST",
+    body: JSON.stringify({
+      p_sport: sport,
+      p_row_type: row.fact.type, p_row_value: row.fact.value, p_row_is_team: row.type === "team",
+      p_col_type: col.fact.type, p_col_value: col.fact.value, p_col_is_team: col.type === "team",
+    }),
+  }).then(r => {
+    if (!r.ok || !Array.isArray(r.data)) throw new Error(`get_square_prior failed (${r.status})`);
+    _serverPrior.set(key, new Map(r.data.map(x => [Number(x.player_id), Number(x.prior_pct)])));
+    return true;
+  }).catch(err => {
+    console.warn(`[rarity] ${err.message}; using the page-view estimate for ${rowCatId}__${colCatId}`);
+    _serverPrior.delete(key);
+    return false;
+  });
+  _serverPrior.set(key, p);
+  return p;
+}
+
+/**
+ * Per-intersection rarity percentages for all valid players (player id → prior %).
+ * Uses the server prior (formula v2) once loadSquarePrior has fetched it for this
+ * square. Otherwise falls back to the page-view estimate: players sorted by
+ * Wikipedia page views, weighted e^(-0.55·rank).
  *
  * Every valid player gets at least 0.01% — no valid answer is ever 0%.
- * Keyed by player id. Every player who owns a fact has a page-view estimate
- * (player_pageviews), so no valid answer falls back to a default.
- *
- * Known limitation: namesakes still share one page's views until the page-view
- * re-seed; real submissions (blended in rarity.js) correct the rankings over time.
  */
 export function getIntersectionRarities(sport, rowCatId, colCatId) {
+  const server = _serverPrior.get(priorKey(sport, rowCatId, colCatId));
+  if (server instanceof Map) return server;
   const players = getIntersectionPlayers(sport, rowCatId, colCatId);
   if (!players.length) return new Map();
   const cached = cachedSport(sport);

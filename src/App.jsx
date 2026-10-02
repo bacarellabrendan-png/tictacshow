@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { DIFFICULTY_META, normalizeStr } from "./data/questions.js";
 import {
   generateBoard, expandBoard, getCategoryDisplay,
-  getIntersectionPlayers, getIntersectionRarities, getPlayerName, ensureSportData,
+  getIntersectionPlayers, getIntersectionRarities, getPlayerName, ensureSportData, loadSquarePrior,
 } from "./data/boardGenerator.js";
 import { blendRarities } from "./data/rarity.js";
 
@@ -200,7 +200,7 @@ function isSamePlayer(mv) {
 /** Rarity % for every player on a cell: prior estimate blended with real submissions. */
 async function liveCellRarities(cell) {
   // The prior needs this sport's data even in a browser that didn't build the board
-  await ensureSportData(cell.sport, sbFetch);
+  await Promise.all([ensureSportData(cell.sport, sbFetch), loadSquarePrior(sbFetch, cell.sport, cell.rowCat, cell.colCat)]);
   const prior = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
   return blendRarities(prior, await fetchSquareCounts(cellKey(cell)));
 }
