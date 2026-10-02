@@ -2149,6 +2149,7 @@ export default function App() {
           <div style={{
             background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: 20,
             padding: "1.75rem", maxWidth: 460, width: "100%", boxShadow: "0 24px 72px rgba(0,0,0,0.8)",
+            maxHeight: "calc(100vh - 3rem)", overflowY: "auto",   // up to 10 options: scroll on short screens
           }}>
             <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.5rem", letterSpacing: "2px", color: HI, marginBottom: "0.3rem" }}>
               {chooser.kind === "suggest" ? "DID YOU MEAN…" : "WHICH ONE?"}
