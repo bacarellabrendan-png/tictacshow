@@ -314,7 +314,7 @@ function RarityBar({ score }) {
   const display = score < 1 ? score.toFixed(2) : score < 10 ? score.toFixed(1) : Math.round(score);
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.15rem 0.5rem", marginBottom: "0.3rem" }}>
         <span style={{ fontSize: "0.65rem", color: LO, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>POPULARITY</span>
         <span style={{ fontSize: "0.65rem", color: col, letterSpacing: "1px", fontFamily: "'Roboto Mono',monospace" }}>{tier} · {display}%</span>
       </div>
@@ -488,7 +488,8 @@ const GLOBAL_CSS = `
 
   /* ─── Board cells ─── */
   .cell {
-    aspect-ratio: 1; border-radius: 12px; border: 1.5px solid ${BORDER};
+    aspect-ratio: 1; min-width: 0; min-height: 0;   /* without these the ratio sets a ~180px minimum width */
+    border-radius: 12px; border: 1.5px solid ${BORDER};
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 0.5rem; transition: all 0.2s; position: relative;
     text-align: center; background: ${SURF}; cursor: default;
@@ -547,15 +548,32 @@ const GLOBAL_CSS = `
     position: sticky; top: 1rem;
   }
   .board-grid {
-    display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 0.4rem;
+    display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)); gap: 0.4rem;
     width: 100%;
   }
+  .score-card { min-width: 0; }
 
   @media (max-width: 860px) {
     .game-wrap { flex-direction: column; padding: 1rem; gap: 1rem; }
+    .board-col, .sidebar { width: 100%; }
     .sidebar { flex: none; position: static; }
     .board-col-label { font-size: 0.6rem; padding: 0.3rem 0.15rem 0.4rem; }
     .board-row-label { font-size: 0.6rem; padding: 0.15rem 0.3rem; }
+  }
+  @media (max-width: 600px) {
+    .game-wrap { padding: 0.75rem; gap: 0.85rem; }
+    .board-grid { grid-template-columns: minmax(0, 0.8fr) repeat(3, minmax(0, 1fr)); gap: 0.3rem; }
+    .board-col-label, .board-row-label { font-size: 0.55rem; padding-left: 0.1rem; padding-right: 0.1rem; overflow-wrap: anywhere; }
+    .cell { border-radius: 9px; padding: 0.25rem; }
+    .score-card { padding: 0.6rem 0.7rem !important; gap: 0.5rem !important; }
+    .game-nav { padding: 0 0.75rem !important; gap: 0.5rem; }
+    .game-nav > * { white-space: nowrap; }
+    .game-nav-logo { font-size: 1.15rem !important; letter-spacing: 1.5px !important; }
+    .game-nav-vs { display: none; }   /* the score card already names the opponent */
+    .reveal-overlay { padding: 0.75rem !important; }
+    .reveal-modal { padding: 1.25rem !important; border-radius: 18px !important; }
+    .reveal-cards { gap: 0.6rem !important; }
+    .reveal-card { padding: 0.9rem !important; overflow-wrap: anywhere; }
   }
 
   /* ─── Lobby ─── */
@@ -1778,18 +1796,18 @@ export default function App() {
         background: SURF, borderBottom: `1px solid ${BORDER}`,
         flexShrink: 0, position: "sticky", top: 0, zIndex: 100,
       }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
+        <div className="game-nav" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
           <button
             onClick={() => { setScreen("lobby"); loadMyGames(); resetGameState(null); }}
             style={{ background: "transparent", border: "none", color: LO, cursor: "pointer", fontFamily: "'Bebas Neue',cursive", fontSize: "0.95rem", letterSpacing: "1px", display: "flex", alignItems: "center", gap: "0.4rem" }}>
             ← LOBBY
           </button>
-          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px" }}>
+          <div className="game-nav-logo" style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.4rem", letterSpacing: "2px" }}>
             TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             {game.isCpu && (
-              <span style={{ fontFamily: "'Roboto Mono',monospace", fontSize: "0.7rem", color: LO }}>
+              <span className="game-nav-vs" style={{ fontFamily: "'Roboto Mono',monospace", fontSize: "0.7rem", color: LO }}>
                 vs {game.player2_name}
               </span>
             )}
@@ -1862,7 +1880,7 @@ export default function App() {
                 const picking = game.phase === "choosing" && game.choosing_player === p;
                 const col     = PC[p];
                 return (
-                  <div key={p} style={{
+                  <div key={p} className="score-card" style={{
                     flex: 1, background: SURF, border: `1.5px solid ${picking ? col : BORDER}`,
                     borderRadius: 14, padding: "0.85rem 1.1rem",
                     display: "flex", alignItems: "center", gap: "0.75rem",
@@ -2184,17 +2202,18 @@ export default function App() {
 
       {/* ── REVEAL MODAL (full-screen overlay, dismisses on Continue click) ── */}
       {revealData && (
-        <div style={{
+        <div className="reveal-overlay" style={{
           position: "fixed", inset: 0,
           background: "rgba(8,8,18,0.92)",
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 400, padding: "1.5rem",
           animation: "fadeIn 0.2s ease",
         }}>
-          <div style={{
+          <div className="reveal-modal" style={{
             background: SURF, border: `1.5px solid ${BORDER}`,
             borderRadius: 24, padding: "2.5rem",
             maxWidth: 620, width: "100%",
+            maxHeight: "100%", overflowY: "auto",   // the report form can make it taller than the screen
             boxShadow: "0 32px 96px rgba(0,0,0,0.85)",
           }}>
             {/* Category reminder — use snapshotted revealData.q, not activeQ (active_cell is null by now) */}
@@ -2210,7 +2229,7 @@ export default function App() {
             )}
 
             {/* Answer cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+            <div className="reveal-cards" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
               {["p1", "p2"].map((p, idx) => {
                 const show   = revealStep > idx;
                 const pName  = p === "p1" ? game.player1_name : game.player2_name;
@@ -2226,7 +2245,7 @@ export default function App() {
                   : answerRarity(cr, revealData.move, p);
                 const won    = revealData.result === p;
                 return (
-                  <div key={p} style={{
+                  <div key={p} className="reveal-card" style={{
                     background: show ? (won ? `${PC[p]}18` : SURF2) : SURF2,
                     border: `2px solid ${show ? (won ? PC[p] : BORDER) : "transparent"}`,
                     borderRadius: 16, padding: "1.4rem",
