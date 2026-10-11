@@ -355,12 +355,13 @@ export function getPlayerName(sport, playerId) {
   return cachedSport(sport)?.names.get(playerId) ?? null;
 }
 
-// Server-side prior (formula v2, get_square_prior), cached per square: player id → prior %
+// Server-side prior (formula v2.1, get_square_prior_v2_1), cached per square: player id → prior %
 const _serverPrior = new Map();
 const priorKey = (sport, rowCatId, colCatId) => `${sport}|${rowCatId}|${colCatId}`;
 
 /**
- * Load a square's prior from the server (formula v2: tenure × award count × page views,
+ * Load a square's prior from the server (formula v2.1: tenure × award count × page views;
+ * team × team squares use the geometric mean of the two tenures;
  * ranked, e^(-0.55·rank)). Cached per square; concurrent callers share one request.
  * Resolves false if the call failed; getIntersectionRarities then falls back to the
  * page-view estimate.
@@ -372,7 +373,7 @@ export function loadSquarePrior(sbFetch, sport, rowCatId, colCatId) {
   if (hit) return hit;
   const row = CATEGORY_MAP[rowCatId], col = CATEGORY_MAP[colCatId];
   if (!row || !col) return Promise.resolve(false);
-  const p = sbFetch("/rest/v1/rpc/get_square_prior", {
+  const p = sbFetch("/rest/v1/rpc/get_square_prior_v2_1", {
     method: "POST",
     body: JSON.stringify({
       p_sport: sport,
@@ -380,7 +381,7 @@ export function loadSquarePrior(sbFetch, sport, rowCatId, colCatId) {
       p_col_type: col.fact.type, p_col_value: col.fact.value, p_col_is_team: col.type === "team",
     }),
   }).then(r => {
-    if (!r.ok || !Array.isArray(r.data)) throw new Error(`get_square_prior failed (${r.status})`);
+    if (!r.ok || !Array.isArray(r.data)) throw new Error(`get_square_prior_v2_1 failed (${r.status})`);
     _serverPrior.set(key, new Map(r.data.map(x => [Number(x.player_id), Number(x.prior_pct)])));
     return true;
   }).catch(err => {
@@ -394,7 +395,7 @@ export function loadSquarePrior(sbFetch, sport, rowCatId, colCatId) {
 
 /**
  * Per-intersection rarity percentages for all valid players (player id → prior %).
- * Uses the server prior (formula v2) once loadSquarePrior has fetched it for this
+ * Uses the server prior (formula v2.1) once loadSquarePrior has fetched it for this
  * square. Otherwise falls back to the page-view estimate: players sorted by
  * Wikipedia page views, weighted e^(-0.55·rank).
  *

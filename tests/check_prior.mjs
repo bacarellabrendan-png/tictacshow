@@ -1,4 +1,4 @@
-// Live check of the server prior (get_square_prior, formula v2), with the browser's public key.
+// Live check of the server prior (get_square_prior_v2_1, formula v2.1), with the browser's public key.
 // For every square a board can contain (team row × enabled category, 3+ valid answers, as the board
 // generator requires): the server returns exactly the valid players the app computes, each with a prior
 // >= 0.01%, so no answer falls back to the 0.1% default. Also prints where the expected answers rank on
@@ -22,10 +22,10 @@ async function all(table, qs) {
   return rows;
 }
 async function prior(sport, a, b) {
-  const r = await fetch(`${URL}/rest/v1/rpc/get_square_prior`, { method: "POST", headers: H, body: JSON.stringify({
+  const r = await fetch(`${URL}/rest/v1/rpc/get_square_prior_v2_1`, { method: "POST", headers: H, body: JSON.stringify({
     p_sport: sport, p_row_type: a.fact.type, p_row_value: a.fact.value, p_row_is_team: a.type === "team",
     p_col_type: b.fact.type, p_col_value: b.fact.value, p_col_is_team: b.type === "team" }) });
-  if (!r.ok) throw new Error(`get_square_prior ${a.id} x ${b.id}: ${r.status} ${await r.text()}`);
+  if (!r.ok) throw new Error(`get_square_prior_v2_1 ${a.id} x ${b.id}: ${r.status} ${await r.text()}`);
   return new Map((await r.json()).map(x => [Number(x.player_id), Number(x.prior_pct)]));
 }
 const names = new Map();
