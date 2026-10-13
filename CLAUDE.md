@@ -87,6 +87,13 @@ override defaults. Detailed history lives in Claude's memory notes; this file is
     that history into the current Jets on 24 Sep 2026 (NHL.com announcement; NHL stats API franchise 35 "Winnipeg
     Jets", first season 1979-80, teams WIN/ATL/WPG). The Coyotes category covers Phoenix/Arizona 1996-2024 only.
   - Pre-NBA NBL years don't count (NBA history starts with the BAA, 1946-47).
+  - MLB franchises start where MLB's own records start them (MLB Stats API firstYearOfPlay), not where Lahman's
+    franchID does: the Yankees from 1903 (the 1901-02 Baltimore Orioles don't count), the Cardinals from 1892
+    (American Association St. Louis years before 1892 don't count), the Orioles from 1901 (1901 Milwaukee Brewers
+    count; owner decision 13 Oct 2026).
+  - Defunct namesakes never count for today's team: original Ottawa Senators (1917-34), Baltimore Bullets (1944-54),
+    Denver Nuggets (1948-50), Baltimore Colts (1947-50), Dallas Texans (NFL, 1952), 19th-century Baltimore Orioles,
+    Washington Senators/Nationals and American Association Philadelphia Athletics.
 - Women's football is not part of the game (men's football only). Women's footballers own no soccer facts; if
   women's soccer is ever added, it will be a separate sport.
 - MLB MVP means the BBWAA award (1931 on). NFL DPOY means the AP award. World Series winners use the on-the-roster
