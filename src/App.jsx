@@ -105,9 +105,54 @@ async function signIn(email, password) {
   return r;
 }
 
+async function requestPasswordReset(email) {
+  // Generate PKCE code_verifier + code_challenge for projects that use PKCE flow
+  const verifier = crypto.randomUUID() + crypto.randomUUID();
+  const encoded  = new TextEncoder().encode(verifier);
+  const digest   = await crypto.subtle.digest("SHA-256", encoded);
+  const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  localStorage.setItem("tts_pkce_verifier", verifier);
+
+  return sbFetch("/auth/v1/recover", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      code_challenge: challenge,
+      code_challenge_method: "s256",
+      redirect_to: window.location.origin,
+    }),
+  });
+}
+
 function signOut() {
   localStorage.removeItem("tts_session");
   localStorage.removeItem("tts_user");
+}
+
+// Read a password-recovery link from the address bar, once, before the first render.
+// Implicit links arrive as #access_token=...&type=recovery; PKCE links (what our reset emails send) as ?code=...;
+// expired or used links come back as #error=...&error_code=otp_expired or ?error=...
+function readRecoveryLink() {
+  const hash  = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+  if (hash.get("error") || hash.get("error_code") || query.get("error") || query.get("error_code")) {
+    const code = hash.get("error_code") || query.get("error_code") || "";
+    return { kind: "error", message: /expired|otp/i.test(code) || /expired/i.test(hash.get("error_description") || query.get("error_description") || "")
+      ? "That reset link has expired or was already used. Request a new one below (only the newest link works)."
+      : "That reset link didn't work. Request a new one below." };
+  }
+  if (hash.get("type") === "recovery" && hash.get("access_token")) return { kind: "implicit", token: hash.get("access_token") };
+  if (query.get("code")) return { kind: "pkce", code: query.get("code") };
+  return null;
+}
+
+// Remove only the recovery parameters from the URL (keeps others such as ?join=).
+function clearRecoveryFromUrl() {
+  const q = new URLSearchParams(window.location.search);
+  for (const k of ["code", "error", "error_code", "error_description"]) q.delete(k);
+  const qs = q.toString();
+  window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
 }
 
 function getUser() {
@@ -639,13 +684,20 @@ const SPORT_META = [
 // ─── MAIN APP ──────────────────────────────────────────────────────────────────
 export default function App() {
   // Auth
-  const [user,          setUser]          = useState(getUser);
-  const [screen,        setScreen]        = useState("lobby");
-  const [authMode,      setAuthMode]      = useState("login");
+  // A recovery link is read synchronously before the first render, so the boot logic below can't send the
+  // user to the lobby first. Opening one signs out whoever is logged in on this browser (it may be another account).
+  const [recovery]                        = useState(readRecoveryLink);
+  const [user,          setUser]          = useState(() => { if (recovery && recovery.kind !== "error") { signOut(); return null; } return getUser(); });
+  const [screen,        setScreen]        = useState(recovery ? "auth" : "lobby");
+  const [authMode,      setAuthMode]      = useState(recovery?.kind === "error" ? "forgot" : recovery ? "reset" : "login");
   const [authForm,      setAuthForm]      = useState({ email: "", password: "", username: "" });
-  const [authError,     setAuthError]     = useState("");
-  const [authLoading,   setAuthLoading]   = useState(false);
+  const [authError,     setAuthError]     = useState(recovery?.kind === "error" ? recovery.message : "");
+  const [authLoading,   setAuthLoading]   = useState(recovery?.kind === "pkce"); // until the link's code is exchanged
   const [authInfo,      setAuthInfo]      = useState(""); // e.g. "check your email"
+  const [recoveryToken, setRecoveryToken] = useState(recovery?.kind === "implicit" ? recovery.token : null); // access_token from recovery link
+  const recoveryActive                    = useRef(!!recovery && recovery.kind !== "error");
+  const exchangeStarted                   = useRef(false); // StrictMode runs mount effects twice in dev
+  const [newPassword,   setNewPassword]   = useState("");
 
   // Lobby
   const [myGames,       setMyGames]       = useState([]);
@@ -689,7 +741,41 @@ export default function App() {
   useEffect(() => { gameRef.current = game; }, [game]);
 
   // ── Boot ──────────────────────────────────────────────────────────────────────
+  // Recovery link handling (the link itself was read before the first render, see readRecoveryLink)
   useEffect(() => {
+    if (!recovery) return;
+    clearRecoveryFromUrl();
+    if (recovery.kind !== "pkce") return;
+    if (exchangeStarted.current) return; // the code can only be exchanged once
+    exchangeStarted.current = true;
+    // PKCE: exchange the code with the verifier saved when the reset was requested. The verifier only exists in the
+    // browser (and on the address) where the reset was requested.
+    const verifier = localStorage.getItem("tts_pkce_verifier");
+    if (!verifier) {
+      recoveryActive.current = false;
+      setAuthLoading(false); setAuthMode("forgot");
+      setAuthError("Open the reset link in the same browser you requested it from, or request a new link here.");
+      return;
+    }
+    localStorage.removeItem("tts_pkce_verifier");
+    (async () => {
+      const r = await sbFetch("/auth/v1/token?grant_type=pkce", {
+        method: "POST",
+        body: JSON.stringify({ auth_code: recovery.code, code_verifier: verifier }),
+      });
+      setAuthLoading(false);
+      if (r.ok && r.data?.access_token) {
+        setRecoveryToken(r.data.access_token);
+      } else {
+        recoveryActive.current = false;
+        setAuthMode("forgot");
+        setAuthError("That reset link has expired or was already used. Request a new one below (only the newest link works).");
+      }
+    })();
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    if (recoveryActive.current) return; // stay on the reset screen until the password is changed
     if (!user) { setScreen("auth"); return; }
     setScreen("lobby");
     loadMyGames();
@@ -917,6 +1003,44 @@ export default function App() {
     e.preventDefault();
     setAuthError(""); setAuthInfo(""); setAuthLoading(true);
     try {
+      if (authMode === "reset") {
+        if (!recoveryToken) { setAuthError("Still checking your reset link, try again in a moment."); setAuthLoading(false); return; }
+        if (newPassword.length < 6) { setAuthError("Password must be at least 6 characters"); setAuthLoading(false); return; }
+        const r = await sbFetch("/auth/v1/user", {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${recoveryToken}` },
+          body: JSON.stringify({ password: newPassword }),
+        });
+        if (r.ok) {
+          setRecoveryToken(null);
+          setNewPassword("");
+          recoveryActive.current = false;
+          // stay in "reset" mode so the PASSWORD UPDATED panel shows; its button switches to the login form
+          setAuthInfo("Password updated! You can now log in with your new password.");
+        } else {
+          const msg = r.data?.msg || r.data?.message || r.data?.error_description;
+          setAuthError(msg || "Failed to reset password. The link may have expired — try requesting a new one.");
+        }
+        setAuthLoading(false);
+        return;
+      }
+      if (authMode === "forgot") {
+        if (!authForm.email.trim()) { setAuthError("Please enter your email"); setAuthLoading(false); return; }
+        const r = await requestPasswordReset(authForm.email.trim());
+        if (r.ok) {
+          // Supabase answers 200 for unknown emails too, so don't imply the account exists
+          setAuthInfo("If an account exists for that email, we've sent a reset link. Check your inbox (and spam folder) and open the link in this browser.");
+        } else {
+          const code = r.data?.error_code || "";
+          setAuthError(
+            code === "email_address_invalid" ? "Please enter a valid email address." :
+            r.status === 429 || /rate_limit/.test(code) ? "Too many reset requests. Please wait a few minutes and try again." :
+            r.status >= 500 ? "Couldn't reach the server. Check your connection and try again." :
+            (r.data?.msg || "Something went wrong. Please try again."));
+        }
+        setAuthLoading(false);
+        return;
+      }
       if (authMode === "signup") {
         if (!authForm.username.trim()) { setAuthError("Username is required"); setAuthLoading(false); return; }
         if (authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); setAuthLoading(false); return; }
@@ -1403,6 +1527,41 @@ export default function App() {
 
       {/* Auth card */}
       <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: 20, padding: "2rem", width: "100%", maxWidth: 440, animation: "fadeUp 0.4s ease" }}>
+        {authMode === "reset" ? (
+          <form onSubmit={handleAuth}>
+            <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.3rem", letterSpacing: "2px", color: HI, textAlign: "center", marginBottom: "0.5rem" }}>
+              RESET YOUR PASSWORD
+            </div>
+            <div style={{ color: MID, fontSize: "0.9rem", marginBottom: "1.5rem", textAlign: "center", lineHeight: 1.5 }}>
+              Enter your new password below.
+            </div>
+            <div style={{ marginBottom: "1.75rem" }}>
+              <label style={{ color: LO, fontSize: "0.7rem", display: "block", marginBottom: "0.4rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>NEW PASSWORD</label>
+              <input className="ni" type="password" autoComplete="new-password" placeholder="••••••••" value={newPassword}
+                onChange={e => setNewPassword(e.target.value)} />
+            </div>
+            {authError && (
+              <div style={{ color: "#FC5C65", fontSize: "0.9rem", marginBottom: "1rem", textAlign: "center", background: "#FC5C6515", border: "1px solid #FC5C6555", borderRadius: 10, padding: "0.75rem 1rem", lineHeight: 1.5 }}>
+                {authError}
+              </div>
+            )}
+            {authInfo && (
+              <div style={{ marginBottom: "1rem", textAlign: "center", background: `${ACCENT2}18`, border: `2px solid ${ACCENT2}66`, borderRadius: 12, padding: "1.1rem 1rem" }}>
+                <div style={{ color: ACCENT2, fontFamily: "'Bebas Neue',cursive", fontSize: "1.1rem", letterSpacing: "2px", marginBottom: "0.5rem" }}>PASSWORD UPDATED</div>
+                <div style={{ color: MID, fontSize: "0.88rem", lineHeight: 1.55 }}>{authInfo}</div>
+                <button type="button" onClick={() => { setAuthMode("login"); setAuthInfo(""); setAuthError(""); }}
+                  style={{ marginTop: "0.85rem", background: ACCENT2, border: "none", borderRadius: 8, color: "#0a0a16", padding: "0.55rem 1.5rem", fontFamily: "'Bebas Neue',cursive", fontSize: "1rem", letterSpacing: "2px", cursor: "pointer" }}>
+                  GO TO LOG IN
+                </button>
+              </div>
+            )}
+            {!authInfo && (
+              <button className="big-btn" type="submit" disabled={authLoading}>
+                {authLoading ? <span className="spinner" /> : "SET NEW PASSWORD"}
+              </button>
+            )}
+          </form>
+        ) : (<>
         <div style={{ display: "flex", marginBottom: "1.75rem", gap: "0.25rem" }}>
           {["login", "signup"].map(m => (
             <button key={m} onClick={() => { setAuthMode(m); setAuthError(""); setAuthInfo(""); }}
@@ -1419,6 +1578,11 @@ export default function App() {
         </div>
 
         <form onSubmit={handleAuth}>
+          {authMode === "forgot" && (
+            <div style={{ color: MID, fontSize: "0.9rem", marginBottom: "1.25rem", textAlign: "center", lineHeight: 1.5 }}>
+              Enter your email and we'll send you a link to reset your password.
+            </div>
+          )}
           {authMode === "signup" && (
             <div style={{ marginBottom: "1rem" }}>
               <label style={{ color: LO, fontSize: "0.7rem", display: "block", marginBottom: "0.4rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>USERNAME</label>
@@ -1431,11 +1595,21 @@ export default function App() {
             <input className="ni" type="email" placeholder="you@email.com" value={authForm.email}
               onChange={e => setAuthForm(f => ({ ...f, email: e.target.value }))} />
           </div>
+          {authMode !== "forgot" && (
           <div style={{ marginBottom: "1.75rem" }}>
             <label style={{ color: LO, fontSize: "0.7rem", display: "block", marginBottom: "0.4rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>PASSWORD</label>
             <input className="ni" type="password" placeholder="••••••••" value={authForm.password}
               onChange={e => setAuthForm(f => ({ ...f, password: e.target.value }))} />
           </div>
+          )}
+          {authMode === "login" && (
+            <div style={{ textAlign: "right", marginTop: "-1.25rem", marginBottom: "1.75rem" }}>
+              <button type="button" onClick={() => { setAuthMode("forgot"); setAuthError(""); setAuthInfo(""); }}
+                style={{ background: "none", border: "none", color: ACCENT, cursor: "pointer", fontSize: "0.85rem", fontFamily: "'Roboto Mono',monospace", padding: 0 }}>
+                Forgot password?
+              </button>
+            </div>
+          )}
           {authError && (
             <div style={{ color: "#FC5C65", fontSize: "0.9rem", marginBottom: "1rem", textAlign: "center", background: "#FC5C6515", border: "1px solid #FC5C6555", borderRadius: 10, padding: "0.75rem 1rem", lineHeight: 1.5 }}>
               {authError}
@@ -1454,10 +1628,19 @@ export default function App() {
           )}
           {!authInfo && (
             <button className="big-btn" type="submit" disabled={authLoading}>
-              {authLoading ? <span className="spinner" /> : authMode === "login" ? "LOG IN" : "CREATE ACCOUNT"}
+              {authLoading ? <span className="spinner" /> : authMode === "login" ? "LOG IN" : authMode === "forgot" ? "SEND RESET LINK" : "CREATE ACCOUNT"}
             </button>
           )}
+          {authMode === "forgot" && !authInfo && (
+            <div style={{ textAlign: "center", marginTop: "1rem" }}>
+              <button type="button" onClick={() => { setAuthMode("login"); setAuthError(""); setAuthInfo(""); }}
+                style={{ background: "none", border: "none", color: MID, cursor: "pointer", fontSize: "0.85rem", fontFamily: "'Roboto Mono',monospace" }}>
+                Back to log in
+              </button>
+            </div>
+          )}
         </form>
+        </>)}
       </div>
     </div>
   );
