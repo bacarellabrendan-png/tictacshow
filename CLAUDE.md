@@ -60,7 +60,8 @@ override defaults. Detailed history lives in Claude's memory notes; this file is
 - No temp tables. Split large migrations into parts that finish well within the editor's time limit.
 - Never create or move extensions (pg_trgm is in `public`, unaccent in `extensions`).
 - Post-COMMIT checks run alone in a fresh session, using only permanent tables, with an `-- EXPECTED:` line.
-  Include a commented-out rollback.
+  Include a commented-out rollback. A rollback that re-inserts rows into an identity-id table (player_facts, players,
+  player_aliases: id is GENERATED ALWAYS) uses OVERRIDING SYSTEM VALUE; the replica models the identity column.
 - Test every migration first on a local PGlite replica of live data: the run, the checks, a second run (must hit the
   guard) and the rollback (must restore exactly).
 - Delete only what complete sources prove wrong for every namesake. Otherwise move the fact to the right person

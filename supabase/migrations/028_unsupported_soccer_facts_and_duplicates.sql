@@ -2918,7 +2918,7 @@ SELECT
 
 -- --- ROLLBACK (only if needed) ------------------------------------------------------------------------
 -- BEGIN;
--- INSERT INTO player_facts (id, player_name, sport, fact_type, fact_value, player_id, owner_method)
+-- INSERT INTO player_facts (id, player_name, sport, fact_type, fact_value, player_id, owner_method) OVERRIDING SYSTEM VALUE
 --   SELECT id, player_name, sport, fact_type, fact_value, player_id, owner_method FROM backup_20261012_facts_028 WHERE action_028 = 'delete';
 -- UPDATE player_facts f SET player_id = b.player_id, owner_method = b.owner_method FROM backup_20261012_facts_028 b WHERE b.id = f.id AND b.action_028 = 'unown';
 -- DROP TABLE backup_20261012_facts_028;
