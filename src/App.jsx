@@ -5,6 +5,14 @@ import {
   getIntersectionPlayers, getIntersectionRarities, getPlayerName, ensureSportData, loadSquarePrior,
 } from "./data/boardGenerator.js";
 import { blendRarities } from "./data/rarity.js";
+import { BG, SURF, SURF2, SURF3, BORDER, HI, MID, LO, ACCENT, ACCENT2, PC } from "./theme.js";
+import { track, trackScreen } from "./lib/analytics.js";
+import HowToPlay from "./components/HowToPlay.jsx";
+import { shouldAutoOpenHowToPlay } from "./lib/howToPlaySeen.js";
+import FeedbackModal from "./components/FeedbackModal.jsx";
+import AccountModal from "./components/AccountModal.jsx";
+import LegalPage from "./components/LegalPage.jsx";
+import SiteFooter from "./components/SiteFooter.jsx";
 
 // ─── SUPABASE ──────────────────────────────────────────────────────────────────
 const SB_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -338,17 +346,7 @@ function cpuPickCell(board) {
 }
 
 // ─── DESIGN TOKENS ─────────────────────────────────────────────────────────────
-const BG      = "#1a1a2e";
-const SURF    = "#22223a";
-const SURF2   = "#2b2b46";
-const SURF3   = "#343454";
-const BORDER  = "#38385a";
-const HI      = "#f2f2ff";
-const MID     = "#a0a0c0";
-const LO      = "#60608a";
-const ACCENT  = "#FF6B35";
-const ACCENT2 = "#4ECDC4";
-const PC      = { p1: ACCENT, p2: ACCENT2 };
+// (in src/theme.js, shared with the components)
 
 // ─── RARITY BAR ────────────────────────────────────────────────────────────────
 function RarityBar({ score }) {
@@ -615,6 +613,11 @@ const GLOBAL_CSS = `
     .game-nav > * { white-space: nowrap; }
     .game-nav-logo { font-size: 1.15rem !important; letter-spacing: 1.5px !important; }
     .game-nav-vs { display: none; }   /* the score card already names the opponent */
+    .lobby-nav { padding: 0 0.75rem !important; gap: 0.5rem; }
+    .lobby-nav-logo { font-size: 1.3rem !important; letter-spacing: 1.5px !important; white-space: nowrap; }
+    .lobby-nav-right { gap: 0.4rem !important; }
+    .lobby-nav-right .ghost-btn { padding: 0.35rem 0.6rem !important; letter-spacing: 0.5px !important; }
+    .lobby-nav-user { max-width: 28vw !important; }
     .reveal-overlay { padding: 0.75rem !important; }
     .reveal-modal { padding: 1.25rem !important; border-radius: 18px !important; }
     .reveal-cards { gap: 0.6rem !important; }
@@ -658,6 +661,10 @@ const GLOBAL_CSS = `
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
 /** Derive a stable key for a cell (row__col). */
+function gameSportOf(g) {
+  return g?.sport ?? g?.cells?.[0]?.sport ?? null;
+}
+
 function cellKey(cell) {
   return `${cell.rowCat}__${cell.colCat}`;
 }
@@ -739,6 +746,41 @@ export default function App() {
   const mySubmission     = useRef(null); // { moveId, role, id } — my latest answer_submissions row
 
   useEffect(() => { gameRef.current = game; }, [game]);
+
+  // ── Pre-launch: legal pages, How to Play, feedback, account, analytics ────────
+  const path      = window.location.pathname.replace(/\/+$/, "");
+  const legalKind = path === "/privacy" ? "privacy" : path === "/terms" ? "terms" : null;
+  const AUTH_VIEW = { login: "login", signup: "signup", forgot: "forgot-password", reset: "reset-password" };
+  const viewName  = legalKind ?? (!user || screen === "auth" ? AUTH_VIEW[authMode] ?? "login" : screen);
+  const [showHowTo,    setShowHowTo]    = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [showAccount,  setShowAccount]  = useState(false);
+  const phaseSeen = useRef(new Map()); // game id -> last phase seen here, so game_completed fires once, on the transition
+
+  // One page_view per screen (index.html turns off gtag's automatic page_view)
+  useEffect(() => { trackScreen(viewName); }, [viewName]);
+
+  // First visit: show How to Play once, when the lobby first opens
+  useEffect(() => {
+    if (user && screen === "lobby" && !legalKind && shouldAutoOpenHowToPlay()) {
+      setShowHowTo(true);
+      track("how_to_play_open", { source: "first_visit" });
+    }
+  }, [user, screen]); // eslint-disable-line
+
+  useEffect(() => {
+    if (!game?.id) return;
+    const prev = phaseSeen.current.get(game.id);
+    phaseSeen.current.set(game.id, game.phase);
+    if (game.phase !== "gameover" || !prev || prev === "gameover") return;
+    const role = game.player1_id === user?.id ? "p1" : "p2";
+    track("game_completed", {
+      game_type: game.isCpu ? "cpu" : "multiplayer",
+      result: game.winner === "draw" ? "draw" : game.winner === role ? "win" : "loss",
+      sport: gameSportOf(game),
+      ...(game.isCpu ? { cpu_level: game.cpuDiff } : {}),
+    });
+  }, [game?.id, game?.phase]); // eslint-disable-line
 
   // ── Boot ──────────────────────────────────────────────────────────────────────
   // Recovery link handling (the link itself was read before the first render, see readRecoveryLink)
@@ -1046,6 +1088,7 @@ export default function App() {
         if (authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); setAuthLoading(false); return; }
         const r = await signUp(authForm.email, authForm.password, authForm.username.trim());
         if (r.confirmed) {
+          track("sign_up", { method: "email" });
           setUser(getUser());
         } else if (r.duplicateEmail) {
           setAuthError("An account with that email already exists. Try logging in instead.");
@@ -1070,6 +1113,7 @@ export default function App() {
       } else {
         const r = await signIn(authForm.email, authForm.password);
         if (r.ok) {
+          track("login", { method: "email" });
           setUser(getUser());
         } else {
           const errCode = r.data?.error_code ?? "";
@@ -1128,7 +1172,7 @@ export default function App() {
       };
       resetGameState(g);
       setScreen("game");
-      window.gtag?.("event", "game_started", { game_type: "cpu" });
+      track("game_started", { game_type: "cpu", sport: boardConfig.sport, cpu_level: cpuDiff });
     } catch (err) {
       console.error("startCpuGame error:", err);
       setCreateError(`Failed to generate board: ${err.message}`);
@@ -1167,7 +1211,7 @@ export default function App() {
       if (r.ok && r.data?.[0]) {
         resetGameState(r.data[0]);
         setScreen("game");
-        window.gtag?.("event", "game_started", { game_type: "multiplayer" });
+        track("game_started", { game_type: "multiplayer", sport: boardConfig.sport });
       } else {
         const msg = typeof r.data === "string" ? r.data : JSON.stringify(r.data);
         console.error("createGame failed →", r.status, msg);
@@ -1201,6 +1245,7 @@ export default function App() {
       const fresh = await dbSelect("games", `?id=eq.${g.id}`);
       resetGameState(fresh.data[0]);
       setScreen("game");
+      track("game_joined", { sport: gameSportOf(fresh.data[0]), via: new URLSearchParams(window.location.search).has("join") ? "link" : "code" });
       window.history.replaceState({}, "", window.location.pathname);
     } else {
       console.error("joinGame update failed:", upd.status, upd.data);
@@ -1400,7 +1445,6 @@ export default function App() {
       phase: check ? "gameover" : "choosing", choosing_player: nextPick,
       winner: check ? check.winner : null, win_line: check ? check.line : [],
     });
-    if (check) window.gtag?.("event", "game_completed");
     if (result === "reset") {
       setTimeout(async () => {
         const nb = [...newBoard]; nb[g.active_cell] = "null";
@@ -1466,7 +1510,6 @@ export default function App() {
       winner: check ? check.winner : null, win_line: check ? check.line : [],
     };
     setGame(updated); gameRef.current = updated;
-    if (check) window.gtag?.("event", "game_completed");
 
     if (result === "reset") {
       setTimeout(() => {
@@ -1495,12 +1538,43 @@ export default function App() {
     ? `${window.location.origin}${window.location.pathname}?join=${game.invite_code}`
     : "";
 
+  // ── Feedback, account deletion, and the dialogs every screen can open ──
+  async function sendFeedback({ message, contact }) {
+    const r = await sbFetch("/rest/v1/rpc/submit_feedback", {
+      method: "POST",
+      body: JSON.stringify({ p_message: message, p_contact: contact || null, p_screen: viewName, p_user_agent: navigator.userAgent.slice(0, 400) }),
+    });
+    if (r.ok) return { ok: true };
+    const msg = r.data?.message ?? "";
+    return { ok: false, error: /too much feedback|too long/.test(msg) ? msg.charAt(0).toUpperCase() + msg.slice(1) + "." : null };
+  }
+  async function deleteAccount() {
+    const r = await sbFetch("/rest/v1/rpc/delete_my_account", { method: "POST", body: "{}" });
+    return r.ok && r.data?.deleted_user === 1 ? { ok: true } : { ok: false };
+  }
+  const openHowTo    = source => { setShowHowTo(true); track("how_to_play_open", { source }); };
+  const openFeedback = () => { setShowHowTo(false); setShowFeedback(true); track("feedback_open", { screen: viewName }); };
+  const overlays = (<>
+    {showHowTo && <HowToPlay onClose={() => setShowHowTo(false)} onFeedback={openFeedback} />}
+    {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} send={sendFeedback} screen={viewName} />}
+    {showAccount && user && (
+      <AccountModal user={user} onClose={() => setShowAccount(false)} deleteAccount={deleteAccount}
+        onDeleted={() => { setShowAccount(false); signOut(); setMyGames([]); resetGameState(null); setUser(null); }} />
+    )}
+  </>);
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // PAGES: PRIVACY, TERMS (readable without signing in)
+  // ══════════════════════════════════════════════════════════════════════════════
+  if (legalKind) return (<><style>{GLOBAL_CSS}</style><LegalPage kind={legalKind} /></>);
+
   // ══════════════════════════════════════════════════════════════════════════════
   // SCREEN: AUTH
   // ══════════════════════════════════════════════════════════════════════════════
   if (!user || screen === "auth") return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <style>{GLOBAL_CSS}</style>
+      {overlays}
 
       {/* Config error banner — visible if env vars missing */}
       {(!SB_URL || !SB_KEY) && (
@@ -1631,6 +1705,13 @@ export default function App() {
               {authLoading ? <span className="spinner" /> : authMode === "login" ? "LOG IN" : authMode === "forgot" ? "SEND RESET LINK" : "CREATE ACCOUNT"}
             </button>
           )}
+          {authMode === "signup" && !authInfo && (
+            <div style={{ color: LO, fontSize: "0.78rem", textAlign: "center", marginTop: "0.9rem", lineHeight: 1.5 }}>
+              By creating an account, you agree to the{" "}
+              <a href="/terms" target="_blank" rel="noreferrer" style={{ color: MID }}>Terms of Service</a> and{" "}
+              <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: MID }}>Privacy Policy</a>.
+            </div>
+          )}
           {authMode === "forgot" && !authInfo && (
             <div style={{ textAlign: "center", marginTop: "1rem" }}>
               <button type="button" onClick={() => { setAuthMode("login"); setAuthError(""); setAuthInfo(""); }}
@@ -1642,6 +1723,7 @@ export default function App() {
         </form>
         </>)}
       </div>
+      <SiteFooter onHowToPlay={() => openHowTo("auth")} onFeedback={openFeedback} />
     </div>
   );
 
@@ -1655,20 +1737,26 @@ export default function App() {
     return (
       <div style={{ minHeight: "100vh", background: BG, color: HI }}>
         <style>{GLOBAL_CSS}</style>
+        {overlays}
 
         {/* Top nav */}
         <nav style={{
           background: SURF, borderBottom: `1px solid ${BORDER}`,
           position: "sticky", top: 0, zIndex: 100,
         }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
-            <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "2px" }}>
+          <div className="lobby-nav" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
+            <div className="lobby-nav-logo" style={{ fontFamily: "'Bebas Neue',cursive", fontSize: "1.7rem", letterSpacing: "2px" }}>
               TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-              <span style={{ color: LO, fontSize: "0.88rem", fontFamily: "'Roboto Mono',monospace" }}>
+            <div className="lobby-nav-right" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <button className="ghost-btn" onClick={() => openHowTo("lobby")} aria-label="How to play" title="How to play"
+                style={{ padding: "0.4rem 0.75rem", fontSize: "0.8rem" }}>
+                ?
+              </button>
+              <button className="ghost-btn lobby-nav-user" onClick={() => setShowAccount(true)} title="Your account"
+                style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem", fontFamily: "'Roboto Mono',monospace", maxWidth: "34vw", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {user.username}
-              </span>
+              </button>
               <button className="ghost-btn" onClick={() => { signOut(); setUser(null); }}
                 style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
                 Log out
@@ -1825,6 +1913,7 @@ export default function App() {
             </div>
           )}
         </div>
+        <SiteFooter onHowToPlay={() => openHowTo("footer")} onFeedback={openFeedback} />
       </div>
     );
   }
@@ -1973,6 +2062,7 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: BG, color: HI, display: "flex", flexDirection: "column" }}>
       <style>{GLOBAL_CSS}</style>
+      {overlays}
 
       {/* ── Header ── */}
       <nav style={{
@@ -1981,7 +2071,10 @@ export default function App() {
       }}>
         <div className="game-nav" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
           <button
-            onClick={() => { setScreen("lobby"); loadMyGames(); resetGameState(null); }}
+            onClick={() => {
+              if (game.phase !== "gameover" && game.phase !== "waiting") track("left_game_midway", { game_type: game.isCpu ? "cpu" : "multiplayer", phase: game.phase });
+              setScreen("lobby"); loadMyGames(); resetGameState(null);
+            }}
             style={{ background: "transparent", border: "none", color: LO, cursor: "pointer", fontFamily: "'Bebas Neue',cursive", fontSize: "0.95rem", letterSpacing: "1px", display: "flex", alignItems: "center", gap: "0.4rem" }}>
             ← LOBBY
           </button>
@@ -1989,6 +2082,10 @@ export default function App() {
             TIC TAC <span style={{ color: ACCENT }}>SHOW</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <button onClick={() => openHowTo("game")} aria-label="How to play" title="How to play"
+              style={{ background: "transparent", border: `1px solid ${BORDER}`, borderRadius: 20, color: LO, cursor: "pointer", fontFamily: "'Roboto Mono',monospace", fontSize: "0.75rem", width: 26, height: 26, padding: 0, flexShrink: 0 }}>
+              ?
+            </button>
             {game.isCpu && (
               <span className="game-nav-vs" style={{ fontFamily: "'Roboto Mono',monospace", fontSize: "0.7rem", color: LO }}>
                 vs {game.player2_name}

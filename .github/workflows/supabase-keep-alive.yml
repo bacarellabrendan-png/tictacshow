@@ -1,7 +1,8 @@
 # Keeps the free-plan Supabase project from pausing (it pauses after about a week with no activity).
 # Every 3 days: one read-only request (1 row of players, public anon key). A failed run turns the
 # workflow red in the Actions tab and GitHub emails the repo owner.
-# Remove this file after upgrading to Supabase Pro.
+# PERMANENT: the project stays on the Supabase free plan (owner decision, 16 Oct 2026). Do not remove.
+# Backstop: api/keep-alive.js runs daily via Vercel Cron, independent of GitHub (60-day inactivity rule).
 name: Supabase keep-alive
 
 on:

@@ -108,5 +108,17 @@ override defaults. Detailed history lives in Claude's memory notes; this file is
 - After any change to facts, run `node tests/check_prior.mjs` against live (every square must have a server prior).
 
 ## Infrastructure
-- Supabase free plan pauses after about 7 days idle. The GitHub Actions keep-alive
-  (`.github/workflows/supabase-keep-alive.yml`) runs every 3 days. Remove it after the Pro upgrade.
+- The project stays on the Supabase FREE plan (owner decision, 16 Oct 2026; no Pro upgrade). Free projects pause after
+  about 7 days idle. Two keep-alives are PERMANENT; never remove either:
+  1. GitHub Actions `.github/workflows/supabase-keep-alive.yml`, every 3 days (failed runs email the owner). GitHub
+     disables scheduled workflows in public repos after 60 days with no repository activity, and a disabled workflow
+     sends no email. So when working in the repo, check its state
+     (`gh api repos/bacarellabrendan-png/tictacshow/actions/workflows`) and re-enable it with
+     `gh workflow enable supabase-keep-alive.yml` if needed. No third-party "keep workflows alive" tricks (one such
+     action was disabled by GitHub for breaking its terms).
+  2. Vercel Cron, daily: `api/keep-alive.js` (vercel.json "crons"), independent of GitHub.
+  Supabase also emails a warning about a week before pausing a project.
+- Free plan database size limit: 500 MB (Supabase's measure: `select sum(pg_database_size(datname)) from pg_database`).
+  Above it the project goes READ-ONLY: every insert fails, so games and answers stop. Check the size before any
+  migration that adds data or backup tables. Drop old backups only with the owner's approval, exporting them to files
+  first.
