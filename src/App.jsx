@@ -729,6 +729,7 @@ export default function App() {
   const [chooser,       setChooser]       = useState(null);  // { kind, candidates } when a name needs a choice
   const [checking,      setChecking]      = useState(false); // an answer is being checked
   const [answerError,   setAnswerError]   = useState("");
+  const [syncError,     setSyncError]     = useState(""); // a game write the database refused (shown on the game screen)
   const [submitted,     setSubmitted]     = useState(false);
   const [copyMsg,       setCopyMsg]       = useState("");
   const [revealData,    setRevealData]    = useState(null);
@@ -892,6 +893,17 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   // POLLING (multiplayer)
   // ─────────────────────────────────────────────────────────────────────────────
+  /** A game or move write that must land. If the database refuses it (or it doesn't arrive), say so and reload the
+   *  game instead of leaving it hanging. Returns true when the write was saved. */
+  async function saved(r, what) {
+    if (r?.ok && !(Array.isArray(r.data) && r.data.length === 0)) return true;
+    console.error(`[save] ${what} was not saved:`, r?.status, r?.data);
+    setSyncError("That move couldn't be saved, so the game was reloaded. Please try again.");
+    resolving.current = false;
+    await refreshGame();
+    return false;
+  }
+
   async function refreshGame() {
     const cur = gameRef.current;
     if (!cur || cur.isCpu) return;
@@ -1034,7 +1046,7 @@ export default function App() {
   function resetGameState(g) {
     setGame(g); gameRef.current = g;
     setCurrentMove(null); clearAnswer(); setSubmitted(false);
-    setRevealData(null); setRevealStep(0); setPreviewCell(null); setReportStatus(null); setReportForm(null);
+    setRevealData(null); setRevealStep(0); setPreviewCell(null); setReportStatus(null); setReportForm(null); setSyncError("");
     resolving.current = false; showingReveal.current = false; cpuThinking.current = false;
   }
 
@@ -1085,6 +1097,7 @@ export default function App() {
       }
       if (authMode === "signup") {
         if (!authForm.username.trim()) { setAuthError("Username is required"); setAuthLoading(false); return; }
+        if (authForm.username.trim().length > 60) { setAuthError("Usernames can be at most 60 characters"); setAuthLoading(false); return; }
         if (authForm.password.length < 6) { setAuthError("Password must be at least 6 characters"); setAuthLoading(false); return; }
         const r = await signUp(authForm.email, authForm.password, authForm.username.trim());
         if (r.confirmed) {
@@ -1261,12 +1274,12 @@ export default function App() {
     const myRole = game.player1_id === user.id ? "p1" : "p2";
     if (game.choosing_player !== myRole) return;
     const owner = game.board[idx];
-    if (owner !== "null" && owner != null) return;
+    if (owner !== "null" && owner !== "reset" && owner != null) return;
     const qKey = cellKey(game.cells[idx]);
     const mv = await dbInsert("moves", { game_id: game.id, cell_index: idx, question_key: qKey });
     if (!mv.ok || !mv.data?.[0]) return;
     setCurrentMove(mv.data[0]);
-    await dbUpdate("games", `?id=eq.${game.id}`, { active_cell: idx, phase: "answering" });
+    if (!(await saved(await dbUpdate("games", `?id=eq.${game.id}`, { active_cell: idx, phase: "answering" }), "pick"))) return;
     await refreshGame();
   }
 
@@ -1277,7 +1290,7 @@ export default function App() {
     const g = gameRef.current;
     if (!g || g.phase !== "choosing") return;
     const owner = g.board[idx];
-    if (owner !== "null" && owner != null) return;
+    if (owner !== "null" && owner !== "reset" && owner != null) return;
     const qKey = cellKey(g.cells[idx]);
     const move = {
       id: `move-${Date.now()}`, game_id: g.id, cell_index: idx, question_key: qKey,
@@ -1325,7 +1338,12 @@ export default function App() {
     const patch  = myRole === "p1"
       ? { p1_answer: shown, p1_valid: valid, p1_rarity: null, p1_submission_id: submissionId, p1_player_id: playerId }
       : { p2_answer: shown, p2_valid: valid, p2_rarity: null, p2_submission_id: submissionId, p2_player_id: playerId };
-    await dbUpdate("moves", `?id=eq.${currentMove.id}`, patch);
+    const savedAnswer = await dbUpdate("moves", `?id=eq.${currentMove.id}`, patch);
+    if (!savedAnswer.ok || (Array.isArray(savedAnswer.data) && savedAnswer.data.length === 0)) {
+      console.error("[save] answer was not saved:", savedAnswer.status, savedAnswer.data);
+      setAnswerError("Couldn't save your answer. Check your connection and try again.");
+      return;
+    }
     setSubmitted(true);
     const freshMv = await dbSelect("moves", `?id=eq.${currentMove.id}`);
     if (freshMv.ok && freshMv.data?.[0]) {
@@ -1383,16 +1401,16 @@ export default function App() {
     if (isSamePlayer(mv)) {
       const qKey = cellKey(g.cells[g.active_cell]);
       // Clear answers on the move
-      await dbUpdate("moves", `?id=eq.${mv.id}`, {
+      if (!(await saved(await dbUpdate("moves", `?id=eq.${mv.id}`, {
         question_key: qKey,
         p1_answer: null, p2_answer: null,
         p1_valid: null,  p2_valid: null,
         p1_rarity: null, p2_rarity: null,
         p1_submission_id: null, p2_submission_id: null,
         p1_player_id: null, p2_player_id: null,
-      });
+      }), "same-answer replay"))) return;
       // Keep same active_cell and choosing_player; switch to "retry" phase
-      await dbUpdate("games", `?id=eq.${game.id}`, { phase: "retry" });
+      if (!(await saved(await dbUpdate("games", `?id=eq.${game.id}`, { phase: "retry" }), "same-answer replay"))) return;
       // Resolver gets the retry move restored after reveal is dismissed
       pendingRetryMove.current = {
         ...mv, question_key: qKey,
@@ -1430,7 +1448,14 @@ export default function App() {
       result = p1Rarity < p2Rarity ? "p1" : "p2";   // lower % = rarer = wins
     }
 
-    await dbUpdate("moves", `?id=eq.${mv.id}`, { result, p1_rarity: p1Rarity, p2_rarity: p2Rarity });
+    const moveSaved = await dbUpdate("moves", `?id=eq.${mv.id}`, { result, p1_rarity: p1Rarity, p2_rarity: p2Rarity });
+    if (!moveSaved.ok || (Array.isArray(moveSaved.data) && moveSaved.data.length === 0)) {
+      // The other player's app may have resolved this square a moment earlier: then just show their result
+      const cur = await dbSelect("moves", `?id=eq.${mv.id}`);
+      if (cur.ok && cur.data?.[0]?.result) { resolving.current = false; await refreshGame(); return; }
+      await saved(moveSaved, "square result");
+      return;
+    }
     mv = { ...mv, p1_rarity: p1Rarity, p2_rarity: p2Rarity };
     const newBoard  = [...g.board];
     newBoard[g.active_cell] = result === "reset" ? "reset" : result;
@@ -1440,14 +1465,20 @@ export default function App() {
     // Simple alternation — the other player always picks next
     const nextPick = g.choosing_player === "p1" ? "p2" : "p1";
     triggerReveal({ ...mv, result }, g, cellRarities);
-    await dbUpdate("games", `?id=eq.${game.id}`, {
+    if (!(await saved(await dbUpdate("games", `?id=eq.${game.id}`, {
       board: newBoard, scores: newScores, active_cell: null,
       phase: check ? "gameover" : "choosing", choosing_player: nextPick,
       winner: check ? check.winner : null, win_line: check ? check.line : [],
-    });
+    }), "square result"))) return;
     if (result === "reset") {
+      // Reopen the square on the CURRENT board (another square may have been decided in the meantime). If this never
+      // runs (tab closed), the "reset" square still counts as open for picking.
+      const cell = g.active_cell;
       setTimeout(async () => {
-        const nb = [...newBoard]; nb[g.active_cell] = "null";
+        const fresh = await dbSelect("games", `?id=eq.${game.id}`);
+        const fb = fresh.ok ? fresh.data?.[0]?.board : null;
+        if (!Array.isArray(fb) || fb[cell] !== "reset") return;
+        const nb = [...fb]; nb[cell] = "null";
         await dbUpdate("games", `?id=eq.${game.id}`, { board: nb });
       }, 2000);
     }
@@ -1660,7 +1691,7 @@ export default function App() {
           {authMode === "signup" && (
             <div style={{ marginBottom: "1rem" }}>
               <label style={{ color: LO, fontSize: "0.7rem", display: "block", marginBottom: "0.4rem", letterSpacing: "1.5px", fontFamily: "'Roboto Mono',monospace" }}>USERNAME</label>
-              <input className="ni" placeholder="Your display name" value={authForm.username}
+              <input className="ni" placeholder="Your display name" maxLength={60} value={authForm.username}
                 onChange={e => setAuthForm(f => ({ ...f, username: e.target.value }))} />
             </div>
           )}
@@ -2063,6 +2094,12 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: BG, color: HI, display: "flex", flexDirection: "column" }}>
       <style>{GLOBAL_CSS}</style>
       {overlays}
+      {syncError && (
+        <div role="alert" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 900, background: "#FC5C65", color: "#fff", padding: "0.8rem 1rem calc(0.8rem + env(safe-area-inset-bottom, 0px))", display: "flex", gap: "1rem", alignItems: "center", justifyContent: "center", fontSize: "0.92rem" }}>
+          <span>{syncError}</span>
+          <button onClick={() => setSyncError("")} aria-label="Dismiss" style={{ background: "none", border: "1px solid #fff8", borderRadius: 8, color: "#fff", cursor: "pointer", padding: "0.2rem 0.6rem" }}>OK</button>
+        </div>
+      )}
 
       {/* ── Header ── */}
       <nav style={{
@@ -2219,7 +2256,7 @@ export default function App() {
                       const isReset = owner === "reset";
                       const isActive = game.active_cell === i;
                       const inWin   = (game.win_line ?? []).includes(i);
-                      const canPick = game.phase === "choosing" && isMyPick && !isOwned && !isReset && (owner === "null" || owner == null);
+                      const canPick = game.phase === "choosing" && isMyPick && !isOwned && (isReset || owner === "null" || owner == null); // a reset square is open again
                       let cls = "cell";
                       if (isActive) cls += " active-cell";
                       if (inWin)    cls += " win-cell";

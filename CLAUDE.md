@@ -109,8 +109,10 @@ override defaults. Detailed history lives in Claude's memory notes; this file is
 
 ## Before the public launch (owner's list; the soft launch to 20-30 testers can go ahead without these)
 - Cookie-consent banner for Google Analytics (EU/UK visitors). Deferred by the owner on 17 Oct 2026.
-- Server-decided square results: the square's rules and the rarity numbers are still computed in the browser
-  (041 checks everything else in the database).
+- Server-decided square results. 041 enforces legal moves in the database, but someone crafting API calls can still
+  get a wrong answer ruled valid: record_answer_v3 takes the square's rules from the browser (the host also writes
+  the game's cells, rules included) and allows repeated attempts per move; the resolver supplies the rarity numbers.
+  Fix: category rules in the database, rulings and rarity decided by the server, one attempt per move.
 - Legal review of /privacy and /terms (they started from a template).
 
 ## Infrastructure
