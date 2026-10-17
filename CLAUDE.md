@@ -107,6 +107,18 @@ override defaults. Detailed history lives in Claude's memory notes; this file is
   blended with real answers as (count + 50 * prior/100) / (total + 50).
 - After any change to facts, run `node tests/check_prior.mjs` against live (every square must have a server prior).
 
+## Weekly feedback triage (set up 17 Oct 2026)
+- Lives in `C:\Users\bacar\tictacshow-triage` (outside the repo): PROCEDURE.md (what the run does), run_triage.ps1
+  (launcher), tools/, runs/<date>/ (gather.json, report.md, notes, session.log), state.json. Windows scheduled task
+  "TicTacShow weekly triage", Mondays 08:00 (runs late if the PC was off). Report: a new private Claude Doc each week,
+  linked in an email to the owner.
+- Read-only by construction: role `triage_ro` (TRIAGE_DB_URL; migrations 042/043), the launcher strips the write
+  credentials and loads none of the personal permission settings (`--setting-sources project`), and only allows the
+  tool commands listed in it; pushing is disabled in the triage worktree. Never widen these limits.
+- It only PROPOSES a migration (committed on a local `triage/<date>` branch in the triage worktree). When the owner
+  says "Approved: triage migration of <date>", an interactive session copies it into supabase/migrations (renumbering
+  if needed), re-runs the replica test, runs it the normal way, runs check_prior, and commits the record.
+
 ## Before the public launch (owner's list; the soft launch to 20-30 testers can go ahead without these)
 - Cookie-consent banner for Google Analytics (EU/UK visitors). Deferred by the owner on 17 Oct 2026.
 - Server-decided square results. 041 enforces legal moves in the database, but someone crafting API calls can still
