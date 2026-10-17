@@ -107,6 +107,12 @@ override defaults. Detailed history lives in Claude's memory notes; this file is
   blended with real answers as (count + 50 * prior/100) / (total + 50).
 - After any change to facts, run `node tests/check_prior.mjs` against live (every square must have a server prior).
 
+## Before the public launch (owner's list; the soft launch to 20-30 testers can go ahead without these)
+- Cookie-consent banner for Google Analytics (EU/UK visitors). Deferred by the owner on 17 Oct 2026.
+- Server-decided square results: the square's rules and the rarity numbers are still computed in the browser
+  (041 checks everything else in the database).
+- Legal review of /privacy and /terms (they started from a template).
+
 ## Infrastructure
 - The project stays on the Supabase FREE plan (owner decision, 16 Oct 2026; no Pro upgrade). Free projects pause after
   about 7 days idle. Two keep-alives are PERMANENT; never remove either:

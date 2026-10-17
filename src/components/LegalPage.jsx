@@ -1,13 +1,12 @@
 import { useEffect } from "react";
 import { BG, SURF, BORDER, HI, MID, LO, ACCENT } from "../theme.js";
 
-// ─── FILL THESE IN BEFORE LAUNCH ───────────────────────────────────────────────
-// The owner fills in the business name, contact email and governing-law jurisdiction. These pages are a starting
-// template, not legal advice: have them checked before a public launch.
-export const BUSINESS_NAME = "[BUSINESS NAME]";
-export const CONTACT_EMAIL = "[CONTACT EMAIL]";
-export const JURISDICTION  = "[JURISDICTION]";
-export const LAST_UPDATED  = "October 16, 2026";
+// ─── OWNER DETAILS (filled in by the owner, 17 Oct 2026) ───────────────────────
+// These pages started from a template, not legal advice: have them checked before a public launch.
+export const BUSINESS_NAME = "Tic Tac Show";
+export const CONTACT_EMAIL = "bacarellabrendan@gmail.com";
+export const JURISDICTION  = "the State of New Jersey, United States";
+export const LAST_UPDATED  = "October 17, 2026";
 
 const SITE = "Tic Tac Show (playtictacshow.com)";
 
