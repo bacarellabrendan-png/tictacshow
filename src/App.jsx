@@ -1448,9 +1448,10 @@ export default function App() {
       result = p1Rarity < p2Rarity ? "p1" : "p2";   // lower % = rarer = wins
     }
 
-    const moveSaved = await dbUpdate("moves", `?id=eq.${mv.id}`, { result, p1_rarity: p1Rarity, p2_rarity: p2Rarity });
+    // only while the move has no result: a second resolve of the same square (this app or the other player's) changes nothing
+    const moveSaved = await dbUpdate("moves", `?id=eq.${mv.id}&result=is.null`, { result, p1_rarity: p1Rarity, p2_rarity: p2Rarity });
     if (!moveSaved.ok || (Array.isArray(moveSaved.data) && moveSaved.data.length === 0)) {
-      // The other player's app may have resolved this square a moment earlier: then just show their result
+      // Already resolved a moment earlier (here or by the other player's app): just show that result
       const cur = await dbSelect("moves", `?id=eq.${mv.id}`);
       if (cur.ok && cur.data?.[0]?.result) { resolving.current = false; await refreshGame(); return; }
       await saved(moveSaved, "square result");
