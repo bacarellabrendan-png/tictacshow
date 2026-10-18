@@ -50,7 +50,7 @@ export default function HowToPlay({ onClose, onFeedback }) {
       <ul style={{ paddingLeft: "1.2rem", margin: 0 }}>
         <li style={li}><span style={b}>Only one correct answer:</span> that player takes it.</li>
         <li style={li}><span style={b}>Both correct:</span> the <span style={{ color: ACCENT2, fontWeight: 600 }}>rarer</span> answer wins.
-          Each answer shows a % estimating how often players give it on that square (from real answers, plus a starting estimate for new squares), so the <span style={b}>lower %</span> wins.
+          Each answer shows a % for how often players give it on that square, so the <span style={b}>lower %</span> wins. New squares start from our <span style={b}>estimate</span>; once enough real answers come in (each player counts once per square), the % is <span style={b}>based on those answers</span>.
           An exact tie is a coin flip.</li>
         <li style={li}><span style={b}>Same player:</span> you both answer that square again.</li>
         <li style={li}><span style={b}>Neither correct:</span> the square stays open.</li>

@@ -4,7 +4,7 @@ import {
   generateBoard, expandBoard, getCategoryDisplay,
   getIntersectionPlayers, getIntersectionRarities, getPlayerName, ensureSportData, loadSquarePrior,
 } from "./data/boardGenerator.js";
-import { blendRarities } from "./data/rarity.js";
+import { blendRarities, rarityBasis } from "./data/rarity.js";
 import { BG, SURF, SURF2, SURF3, BORDER, HI, MID, LO, ACCENT, ACCENT2, PC } from "./theme.js";
 import { track, trackScreen } from "./lib/analytics.js";
 import HowToPlay from "./components/HowToPlay.jsx";
@@ -221,7 +221,8 @@ async function submitAndRule({ gameId, moveId, role, gameMode, questionKey, cell
 
 /** Real valid-submission counts for a square: { total, counts: Map<playerId, n> }, or null. */
 async function fetchSquareCounts(questionKey) {
-  const r = await sbFetch("/rest/v1/rpc/get_square_counts_v2", {
+  // v3: each person counts once per square (their first valid answer); deleted accounts' answers once each
+  const r = await sbFetch("/rest/v1/rpc/get_square_counts_v3", {
     method: "POST",
     body: JSON.stringify({ p_question_key: questionKey }),
   });
@@ -349,7 +350,7 @@ function cpuPickCell(board) {
 // (in src/theme.js, shared with the components)
 
 // ─── RARITY BAR ────────────────────────────────────────────────────────────────
-function RarityBar({ score }) {
+function RarityBar({ score, basis }) {
   const pct  = Math.max(2, Math.min(100, score));
   const col  = score < 10 ? "#FC5C65" : score < 30 ? "#F7B731" : ACCENT2;
   const tier = score < 10 ? "RARE" : score < 30 ? "UNCOMMON" : "COMMON";
@@ -364,6 +365,12 @@ function RarityBar({ score }) {
       <div style={{ height: 5, background: BORDER, borderRadius: 3, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: col, borderRadius: 3, transition: "width 0.9s ease" }} />
       </div>
+      {basis && (
+        <div title={basis.estimate ? `Mostly our starting estimate: ${basis.total} real answer${basis.total === 1 ? "" : "s"} on this square so far` : "Each player counts once per square"}
+          style={{ fontSize: "0.6rem", color: LO, letterSpacing: "0.5px", fontFamily: "'Roboto Mono',monospace", marginTop: "0.3rem", textAlign: "right" }}>
+          {basis.label}
+        </div>
+      )}
     </div>
   );
 }
@@ -962,7 +969,14 @@ export default function App() {
       rowCatId: activeCell.rowCat, rowLabel: getCategoryDisplay(activeCell.rowCat).label,
       colCatId: activeCell.colCat, colLabel: getCategoryDisplay(activeCell.colCat).label,
     } : null;
-    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, cellRarities: rarities || null, report });
+    setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, cellRarities: rarities || null, report, basis: null });
+    // How many real answers the square's rarity rests on ("estimate" until they carry weight); shown when it arrives
+    if (activeCell?.rowCat && activeCell?.colCat) {
+      fetchSquareCounts(cellKey(activeCell)).then(sc => {
+        const basis = rarityBasis(sc ? sc.total : null);
+        setRevealData(prev => (prev && prev.move?.id === move.id ? { ...prev, basis } : prev));
+      }).catch(() => {});
+    }
     setRevealStep(0);
     // Stagger the answer cards in — no auto-close, user clicks Continue
     setTimeout(() => setRevealStep(1), 350);
@@ -2601,7 +2615,7 @@ export default function App() {
                             ✗ INVALID
                           </div>
                         ) : rarity != null ? (
-                          <RarityBar score={rarity} />
+                          <RarityBar score={rarity} basis={revealData.basis} />
                         ) : null}
                       </>
                     ) : (
@@ -2652,7 +2666,7 @@ export default function App() {
                       if (wRarity == null || lRarity == null) return null;
                       return (
                         <div style={{ color: MID, fontSize: "0.85rem", marginTop: "0.35rem", fontStyle: "italic" }}>
-                          Rarity: {wRarity < 1 ? wRarity.toFixed(2) : wRarity < 10 ? wRarity.toFixed(1) : Math.round(wRarity)}% vs {lRarity < 1 ? lRarity.toFixed(2) : lRarity < 10 ? lRarity.toFixed(1) : Math.round(lRarity)}%
+                          Rarity: {wRarity < 1 ? wRarity.toFixed(2) : wRarity < 10 ? wRarity.toFixed(1) : Math.round(wRarity)}% vs {lRarity < 1 ? lRarity.toFixed(2) : lRarity < 10 ? lRarity.toFixed(1) : Math.round(lRarity)}%{revealData.basis ? ` (${revealData.basis.label})` : ""}
                         </div>
                       );
                     })()}

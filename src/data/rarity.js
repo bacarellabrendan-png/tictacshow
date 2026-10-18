@@ -9,6 +9,16 @@
 
 export const BLEND_K = 50;
 
+/**
+ * How a square's rarity numbers should be labelled for players. Until real answers carry at least half the weight
+ * (total >= BLEND_K, one answer per person per square), the numbers are mostly the prior: show "estimate".
+ * @param {number|null|undefined} total  real answers on the square (null when unknown)
+ */
+export function rarityBasis(total) {
+  if (total == null) return null;
+  return total >= BLEND_K ? { estimate: false, total, label: `based on ${total} answers` } : { estimate: true, total, label: "estimate" };
+}
+
 // Prior for a player the estimate doesn't know. Every player who owns a fact has a
 // page-view estimate, so this should never be used; it is logged when it is.
 const UNKNOWN_PRIOR_PCT = 0.1;
