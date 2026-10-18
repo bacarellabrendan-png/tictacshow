@@ -256,7 +256,10 @@ async function liveCellRarities(cell) {
   // The prior needs this sport's data even in a browser that didn't build the board
   await Promise.all([ensureSportData(cell.sport, sbFetch), loadSquarePrior(sbFetch, cell.sport, cell.rowCat, cell.colCat)]);
   const prior = getIntersectionRarities(cell.sport, cell.rowCat, cell.colCat);
-  return blendRarities(prior, await fetchSquareCounts(cellKey(cell)));
+  const counts = await fetchSquareCounts(cellKey(cell));
+  const blended = blendRarities(prior, counts);
+  blended.realTotal = counts ? counts.total : null;   // the real-answer count these numbers rest on (for the label)
+  return blended;
 }
 
 // ─── GAME LOGIC ────────────────────────────────────────────────────────────────
@@ -367,7 +370,7 @@ function RarityBar({ score, basis }) {
       </div>
       {basis && (
         <div title={basis.estimate ? `Mostly our starting estimate: ${basis.total} real answer${basis.total === 1 ? "" : "s"} on this square so far` : "Each player counts once per square"}
-          style={{ fontSize: "0.6rem", color: LO, letterSpacing: "0.5px", fontFamily: "'Roboto Mono',monospace", marginTop: "0.3rem", textAlign: "right" }}>
+          style={{ fontSize: "0.68rem", color: MID, letterSpacing: "0.5px", fontFamily: "'Roboto Mono',monospace", marginTop: "0.3rem", textAlign: "right" }}>
           {basis.label}
         </div>
       )}
@@ -970,8 +973,12 @@ export default function App() {
       colCatId: activeCell.colCat, colLabel: getCategoryDisplay(activeCell.colCat).label,
     } : null;
     setRevealData({ move, result: move.result, winnerName, nextPickerName, isSameAnswer, isBothInvalid, q: revealQ, cellRarities: rarities || null, report, basis: null });
-    // How many real answers the square's rarity rests on ("estimate" until they carry weight); shown when it arrives
-    if (activeCell?.rowCat && activeCell?.colCat) {
+    // How many real answers the square's rarity rests on ("estimate" until they carry weight). Use the count the shown
+    // numbers were computed from when we have it; otherwise (the other player's reveal) fetch it.
+    if (rarities && rarities.realTotal !== undefined) {
+      const basis = rarityBasis(rarities.realTotal);
+      setRevealData(prev => (prev && prev.move?.id === move.id ? { ...prev, basis } : prev));
+    } else if (activeCell?.rowCat && activeCell?.colCat) {
       fetchSquareCounts(cellKey(activeCell)).then(sc => {
         const basis = rarityBasis(sc ? sc.total : null);
         setRevealData(prev => (prev && prev.move?.id === move.id ? { ...prev, basis } : prev));
